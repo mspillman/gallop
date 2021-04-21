@@ -67,11 +67,11 @@ elif function == "GALLOP":
         # give it a meaningful name
         if all_settings["structure_name"] == "Enter_structure_name":
             if pawley_program == "DASH":
-                structure_name = sdi.split(".sdi")[0].split("\\")[-1]
+                structure_name = os.path.split(sdi)[1].split(".sdi")[0]
             elif pawley_program == "GSAS-II":
-                structure_name = gpx.split(".gpx")[0].split("\\")[-1]
+                structure_name = os.path.split(gpx)[1].split(".gpx")[0]
             else:
-                structure_name = out.split(".out")[0].split("\\")[-1]
+                structure_name = os.path.split(out)[1].split(".out")[0]
             all_settings["structure_name"] = structure_name
         struct = structure.Structure(name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
@@ -166,8 +166,6 @@ elif function == "GALLOP":
         if not failed:
             # Now dump all of the settings used to a JSON so it can be inspected
             # and even read in at a later stage.
-            st.write(os.getcwd())
-            st.write(struct.name)
             with open(os.path.join(os.getcwd(),
                                 struct.name+"_GALLOP_Settings.json"), "w") as f:
                 json.dump(all_settings, f, indent=4)
