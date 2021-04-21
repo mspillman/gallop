@@ -166,7 +166,8 @@ elif function == "GALLOP":
         if not failed:
             # Now dump all of the settings used to a JSON so it can be inspected
             # and even read in at a later stage.
-
+            st.write(os.getcwd())
+            st.write(struct.name)
             with open(os.path.join(os.getcwd(),
                                 struct.name+"_GALLOP_Settings.json"), "w") as f:
                 json.dump(all_settings, f, indent=4)
