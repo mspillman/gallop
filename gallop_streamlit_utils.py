@@ -596,7 +596,6 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
 
 
 
-@st.cache
 def browse_solved_zips():
     # Very basic file browser, limited to zips in the "GALLOP_results" directory
     # into which all result CIFs are placed.
