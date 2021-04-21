@@ -612,7 +612,7 @@ def browse_solved_zips():
         dates.sort(reverse=True)
         sorteddates = [datetime.datetime.strftime(d, "%Y-%b-%d") for d in dates]
         for i, s in enumerate(sorteddates):
-            folders.append(st.sidebar.checkbox(s,value=False, key=i))
+            folders.append(st.sidebar.checkbox(s,value=i==0, key=i))
         for i, d in enumerate(zip(sorteddates, folders)):
             if d[1]:
                 with st.beta_expander(label=d[0], expanded=True):
