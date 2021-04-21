@@ -167,7 +167,8 @@ elif function == "GALLOP":
             # Now dump all of the settings used to a JSON so it can be inspected
             # and even read in at a later stage.
 
-            with open(struct.name+"_GALLOP_Settings.json", "w") as f:
+            with open(os.path.join(os.getcwd(),
+                                struct.name+"_GALLOP_Settings.json"), "w") as f:
                 json.dump(all_settings, f, indent=4)
             f.close()
 
@@ -256,7 +257,7 @@ elif function == "GALLOP":
                         os.remove(fn)
                     zipObj.close()
                     filename = zipname.split(date)[1].strip("\\")
-                    with open(zipname, "rb") as f:
+                    with open(os.path.join(os.getcwd(), zipname), "rb") as f:
                         bytes = f.read()
                         b64 = base64.b64encode(bytes).decode()
                         href = f'<a href="data:file/zip;base64,{b64}\
