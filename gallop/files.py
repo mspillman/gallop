@@ -38,7 +38,6 @@ def get_data_from_DASH_sdi(Structure, filename, percentage_cutoff_inv_cov=20):
     Doesn't return anything, parameters are added to the supplied
     Structure object
     """
-    st.write(filename)
     Structure.hcv, Structure.tic, Structure.dsl, Structure.unit_cell, Structure.sg_number,\
                                 Structure.sg_setting = read_DASH_sdi(filename)
     Structure.wavelength = read_DASH_dsl(Structure.dsl)
