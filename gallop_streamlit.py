@@ -67,11 +67,11 @@ elif function == "GALLOP":
         # give it a meaningful name
         if all_settings["structure_name"] == "Enter_structure_name":
             if pawley_program == "DASH":
-                structure_name = os.path.split(sdi)[1].split(".sdi")[0]
+                structure_name = os.path.split(sdi)[-1].split(".sdi")[0]
             elif pawley_program == "GSAS-II":
-                structure_name = os.path.split(gpx)[1].split(".gpx")[0]
+                structure_name = os.path.split(gpx)[-1].split(".gpx")[0]
             else:
-                structure_name = os.path.split(out)[1].split(".out")[0]
+                structure_name = os.path.split(out)[-1].split(".out")[0]
             all_settings["structure_name"] = structure_name
         struct = structure.Structure(name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
