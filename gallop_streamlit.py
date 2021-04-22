@@ -1,23 +1,20 @@
-import streamlit as st
-import numpy as np
-import pandas as pd
-import time
-
-import gallop_streamlit_utils as gsu
-
 #GALLOP related
+import gallop_streamlit_utils as gsu
 import gallop.z_matrix as z_matrix
 import gallop.optimiser as optimiser
 import gallop.structure as structure
 
 #Others needed
+import streamlit as st
+import numpy as np
+import pandas as pd
+import time
 import torch
 import os
 import altair as alt
 from zipfile import ZipFile, ZIP_DEFLATED
 import glob
 import base64
-import time
 import json
 import datetime
 

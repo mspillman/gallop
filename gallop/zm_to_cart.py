@@ -1,5 +1,7 @@
-import torch
 import gallop.tensor_prep as tensor_prep
+
+import torch
+
 
 @torch.jit.script
 def modify_D2(tors, D2, refineable_torsion_indices):

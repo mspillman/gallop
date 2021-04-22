@@ -1,14 +1,14 @@
+import gallop.z_matrix as zm
+import gallop.files as files
+
 import numpy as np
+import torch
+import json
+import os
+from collections import OrderedDict
 import pymatgen as pmg
 from pymatgen.symmetry import groups
 from pymatgen.io import cif
-import torch
-import gallop.z_matrix as zm
-import json
-import gallop.files as files
-import os
-
-from collections import OrderedDict
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core.operations import SymmOp
 from pymatgen.io.cif import CifBlock, CifFile

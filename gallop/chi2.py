@@ -1,7 +1,8 @@
-import torch
 import gallop.intensities as intensities
 import gallop.zm_to_cart as zm_to_cart
 import gallop.tensor_prep as tensor_prep
+
+import torch
 
 @torch.jit.script
 def calc_chisqd(intensities, inverse_covariance_matrix, observed_intensities,

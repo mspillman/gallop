@@ -1,7 +1,8 @@
-import torch
 import gallop.chi2 as chi2
 import gallop.tensor_prep as tensor_prep
 import gallop.files as files
+
+import torch
 import numpy as np
 import time
 import tqdm

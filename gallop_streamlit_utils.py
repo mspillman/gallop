@@ -1,6 +1,11 @@
+# GALLOP related
+import gallop.optimiser as optimiser
+import gallop.tensor_prep as tensor_prep
+import gallop.chi2 as chi2
+
+# Others needed
 import streamlit as st
 import torch
-import gallop.optimiser as optimiser
 import os
 from io import StringIO
 import pandas as pd
@@ -10,8 +15,6 @@ import glob
 import base64
 import json
 import datetime
-import gallop.tensor_prep as tensor_prep
-import gallop.chi2 as chi2
 
 def improve_GPU_memory_use(struct, minimiser_settings):
     """

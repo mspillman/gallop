@@ -1,3 +1,5 @@
+import gallop.zm_to_cart as zm_to_cart
+
 import numpy as np
 import pymatgen as pmg
 from pymatgen.symmetry import groups
@@ -7,7 +9,6 @@ from pymatgen.io.cif import CifBlock, CifFile
 from collections import OrderedDict
 from monty.io import zopen
 import time
-import gallop.zm_to_cart as zm_to_cart
 import os
 import pickle
 import streamlit as st
