@@ -3,6 +3,7 @@ import gallop_streamlit_utils as gsu
 import gallop.z_matrix as z_matrix
 import gallop.optimiser as optimiser
 import gallop.structure as structure
+import gallop.multiGPU as multiGPU
 
 #Others needed
 import streamlit as st
@@ -10,6 +11,7 @@ import numpy as np
 import pandas as pd
 import time
 import torch
+import torch.multiprocessing as mp
 import os
 import altair as alt
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -117,6 +119,9 @@ elif function == "GALLOP":
             minimiser_settings["device"] = torch.device("cpu")
         elif all_settings["device"] == "Auto":
             minimiser_settings["device"] = None
+        elif all_settings["device"] == "Multiple GPUs":
+            minimiser_settings["device"] = torch.device("cuda:" +
+                                all_settings["particle_division"][0][0])
         else:
             minimiser_settings["device"] = torch.device("cuda:"+
                                         all_settings["device"].split(" = ")[0])
@@ -127,7 +132,6 @@ elif function == "GALLOP":
             gsu.improve_GPU_memory_use(struct, minimiser_settings)
             st.write("Attempting to reduce GPU memory use at the expense of\
                     reduced Local Optimisation speed")
-
         swarm = optimiser.Swarm(
                     Structure = struct,
                     n_particles=all_settings["swarm_size"]*all_settings["n_swarms"],
@@ -211,14 +215,22 @@ elif function == "GALLOP":
                 iter_placeholder.text(itertext)
                 with progress_bar_placeholder:
                     try:
-                        result = optimiser.minimise(struct, external=external,
+                        GPU_split = all_settings["particle_division"]
+                        n_GPUs = torch.cuda.device_count()
+                        if (GPU_split is not None and n_GPUs >= len(GPU_split)):
+                            result = multiGPU.minimise(i, struct, swarm, external,
+                                    internal, GPU_split, minimiser_settings)
+
+                        else:
+                            result = optimiser.minimise(struct,
+                                                external=external,
                                                 internal=internal,
                                                 run=i, start_time=start_time,
                                                 **minimiser_settings)
                     except Exception as e:
                         if "memory" in str(e):
-                            st.write("GPU memory error! Reset GALLOP, then:")
-                            st.write("Try reducing total number of particles,\
+                            st.error("GPU memory error! Reset GALLOP, then:")
+                            st.error("Try reducing total number of particles,\
                                     the number of reflections or use the Reduce \
                                     performance option in Local optimiser \
                                     settings.")

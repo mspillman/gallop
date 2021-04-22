@@ -11,7 +11,6 @@ from monty.io import zopen
 import time
 import os
 import pickle
-import streamlit as st
 
 def get_data_from_DASH_sdi(Structure, filename, percentage_cutoff_inv_cov=20):
     """
@@ -153,7 +152,6 @@ def read_DASH_hcv(filename, percentage_cutoff_inv_cov=20):
     return hkl, I, sigma, inverse_covariance
 
 def read_DASH_dsl(filename):
-    print(filename)
     with open(filename) as in_dsl:
         for line in in_dsl:
             line = list(filter(None,line.strip().split(" ")))

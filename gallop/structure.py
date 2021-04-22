@@ -39,23 +39,15 @@ class Structure(object):
     the required arrays and parameters.
 
     """
-    def __init__(self, DASH_sdi=None, name="Gallop_structure",
-                wavelength=1.54056, ignore_H_atoms=True,
-                absorb_H_Z_increase=False,
-                absorb_H_occu_increase=False):
+    def __init__(self, name="Gallop_structure",
+                    ignore_H_atoms=True,
+                    absorb_H_Z_increase=False,
+                    absorb_H_occu_increase=False):
         """
         Args:
-            DASH_sdi (str, optional): Filename of a DASH .sdi file.
-                Used to populate the hkl, intensities, pymatgen lattice
-                and inverse_covariance_matrix arrays, as well as
-                supply the space_group. Defaults to None.
             name (str, optional): The root name to be used for
                 writing CIFs during SDPD attempts. Defaults to
                 "Gallop_structure".
-            wavelength (float, optional): Wavelength of experimental
-                data collection. Not needed for SDPD, but allows data
-                resolution to be calculated and printed.
-                Defaults to 1.54056 (CuKa1)
             ignore_H_atoms (bool, optional): Ignore H-atoms during
                 SDPD. Setting this to True, and
                 absorb_H_occu_increase and absorb_H_Z_increase to
@@ -74,9 +66,6 @@ class Structure(object):
         self.name = name
         self.ignore_H_atoms = ignore_H_atoms
         self.output_filename_root = name
-        if DASH_sdi is not None:
-            self.add_data(DASH_sdi, wavelength=wavelength)
-        self.wavelength = wavelength
         self.zmatrices = []
         self.absorb_H_Z_increase = absorb_H_Z_increase
         self.absorb_H_occu_increase = absorb_H_occu_increase
@@ -113,7 +102,7 @@ class Structure(object):
         d = self.wavelength / (2*np.sin(np.deg2rad(twotheta/2)))
         return (np.around(d, decimal_places))
 
-    def add_data(self, filename, source="DASH", wavelength=None,
+    def add_data(self, filename, source="DASH",
                 percentage_cutoff_inv_cov=20):
         """
         Add PXRD data to a Z-matrix
@@ -123,34 +112,28 @@ class Structure(object):
             source (str, optional): data source. Currently only "DASH" is
                 accepted as an argument. More programs may be added in the
                 future. Defaults to "DASH".
-            wavelength (float, optional): The wavelength at which the data were
-                recorded. This is not needed for crystal structure determination
-                and is only used to print out information about data resolution.
-                Defaults to 1.54056 (Cu Ka1).
             percentage_cutoff_hcv (int, optional): the minimum percentage
             correlation to be included in the inverse covariance
             matrix. Defaults to 20 to be comparable with DASH,
             however, this doesn't affect the speed of GALLOP so can
             be set as desired without impacting performance.
         """
+        self.data_file = filename
         if source.lower() == "dash":
             files.get_data_from_DASH_sdi(self,filename,
                         percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
-            if wavelength is not None:
-                self.wavelength = wavelength
             self.dspacing = self.get_resolution(self.twotheta)
             self.data_resolution = self.get_resolution(self.twotheta[-1])
+            self.source = "dash"
         elif "gsas" in source.lower():
             files.get_data_from_GSAS_gpx(self,filename,
                             percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
-            if wavelength is not None:
-                self.wavelength = wavelength
             self.data_resolution = self.dspacing[-1]
+            self.source = "gsas"
         elif "topas" == source.lower():
             files.get_data_from_TOPAS_output(self,filename,
                             percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
-            if wavelength is not None:
-                self.wavelength = wavelength
+            self.source = "topas"
 
         else:
             print("This program is not yet supported.")

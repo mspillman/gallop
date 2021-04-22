@@ -19,7 +19,7 @@ import datetime
 def improve_GPU_memory_use(struct, minimiser_settings):
     """
     This function improves the use of GPU memory, at the expense of worse
-    performance in terms of numbers of chi2 evaluations per second.
+    performance in terms of number of chi2 evaluations per second.
     This works by initialising the JIT compilation to optimise for gradient-free
     chi2 calcs, which slows down the backward pass used to find the gradients,
     but reduces the memory requirements a little. Doesn't result in massive
@@ -44,7 +44,7 @@ def improve_GPU_memory_use(struct, minimiser_settings):
 
 def load_save_settings(all_settings):
     # Allows settings to be saved to disk and reloaded.
-    with st.sidebar.beta_expander(label="Load/Save", expanded=False):
+    with st.sidebar.beta_expander(label="Load/Save settings", expanded=False):
         save_load = st.radio("Save current settings or load previous settings",
                             ["Save", "Load"])
         if save_load == "Save":
@@ -74,9 +74,9 @@ def load_save_settings(all_settings):
                 files = ["Continue with GUI settings"] + files
                 if len(files) > 1:
                     settings = ["structure_name", "n_GALLOP_iters", "seed",
-                        "optim","n_LO_iters", "ignore_H_atoms", "device",
-                        "find_lr", "find_lr_auto_mult", "mult",
-                        "learning_rate_schedule", "n_cooldown", "loss",
+                        "optim", "n_LO_iters", "ignore_H_atoms", "device",
+                        "particle_division","find_lr", "find_lr_auto_mult",
+                        "mult", "learning_rate_schedule", "n_cooldown", "loss",
                         "reflection_percentage", "include_dw_factors",
                         "memory_opt", "n_swarms", "swarm_size", "global_update",
                         "global_update_freq", "c1", "c2", "inertia",
@@ -98,7 +98,8 @@ def load_save_settings(all_settings):
                     for s in settings:
                         json_settings.pop(s)
                     all_settings.update(json_settings)
-                    st.success("Loaded settings")
+                    st.success("Loaded settings - note GUI elements will not \
+                                be updated")
     return all_settings
 
 
@@ -143,8 +144,22 @@ def sidebar():
         GPUs = []
         for i in range(torch.cuda.device_count()):
             GPUs.append(str(i)+" = "+torch.cuda.get_device_name(i))
+        if len(GPUs) > 1:
+            GPUs.append("Multiple GPUs")
         all_settings["device"] = st.selectbox("Device to perform LO",
                                 ["Auto","CPU"]+GPUs)
+        if all_settings["device"] == "Multiple GPUs":
+            GPUs = st.multiselect("Select GPUs to use",GPUs[:-1],
+                                                default=GPUs[:-1])
+            all_settings["particle_division"] = []
+            for i in GPUs:
+                all_settings["particle_division"].append([i.split(" = ")[0],
+                    st.number_input("Enter % of particles to run on "+i,
+                        min_value=0., max_value=100., value=100./(len(GPUs)))])
+            if sum(x[1] for x in all_settings["particle_division"]) != 100.:
+                st.error("Percentages do not sum to 100 %")
+        else:
+            all_settings["particle_division"] = None
         st.markdown("***Advanced***")
         show_advanced_lo = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_lo")
@@ -365,13 +380,13 @@ def get_files():
     if load_settings:
         with st.beta_expander(label="Choose settings to load", expanded=False):
             settings = ["structure_name", "n_GALLOP_iters", "seed", "optim",
-                        "n_LO_iters", "ignore_H_atoms", "device", "find_lr",
-                        "find_lr_auto_mult", "mult", "learning_rate_schedule",
-                        "n_cooldown", "loss", "reflection_percentage",
-                        "include_dw_factors", "memory_opt", "n_swarms",
-                        "swarm_size", "global_update", "global_update_freq",
-                        "c1", "c2", "inertia", "inertia_bounds",
-                        "limit_velocity", "vmax", "lr"]
+                        "n_LO_iters", "ignore_H_atoms", "device",
+                        "particle_division","find_lr", "find_lr_auto_mult",
+                        "mult", "learning_rate_schedule", "n_cooldown", "loss",
+                        "reflection_percentage", "include_dw_factors",
+                        "memory_opt", "n_swarms", "swarm_size", "global_update",
+                        "global_update_freq", "c1", "c2", "inertia",
+                        "inertia_bounds", "limit_velocity", "vmax", "lr"]
             s_import = st.multiselect("",settings, default=settings,
                                                                 key="uploader")
 
@@ -529,8 +544,13 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
     if not all_settings["find_lr_auto_mult"]:
         st.write("Using multiplication_factor", all_settings["mult"])
     try:
-        lr = optimiser.find_learning_rate(struct, external=external,
-                                internal=internal,
+        if all_settings["device"] == "Multiple GPUs":
+            percentage = all_settings["particle_division"][0][1] / 100.
+            end = int(np.ceil(len(external)*percentage))
+        else:
+            end = len(external)
+        lr = optimiser.find_learning_rate(struct, external=external[0:end],
+                                internal=internal[0:end],
                                 multiplication_factor=all_settings["mult"],
                                 min_lr=-4, max_lr=np.log10(0.15),
                                 plot=False,
