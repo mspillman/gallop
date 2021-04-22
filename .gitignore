@@ -112,7 +112,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-Famotidine_GALLOP_Settings.json
+*GALLOP_Settings.json
 *.cif
-
+reset.bat
 GALLOP_results/
+GALLOP_user_settings/
