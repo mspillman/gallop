@@ -75,6 +75,45 @@ class Structure(object):
     def __repr__(self):
         return self.name
 
+    def to_json(self):
+        dumpable = {}
+        for k, v in self.__dict__.items():
+            if k in ["zmatrices", "lattice", "space_group"]:
+                if k == "zmatrices":
+                    dumpable[k] = [zm.to_json() for zm in v]
+                elif k == "lattice":
+                    dumpable[k] = v.as_dict()
+            else:
+                if isinstance(v, np.ndarray):
+                    dumpable[k] = [v.tolist(), True]
+                elif isinstance(v, np.int32):
+                    dumpable[k] = [int(v), False]
+                else:
+                    dumpable[k] = [v, False]
+        return json.dumps(dumpable)
+
+    def from_json(self, attribute_string):
+        attributes = json.loads(attribute_string)
+        for k, v in attributes.items():
+            if k in ["zmatrices", "lattice", "space_group"]:
+                if k == "zmatrices":
+                    zmatrices = []
+                    for zmstring in v:
+                        zmat = zm.Z_matrix()
+                        zmat.from_json(zmstring)
+                        zmatrices.append(zmat)
+                    setattr(self, k, zmatrices)
+                elif k == "lattice":
+                    lattice = pmg.Lattice.from_dict(v)
+                    setattr(self,k,lattice)
+            else:
+                if v[1]:
+                    setattr(self, k, np.array(v[0]))
+                else:
+                    setattr(self, k, v[0])
+        setattr(self, "space_group",
+                            groups.SpaceGroup.from_int_number(self.sg_number))
+
     def add_zmatrix(self, filename, verbose=True):
         """
         Create and add a z-matrix object to the Structure

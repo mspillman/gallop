@@ -112,3 +112,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Famotidine_GALLOP_Settings.json
+*.cif
+
+GALLOP_results/

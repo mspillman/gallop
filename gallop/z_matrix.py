@@ -1,107 +1,64 @@
 import numpy as np
+import json
 
 """
 TODO - extract occupancies from the ZM
 """
 
 class Z_matrix(object):
-    def __init__(self, filename):
-        # Read in the Z-matrix
-        self.filename = filename
-        self.read_DASH_zm(filename)
-        self.coords_radians = self.zm_angles_to_radians(self.coords)
+    def __init__(self, filename=None, zmformat="DASH"):
+        if filename is not None:
+            # Read in the Z-matrix
+            self.filename = filename
+            if zmformat.lower() == "dash":
+                self.read_DASH_zm(filename)
+            elif zmformat.lower() == "gaussian":
+                self.read_Gaussian_zm(filename)
+            self.coords_radians = self.zm_angles_to_radians(self.coords)
 
-        # Create a new Z-matrix with no hydrogen atoms
-        self.remove_H_from_zm()
-        self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
-        # Zero indexing needed in Python
-        self.bond_connection -= 1
-        self.angle_connection -= 1
-        self.torsion_connection -= 1
-        self.bond_connection_no_H -= 1
-        self.angle_connection_no_H -= 1
-        self.torsion_connection_no_H -= 1
-        # Generate some initial Cartesian coordinates for the Z-matrices
-        self.initial_cartesian = self.zm_to_cart(self.coords_radians,
-                                                self.bond_connection,
-                                                self.angle_connection,
-                                                self.torsion_connection)
-        try:
-            self.initial_cartesian_no_H = self.zm_to_cart(
-                                                self.coords_radians_no_H,
-                                                self.bond_connection_no_H,
-                                                self.angle_connection_no_H,
-                                                self.torsion_connection_no_H)
-            self.H_atom_torsion_defs = False
-        except:
-            print("Error in Z-matrix " + self.filename + \
-            " - check to see if refineable torsions are defined in terms of \
-            hydrogen atoms in original Z-matrix")
-            print("All atoms refineable torsions = ",
-                                            self.torsion_refineable.sum())
-            print("Non-H atoms refineable torsions = ",
-                                            self.torsion_refineable_no_H.sum())
-            self.H_atom_torsion_defs = True
+            # Create a new Z-matrix with no hydrogen atoms
+            self.remove_H_from_zm()
+            self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
+            # Zero indexing needed in Python
+            self.bond_connection -= 1
+            self.angle_connection -= 1
+            self.torsion_connection -= 1
+            self.bond_connection_no_H -= 1
+            self.angle_connection_no_H -= 1
+            self.torsion_connection_no_H -= 1
+            # Generate some initial Cartesian coordinates for the Z-matrices
+            self.initial_cartesian = self.zm_to_cart(self.coords_radians,
+                                                    self.bond_connection,
+                                                    self.angle_connection,
+                                                    self.torsion_connection)
+            try:
+                self.initial_cartesian_no_H = self.zm_to_cart(
+                                                    self.coords_radians_no_H,
+                                                    self.bond_connection_no_H,
+                                                    self.angle_connection_no_H,
+                                                    self.torsion_connection_no_H)
+                self.H_atom_torsion_defs = False
+            except:
+                print("Error in Z-matrix " + self.filename + \
+                " - check to see if refineable torsions are defined in terms of \
+                hydrogen atoms in original Z-matrix")
+                print("All atoms refineable torsions = ",
+                                                self.torsion_refineable.sum())
+                print("Non-H atoms refineable torsions = ",
+                                                self.torsion_refineable_no_H.sum())
+                self.H_atom_torsion_defs = True
 
-        if self.bond_refineable.sum() > 0:
-            print("Refineable bonds not yet supported")
-        if self.angle_refineable.sum() > 0:
-            print("Refineable angles not yet supported")
+            if self.bond_refineable.sum() > 0:
+                print("Refineable bonds not yet supported")
+            if self.angle_refineable.sum() > 0:
+                print("Refineable angles not yet supported")
 
-        self.get_degrees_of_freedom()
-class Z_matrix(object):
-    def __init__(self, filename, zmformat="DASH"):
-        # Read in the Z-matrix
-        self.filename = filename
-        if zmformat.lower() == "dash":
-            self.read_DASH_zm(filename)
-        elif zmformat.lower() == "gaussian":
-            self.read_Gaussian_zm(filename)
-        self.coords_radians = self.zm_angles_to_radians(self.coords)
+            self.get_degrees_of_freedom()
 
-        # Create a new Z-matrix with no hydrogen atoms
-        self.remove_H_from_zm()
-        self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
-        # Zero indexing needed in Python
-        self.bond_connection -= 1
-        self.angle_connection -= 1
-        self.torsion_connection -= 1
-        self.bond_connection_no_H -= 1
-        self.angle_connection_no_H -= 1
-        self.torsion_connection_no_H -= 1
-        # Generate some initial Cartesian coordinates for the Z-matrices
-        self.initial_cartesian = self.zm_to_cart(self.coords_radians,
-                                                self.bond_connection,
-                                                self.angle_connection,
-                                                self.torsion_connection)
-        try:
-            self.initial_cartesian_no_H = self.zm_to_cart(
-                                                self.coords_radians_no_H,
-                                                self.bond_connection_no_H,
-                                                self.angle_connection_no_H,
-                                                self.torsion_connection_no_H)
-            self.H_atom_torsion_defs = False
-        except:
-            print("Error in Z-matrix " + self.filename + \
-            " - check to see if refineable torsions are defined in terms of \
-            hydrogen atoms in original Z-matrix")
-            print("All atoms refineable torsions = ",
-                                            self.torsion_refineable.sum())
-            print("Non-H atoms refineable torsions = ",
-                                            self.torsion_refineable_no_H.sum())
-            self.H_atom_torsion_defs = True
-
-        if self.bond_refineable.sum() > 0:
-            print("Refineable bonds not yet supported")
-        if self.angle_refineable.sum() > 0:
-            print("Refineable angles not yet supported")
-
-        self.get_degrees_of_freedom()
-
-        self.initial_D2      = self.get_initial_D2_for_torch(
-                        self.coords_radians, self.torsion_refineable_indices)
-        self.initial_D2_no_H = self.get_initial_D2_for_torch(
-                self.coords_radians_no_H, self.torsion_refineable_indices_no_H)
+            self.initial_D2      = self.get_initial_D2_for_torch(
+                            self.coords_radians, self.torsion_refineable_indices)
+            self.initial_D2_no_H = self.get_initial_D2_for_torch(
+                    self.coords_radians_no_H, self.torsion_refineable_indices_no_H)
 
     def __repr__(self):
         file_info = "Filename: " + self.filename
@@ -115,6 +72,37 @@ class Z_matrix(object):
             dof = "\nDegrees of freedom: "+str(self.degrees_of_freedom)
 
         return file_info + n_non_H_atoms + n_ref_torsions + dof
+
+    def from_json(self, attribute_string):
+        """
+        Load Z-matrix from a JSON formatted string
+
+        Args:
+            attribute_string (str): json string with all attributes of a ZM
+        """
+        attributes = json.loads(attribute_string)
+        for k, v in attributes.items():
+            if v[1]:
+                setattr(self, k, np.array(v[0]))
+            else:
+                setattr(self, k, v[0])
+
+    def to_json(self):
+        """
+        Save the Z-matrix to a JSON formatted string
+
+        Returns:
+            str: JSON formatted string of the Z-matrix object attributes
+        """
+        dumpable = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, np.ndarray):
+                dumpable[k] = [v.tolist(), True]
+            elif isinstance(v, np.int32):
+                dumpable[k] = [int(v), False]
+            else:
+                dumpable[k] = [v, False]
+        return json.dumps(dumpable)
 
     def get_degrees_of_freedom(self):
         if len(self.elements) == 1:
@@ -315,7 +303,9 @@ class Z_matrix(object):
             """
             Performs the cross-product of two three-dimensional vectors.
             """
-            return np.array([a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]])
+            return np.array([a[1]*b[2] - a[2]*b[1],
+                            a[2]*b[0] - a[0]*b[2],
+                            a[0]*b[1] - a[1]*b[0]])
 
         def get_D2(zm):
             """

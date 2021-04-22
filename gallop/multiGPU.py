@@ -33,26 +33,30 @@ def multiGPU(GPU, start, end, external, internal, structure_files, minimiser_set
     minimiser_settings["device"] = torch.device("cuda:"+str(GPU))
     external = external[start:end]
     internal = internal[start:end]
-    struct = structure.Structure(name=structure_files["name"],
-                                ignore_H_atoms=structure_files["ignore_H_atoms"],
-                                absorb_H_occu_increase=structure_files["absorb_H_occu_increase"])
-    struct.add_data(structure_files["data_file"])
-    for zm in structure_files["zmatrices"]:
-        struct.add_zmatrix(zm)
+    struct = structure.Structure()
+            #name=structure_files["name"],
+            #ignore_H_atoms=structure_files["ignore_H_atoms"],
+            #absorb_H_occu_increase=structure_files["absorb_H_occu_increase"])
+    struct.from_json(structure_files)
+    #struct.add_data(structure_files["data_file"])
+    #for zm in structure_files["zmatrices"]:
+    #    struct.add_zmatrix(zm)
     result = optimiser.minimise(struct, external=external, internal=internal,
                                 **minimiser_settings)
+
     result = {GPU : result}
     return result
 
 
 def minimise(i, struct, swarm, external, internal, GPU_split, minimiser_settings):
-    structure_files = {
-            "name" : struct.name,
-            "ignore_H_atoms" : struct.ignore_H_atoms,
-            "absorb_H_occu_increase" : struct.absorb_H_occu_increase,
-            "data_file" : struct.data_file,
-            "source" : struct.source,
-            "zmatrices" : [z.filename for z in struct.zmatrices]}
+    #structure_files = {
+    #        "name" : struct.name,
+    #        "ignore_H_atoms" : struct.ignore_H_atoms,
+    #        "absorb_H_occu_increase" : struct.absorb_H_occu_increase,
+    #        "data_file" : struct.data_file,
+    #        "source" : struct.source,
+    #        "zmatrices" : [z.filename for z in struct.zmatrices]}
+    structure_files = struct.to_json()
     minimiser_settings["streamlit"] = False
     common_args = [external, internal, structure_files, minimiser_settings]
     args = []
