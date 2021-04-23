@@ -18,7 +18,7 @@ class Z_matrix(object):
 
             # Create a new Z-matrix with no hydrogen atoms
             self.remove_H_from_zm()
-            self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
+            self.coords_radians_no_H=self.zm_angles_to_radians(self.coords_no_H)
             # Zero indexing needed in Python
             self.bond_connection -= 1
             self.angle_connection -= 1
@@ -121,7 +121,8 @@ class Z_matrix(object):
     def update_refineable_indices(self):
         self.bond_refineable_indices = np.where(self.bond_refineable == 1)[0]
         self.angle_refineable_indices = np.where(self.angle_refineable == 1)[0]
-        self.torsion_refineable_indices = np.where(self.torsion_refineable == 1)[0]
+        self.torsion_refineable_indices = np.where(
+                                                self.torsion_refineable == 1)[0]
         self.remove_H_from_zm()
         self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
 
@@ -170,7 +171,8 @@ class Z_matrix(object):
         self.dw_factors = dw_factors
         self.bond_refineable_indices = np.where(self.bond_refineable == 1)[0]
         self.angle_refineable_indices = np.where(self.angle_refineable == 1)[0]
-        self.torsion_refineable_indices = np.where(self.torsion_refineable == 1)[0]
+        self.torsion_refineable_indices = np.where(
+                                                self.torsion_refineable == 1)[0]
 
     def read_Gaussian_zm(self, filename):
         """
@@ -196,7 +198,7 @@ class Z_matrix(object):
                         coords = True
                     if variables:
                         if len(line) > 0:
-                            variables_dict[line[0].split("=")[0]] = float(line[1])
+                            variables_dict[line[0].split("=")[0]]=float(line[1])
                     else:
                         if line[0] == "Variables:":
                             variables = True
@@ -239,7 +241,8 @@ class Z_matrix(object):
 
         self.bond_refineable_indices = np.where(self.bond_refineable == 1)[0]
         self.angle_refineable_indices = np.where(self.angle_refineable == 1)[0]
-        self.torsion_refineable_indices = np.where(self.torsion_refineable == 1)[0]
+        self.torsion_refineable_indices = np.where(
+                                                self.torsion_refineable == 1)[0]
 
     def remove_H_from_zm(self):
         coords_no_H, bond_connection_no_H = [], []
@@ -309,7 +312,7 @@ class Z_matrix(object):
         return zm_radians
 
 
-    def zm_to_cart(self, zm, bond_connection, angle_connection, torsion_connection):
+    def zm_to_cart(self,zm,bond_connection,angle_connection,torsion_connection):
         """
         Uses the Natural Extension Reference Frame method to convert from
         Internal to Cartesian coordinates.
