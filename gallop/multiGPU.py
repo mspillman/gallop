@@ -4,7 +4,8 @@ import torch
 import torch.multiprocessing as mp
 import numpy as np
 
-def multiGPU(GPU, start, end, external, internal, structure_files, minimiser_settings):
+def multiGPU(GPU, start, end, external, internal, structure_files,
+            minimiser_settings):
     """
     Process GALLLOP jobs on multiple GPUs
 
@@ -49,13 +50,6 @@ def multiGPU(GPU, start, end, external, internal, structure_files, minimiser_set
 
 
 def minimise(i, struct, swarm, external, internal, GPU_split, minimiser_settings):
-    #structure_files = {
-    #        "name" : struct.name,
-    #        "ignore_H_atoms" : struct.ignore_H_atoms,
-    #        "absorb_H_occu_increase" : struct.absorb_H_occu_increase,
-    #        "data_file" : struct.data_file,
-    #        "source" : struct.source,
-    #        "zmatrices" : [z.filename for z in struct.zmatrices]}
     structure_files = struct.to_json()
     minimiser_settings["streamlit"] = False
     common_args = [external, internal, structure_files, minimiser_settings]
@@ -83,11 +77,13 @@ def minimise(i, struct, swarm, external, internal, GPU_split, minimiser_settings
     result = {"GALLOP Iter" : i}
     for d in devices:
         if "external" in result.keys():
-            result["external"] = np.vstack([result["external"], combined[d]["external"]])
+            result["external"] = np.vstack([result["external"],
+                                            combined[d]["external"]])
         else:
             result["external"] = combined[d]["external"]
         if "internal" in result.keys():
-            result["internal"] = np.vstack([result["internal"], combined[d]["internal"]])
+            result["internal"] = np.vstack([result["internal"],
+                                            combined[d]["internal"]])
         else:
             result["internal"] = combined[d]["internal"]
         if "chi_2" in result.keys():

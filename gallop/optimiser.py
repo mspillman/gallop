@@ -9,12 +9,8 @@ import tqdm
 import matplotlib.pyplot as plt
 import os
 import random
-#from SALib.sample import latin
 import pyDOE
 import torch_optimizer as t_optim
-
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
 
 
 def seed_everything(seed=1234, change_backend=True):
@@ -466,10 +462,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 detached_chi2 = chi_2.detach().cpu().numpy()
                 if chi2_solved is not None:
                     n_solved = detached_chi2[detached_chi2 < chi2_solved]
-                    printstring = ("GALLOP iter {:04d} | LO iter {:04d} | lr {:.3f} ||",
-                            "max/mean/min chi^2 {:.1f} / {:.1f} / {:.1f} ||",
-                            "Time {:.1f} (s) / {:.1f} (min) || Best {:.1f}",
-                            "in iter {:04d} || n<{:.1f}: {:05d}")
+                    printstring = (
+                        "GALLOP iter {:04d} | LO iter {:04d} | lr {:.3f} ||",
+                        "max/mean/min chi^2 {:.1f} / {:.1f} / {:.1f} ||",
+                        "Time {:.1f} (s) / {:.1f} (min) || Best {:.1f}",
+                        "in iter {:04d} || n<{:.1f}: {:05d}")
                     print("".join(printstring).format(
                             run+1, i, lr,
                             chi_2.max().item(), chi_2.mean().item(),
@@ -477,10 +474,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                             (time.time() - t1)/60, best, best_iteration,
                             chi2_solved, n_solved.shape[0]))
                 else:
-                    printstring = ("GALLOP iter {:04d} | LO iter {:04d} | lr {:.3f} ||",
-                            "max/mean/min chi^2 {:.1f} / {:.1f} / {:.1f} ||",
-                            "Time {:.1f} (s) / {:.1f} (min) || Best {:.1f}"
-                            "in iter {:04d}")
+                    printstring = (
+                        "GALLOP iter {:04d} | LO iter {:04d} | lr {:.3f} ||",
+                        "max/mean/min chi^2 {:.1f} / {:.1f} / {:.1f} ||",
+                        "Time {:.1f} (s) / {:.1f} (min) || Best {:.1f}"
+                        "in iter {:04d}")
                     print("".join(printstring).format(
                             run+1, i, lr,
                             chi_2.max().item(), chi_2.mean().item(),
@@ -610,8 +608,8 @@ class Swarm(object):
             inertia (float or str, optional): The inertia to use in the velocity
                 update. If random, sample the inertia from a uniform
                 distribution. If "ranked", then solutions ranked in order of
-                increasing chi2. Lowest chi2 assigned lowest inertia, as defined by
-                bounds in inertia_bounds. Defaults to "ranked".
+                increasing chi2. Lowest chi2 assigned lowest inertia, as defined
+                by bounds in inertia_bounds. Defaults to "ranked".
             c1 (int, optional): c1 (social) parameter in PSO equation.
                 Defaults to 1.5
             c2 (int, optional): c2 (cognitive) parameter in PSO equation.
@@ -643,11 +641,11 @@ class Swarm(object):
         self.position = position
         self.n_swarms = n_swarms
         self.best_subswarm_chi_2 = best_subswarm_chi_2
-        self.inertia=inertia
-        self.c1=c1
-        self.c2=c2
-        self.inertia_bounds=inertia_bounds
-        self.use_matrix=use_matrix
+        self.inertia = inertia
+        self.c1 = c1
+        self.c2 = c2
+        self.inertia_bounds = inertia_bounds
+        self.use_matrix = use_matrix
         self.swarm_progress = []
         self.limit_velocity = limit_velocity
         self.n_particles = n_particles
@@ -696,19 +694,6 @@ class Swarm(object):
         int_names = ["int"+str(x) for x in range(total_tors)]
         for i in tqdm.tqdm(range(self.n_swarms)):
             if method == "latin":
-                #SAlib old latin code
-                #problem = {
-                #"num_vars" : total_pos + total_rot + total_tors,
-                #"names": ext_names + int_names,
-                #"bounds" : (total_pos*[[0,1]]
-                #            + total_rot*[[-1,1]]
-                #            + total_tors*[[-np.pi, np.pi]])
-                #}
-                #init_dof = latin.sample(problem, subswarm)
-                #init_external.append(init_dof[:,:total_pos+total_rot])
-                #init_internal.append(init_dof[:,total_pos+total_rot:])
-
-                #Try pyDOE as alternative library
                 all_dof = np.array(pyDOE.lhs(total_pos + total_rot + total_tors,
                             samples=subswarm, criterion=latin_criterion))
                 external = all_dof[:,:total_pos+total_rot]
@@ -772,7 +757,7 @@ class Swarm(object):
         end_of_translations = self.Structure.total_position_degrees_of_freedom
         n_quaternions = self.Structure.total_rotation_degrees_of_freedom // 4
         translation = np.copy(external[:,:end_of_translations])
-        translation = translation % 1   # Convert into range(0,1)
+        translation = translation % 1    # Convert into range(0,1)
         translation *= 2 * np.pi         # Convert into range(0, 2pi)
         translation = np.hstack([np.sin(translation), np.cos(translation)])
 
@@ -782,12 +767,6 @@ class Swarm(object):
             # Ensure quaternions are unit quaternions
             quaternion = rotation[:,(i*4):(i+1)*4]
             quaternion /= np.sqrt((quaternion**2).sum(axis=1)).reshape(-1,1)
-            # Now extract angle and unit-axis representation of quaternion, and
-            # project angle onto unit circle
-            #angle = 2*np.arccos(quaternion[:,0]).reshape(-1,1)
-            #axis = quaternion[:,1:]
-            #axis /= np.sqrt((axis**2).sum(axis=1)).reshape(-1,1)
-            #rotation_list.append(np.hstack([np.sin(angle), np.cos(angle), axis]))
             rotation_list.append(quaternion)
         rotation = np.hstack(rotation_list)
         # Take the sin and cos of the torsions, and stack everything.
@@ -811,10 +790,8 @@ class Swarm(object):
         total_position = self.Structure.total_position_degrees_of_freedom
         total_rotation = self.Structure.total_rotation_degrees_of_freedom
         total_torsional = self.Structure.total_internal_degrees_of_freedom
-        # Recall, we store an extra component so the swarm representation of a
-        # quaternion has 5 components rather than 4
         n_quaternions = total_rotation // 4
-        end_external = (2*total_position) + total_rotation #+ n_quaternions
+        end_external = (2*total_position) + total_rotation
         external = np.copy(position[:,:end_external])
         internal = np.copy(position[:,end_external:])
         # Reverse the normalisation of the particle position,
@@ -823,27 +800,18 @@ class Swarm(object):
         pos_cosines = external[:,total_position:2*total_position]
         # Can now use the inverse tangent to get positions in range -0.5, 0.5
         translations = np.arctan2(pos_sines, pos_cosines) / (2*np.pi)
-        #translations = translations % 1 # Return translations to the range(0, 1)
 
         rotations = external[:,2*total_position:]
-        # Ensure the quaternions are unit quaternions
-
         rotation_list = []
         for i in range(n_quaternions):
-            #angle = np.arctan2(rotations[:,(i*5):(i+1)*5][:,0],
-            #                    rotations[:,(i*5):(i+1)*5][:,1])
-            #axis = rotations[:,(i*5):(i+1)*5][:,2:]
-            #axis /= np.sqrt((axis**2).sum(axis=1)).reshape(-1,1)
-            #cos_angle = np.cos(angle/2).reshape(-1,1)
-            #sin_angle = np.sin(angle/2).reshape(-1,1)
-            #quaternion = np.hstack([cos_angle, sin_angle*axis])
+            # Ensure the quaternions are unit quaternions
             quaternion = rotations[:,(i*4):(i+1)*4]
             quaternion /= np.sqrt((quaternion**2).sum(axis=1)).reshape(-1,1)
             rotation_list.append(quaternion)
         rotations = np.hstack(rotation_list)
 
         external = np.hstack([translations, rotations])
-        # Revert torsion angles back to angles using the inverse tangent
+        # Revert torsion representation back to angles using the inverse tangent
         internal = np.arctan2(internal[:,:total_torsional],
                             internal[:,total_torsional:])
 
@@ -992,8 +960,6 @@ class Swarm(object):
 
         if self.limit_velocity:
             unlimited = self.velocity
-            #self.velocity[unlimited >= 0] = unlimited[unlimited >= 0] % 2
-            #self.velocity[unlimited < 0] = unlimited[unlimited < 0] % -2
             self.velocity[unlimited > self.vmax] = self.vmax
             self.velocity[unlimited < -1*self.vmax] = -1*self.vmax
 
@@ -1104,8 +1070,8 @@ class Swarm(object):
             filename_root = self.Structure.name
         for i in range(external.shape[0]):
             result = {}
-            result["external"] = external[i]#.reshape(1,-1)
-            result["internal"] = internal[i]#.reshape(1,-1)
+            result["external"] = external[i]
+            result["internal"] = internal[i]
             result["chi_2"] = chi2s[i]
             result["GALLOP Iter"] = len(self.swarm_progress)
             if start_time is None:
@@ -1121,63 +1087,3 @@ class Swarm(object):
         self.particle_best_position = None
         self.n_particles = None
         self.velocity = None
-
-def resolution_switch(run, minimiser_settings,
-    Swarm, external, internal, result=None, switch_freq=10, switch_factor=2,
-    find_learning_rate_on_switch=True, low_res_start=False, keep_pos=False,
-    keep_vel=False, verbose=True, find_lr_kw_args={}):
-
-    n_reflections = minimiser_settings["n_reflections"]
-    if n_reflections is None:
-        n_reflections = len(Swarm.Structure.hkl)
-    elif n_reflections > len(Swarm.Structure.hkl):
-        n_reflections = len(Swarm.Structure.hkl)
-    switch = False
-    if (run+1) % switch_freq == 0 and (run+1) % (switch_freq*2) != 0 and run != 0:
-        if low_res_start:
-            n_reflections = int(n_reflections*switch_factor)
-        else:
-            n_reflections = int(n_reflections/switch_factor)
-        switch = True
-    elif (run+1) % (switch_freq*2) == 0 and run != 0:
-        if low_res_start:
-            n_reflections = int(n_reflections/switch_factor)
-        else:
-            n_reflections = int(n_reflections*switch_factor)
-        switch = True
-
-    if switch:
-        minimiser_settings["n_reflections"] = n_reflections
-        if verbose:
-            print("Setting n_reflections to:", n_reflections)
-            print("Resolution with {} reflections:".format(n_reflections),
-                Swarm.Structure.get_resolution(
-                                    Swarm.Structure.twotheta[n_reflections-1]))
-        if find_learning_rate_on_switch:
-            if result is not None:
-                lr = find_learning_rate(Swarm.Structure,
-                            external=result["external"],
-                            internal=result["internal"],
-                            **find_lr_kw_args, **minimiser_settings)
-                learning_rate = lr[-1]
-                if verbose:
-                    print("Setting learning rate to:", learning_rate)
-                minimiser_settings["learning_rate"] = learning_rate
-            else:
-                lr = find_learning_rate(Swarm.Structure, external=external,
-                                        internal=internal,
-                                        **find_lr_kw_args, **minimiser_settings)
-                learning_rate = lr[-1]
-                if verbose:
-                    print("Setting learning rate to:", learning_rate)
-                minimiser_settings["learning_rate"] = learning_rate
-        if not keep_vel:
-            Swarm.velocity = None
-            if verbose:
-                print("Reset particle velocities")
-        if not keep_pos:
-            Swarm.particle_best_position = None
-            if verbose:
-                print("Reset best particle positions")
-
-

@@ -361,8 +361,10 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     else:
         # Use a fall-back method to generate all equivalent positions in the unit cell
-        frac_all = get_symmetry_equivalent_points(asymmetric_frac_coords, nsamples_ones, affine_matrices)
+        frac_all = get_symmetry_equivalent_points(asymmetric_frac_coords,
+                                    nsamples_ones, affine_matrices)
         # And then the P1 structure factor equation to obtain the intensities.
-        intensities = intensities_from_full_cell_contents(frac_all, hkl, intensity_calc_prefix_fs, centrosymmetric)
+        intensities = intensities_from_full_cell_contents(frac_all, hkl,
+                                    intensity_calc_prefix_fs, centrosymmetric)
 
     return intensities

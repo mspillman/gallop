@@ -29,7 +29,8 @@ st.set_page_config(page_title='GALLOP WebApp', page_icon = None,
 st.title("GALLOP")
 st.markdown("*Gradient Accelerated LocaL Optimisation and Particle Swarm*")
 st.sidebar.title("Options")
-function = st.sidebar.radio("Choose function",["GALLOP","View previous results"])
+function = st.sidebar.radio("Choose function",
+                            ["GALLOP","View previous results"])
 
 if "View" in function:
     gsu.browse_solved_zips()
@@ -42,10 +43,6 @@ elif function == "GALLOP":
     uploaded_files, sdi, gpx, out, json_settings, zms, load_settings, \
                                 pawley_program, clear_files = gsu.get_files()
 
-    #st.write("uploaded_files, sdi, gpx, out, json_settings, zms, load_settings, \
-    #                            pawley_program, clear_files")
-    #st.write(uploaded_files, sdi, gpx, out, json_settings, zms, load_settings, \
-    #                            pawley_program, clear_files)
 
     st.text("")
     st.text("")
@@ -103,11 +100,13 @@ elif function == "GALLOP":
 
         minimiser_settings = optimiser.get_minimiser_settings(struct)
         minimiser_settings["streamlit"] = True
-        minimiser_settings["include_dw_factors"] = all_settings["include_dw_factors"]
+        minimiser_settings["include_dw_factors"] = \
+                                            all_settings["include_dw_factors"]
         minimiser_settings["n_iterations"] = all_settings["n_LO_iters"]
-        minimiser_settings["learning_rate_schedule"] = all_settings["learning_rate_schedule"]
+        minimiser_settings["learning_rate_schedule"] = \
+                                        all_settings["learning_rate_schedule"]
         n_refs = int(np.ceil(
-                    (all_settings["reflection_percentage"]/100.)*len(struct.hkl)))
+                (all_settings["reflection_percentage"]/100.)*len(struct.hkl)))
         if n_refs > len(struct.hkl):
             n_refs = len(struct.hkl)
         minimiser_settings["n_reflections"] = n_refs
@@ -132,9 +131,10 @@ elif function == "GALLOP":
             gsu.improve_GPU_memory_use(struct, minimiser_settings)
             st.write("Attempting to reduce GPU memory use at the expense of\
                     reduced Local Optimisation speed")
+        n_particles = all_settings["swarm_size"]*all_settings["n_swarms"]
         swarm = optimiser.Swarm(
                     Structure = struct,
-                    n_particles=all_settings["swarm_size"]*all_settings["n_swarms"],
+                    n_particles=n_particles,
                     n_swarms = all_settings["n_swarms"],
                     global_update = all_settings["global_update"],
                     global_update_freq = all_settings["global_update_freq"],
@@ -184,15 +184,6 @@ elif function == "GALLOP":
             current_time = str(now.strftime("%H-%M"))
 
             lr = minimiser_settings["learning_rate"]
-            #if all_settings["find_lr"]:
-            #    zipname = (struct.name+"_" + str(swarm.c1)+"-"+str(swarm.c2)
-            #        +"c1c2"+"_mult_" + str(all_settings["mult"])+"_lr_"
-            #        + str(np.around(lr, 4)) + "_"
-            #        + all_settings["optim"] + current_time+".zip")
-            #else:
-            #    zipname = (struct.name+"_" + str(swarm.c1)+"-"+str(swarm.c2)
-            #                    +"c1c2"+"_lr_" + str(np.around(lr, 4))+"_"
-            #                    +all_settings["optim"] + current_time+".zip")
             zipname = f'{struct.name}_{current_time}_{all_settings["n_swarms"]}\
                         _swarms_{all_settings["swarm_size"]}\
                         _particles_{all_settings["optim"]}.zip'
@@ -218,8 +209,9 @@ elif function == "GALLOP":
                         GPU_split = all_settings["particle_division"]
                         n_GPUs = torch.cuda.device_count()
                         if (GPU_split is not None and n_GPUs >= len(GPU_split)):
-                            result = multiGPU.minimise(i, struct, swarm, external,
-                                    internal, GPU_split, minimiser_settings)
+                            result = multiGPU.minimise(i, struct, swarm,
+                                    external, internal, GPU_split,
+                                    minimiser_settings)
 
                         else:
                             result = optimiser.minimise(struct,
@@ -230,8 +222,8 @@ elif function == "GALLOP":
                     except Exception as e:
                         if "memory" in str(e):
                             st.error("GPU memory error! Reset GALLOP, then:")
-                            st.error("Try reducing total number of particles,\
-                                    the number of reflections or use the Reduce \
+                            st.error("Try reducing number of particles, the \
+                                    number of reflections or use the Reduce \
                                     performance option in Local optimiser \
                                     settings.")
                             st.write("Error code below:")

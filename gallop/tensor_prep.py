@@ -310,8 +310,10 @@ def get_all_required_tensors(Structure, external=None, internal=None,
         dtype = torch.float32
 
     if external is None:
-        pos = torch.rand((n_samples, Structure.total_position_degrees_of_freedom))
-        rot = torch.rand((n_samples, Structure.total_rotation_degrees_of_freedom))
+        pos = torch.rand(
+                    (n_samples, Structure.total_position_degrees_of_freedom))
+        rot = torch.rand(
+                    (n_samples, Structure.total_rotation_degrees_of_freedom))
         rot -= 0.5
         rot *= 2
         external = torch.cat([pos, rot], dim=1)

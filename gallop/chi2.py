@@ -31,7 +31,7 @@ def calc_chisqd(intensities, inverse_covariance_matrix, observed_intensities,
     sum_2_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix, intensities)
     sum_2_2 = torch.einsum("ij,ij->i",intensities,sum_2_1)
 
-    # Calculate scaling factor for calculated intensities.
+    # Scaling factor for calculated intensities.
     scale = (sum_1_2 / sum_2_2).reshape(-1,1)
 
     # Difference between observed and scaled calculated intensities
@@ -57,6 +57,9 @@ def get_chi_2(external, internal, position, rotation, torsion, initial_D2,
     Convenience function to get chi2 directly from external/internal rather
     than performing the three steps required:
     1. coords, 2. intensities, 3. chi2
+
+    The required arguments are produced and packaged into a dictionary by the
+    gallop.tensor_prep code
 
     Args:
         external (Tensor): The external degrees of freedom
@@ -119,9 +122,11 @@ def get_chi_2(external, internal, position, rotation, torsion, initial_D2,
                                 lattice_inv_matrix, init_cart_coords)
 
     calculated_intensities = intensities.calculate_intensities(
-                        asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
-                        intensity_calc_prefix_fs_asymmetric, nsamples_ones,
-                        affine_matrices, centrosymmetric, space_group_number)
+                                asymmetric_frac_coords, hkl,
+                                intensity_calc_prefix_fs,
+                                intensity_calc_prefix_fs_asymmetric,
+                                nsamples_ones, affine_matrices, centrosymmetric,
+                                space_group_number)
 
     chisqd = calc_chisqd(calculated_intensities, inverse_covariance_matrix,
                         observed_intensities, chisqd_scale_sum_1_1)
@@ -160,9 +165,8 @@ def get_chi2_from_CIF(Structure, n_reflections=None, include_dw_factors=True,
     space_group_number = tensors["space_group_number"]
     asymmetric_frac_coords = tensors["asymmetric_frac_coords"]
     hkl = tensors["hkl"]
-    intensity_calc_prefix_fs = tensors["intensity_calc_prefix_fs"]
-    intensity_calc_prefix_fs_asymmetric = \
-        tensors["intensity_calc_prefix_fs_asymmetric"]
+    i_calc_prefix_fs = tensors["intensity_calc_prefix_fs"]
+    i_calc_prefix_fs_asymmetric = tensors["intensity_calc_prefix_fs_asymmetric"]
     nsamples_ones = tensors["nsamples_ones"]
     affine_matrices = tensors["affine_matrices"]
     inverse_covariance_matrix = tensors["inverse_covariance_matrix"]
@@ -171,8 +175,8 @@ def get_chi2_from_CIF(Structure, n_reflections=None, include_dw_factors=True,
 
 
     calculated_intensities = intensities.calculate_intensities(
-                        asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
-                        intensity_calc_prefix_fs_asymmetric, nsamples_ones,
+                        asymmetric_frac_coords, hkl, i_calc_prefix_fs,
+                        i_calc_prefix_fs_asymmetric, nsamples_ones,
                         affine_matrices, centrosymmetric, space_group_number)
 
     chisqd = calc_chisqd(calculated_intensities, inverse_covariance_matrix,

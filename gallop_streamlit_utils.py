@@ -247,7 +247,7 @@ def sidebar():
                         min_value=1, max_value=all_settings["n_GALLOP_iters"],
                         value=10, step=1, format=None, key=None)
         else:
-            all_settings["global_update_freq"] = all_settings["n_GALLOP_iters"]+1
+            all_settings["global_update_freq"]=all_settings["n_GALLOP_iters"]+1
         st.markdown("***Advanced***")
         show_advanced_pso = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_pso")
@@ -387,8 +387,7 @@ def get_files():
                         "memory_opt", "n_swarms", "swarm_size", "global_update",
                         "global_update_freq", "c1", "c2", "inertia",
                         "inertia_bounds", "limit_velocity", "vmax", "lr"]
-            s_import = st.multiselect("",settings, default=settings,
-                                                                key="uploader")
+            s_import = st.multiselect("",settings,default=settings,key="upload")
 
     sdi = None
     gpx  = None

@@ -5,14 +5,8 @@ import numpy as np
 import torch
 import json
 import os
-from collections import OrderedDict
 import pymatgen as pmg
 from pymatgen.symmetry import groups
-from pymatgen.io import cif
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.operations import SymmOp
-from pymatgen.io.cif import CifBlock, CifFile
-from monty.io import zopen
 
 
 class Structure(object):
