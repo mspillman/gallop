@@ -73,21 +73,22 @@ class Z_matrix(object):
 
         return file_info + n_non_H_atoms + n_ref_torsions + dof
 
-    def from_json(self, attribute_string):
+    def from_json(self, attributes, is_json=True):
         """
         Load Z-matrix from a JSON formatted string
 
         Args:
             attribute_string (str): json string with all attributes of a ZM
         """
-        attributes = json.loads(attribute_string)
+        if is_json:
+            attributes = json.loads(attributes)
         for k, v in attributes.items():
             if v[1]:
                 setattr(self, k, np.array(v[0]))
             else:
                 setattr(self, k, v[0])
 
-    def to_json(self):
+    def to_json(self, return_json=True):
         """
         Save the Z-matrix to a JSON formatted string
 
@@ -102,7 +103,10 @@ class Z_matrix(object):
                 dumpable[k] = [int(v), False]
             else:
                 dumpable[k] = [v, False]
-        return json.dumps(dumpable)
+        if return_json:
+            return json.dumps(dumpable)
+        else:
+            return dumpable
 
     def get_degrees_of_freedom(self):
         if len(self.elements) == 1:

@@ -1,8 +1,11 @@
 import gallop.structure as structure
 import gallop.optimiser as optimiser
+import gallop.files as files
 import torch
-import torch.multiprocessing as mp
+import multiprocessing as mp
 import numpy as np
+import time
+import copy
 
 def multiGPU(GPU, start, end, external, internal, structure_files,
             minimiser_settings):
@@ -34,24 +37,26 @@ def multiGPU(GPU, start, end, external, internal, structure_files,
     minimiser_settings["device"] = torch.device("cuda:"+str(GPU))
     external = external[start:end]
     internal = internal[start:end]
-    struct = structure.Structure()
+    temp_struct = structure.Structure()
             #name=structure_files["name"],
             #ignore_H_atoms=structure_files["ignore_H_atoms"],
             #absorb_H_occu_increase=structure_files["absorb_H_occu_increase"])
-    struct.from_json(structure_files)
+    temp_struct.from_json(structure_files, is_json=False)
     #struct.add_data(structure_files["data_file"])
     #for zm in structure_files["zmatrices"]:
     #    struct.add_zmatrix(zm)
-    result = optimiser.minimise(struct, external=external, internal=internal,
+    result = optimiser.minimise(temp_struct, external=external, internal=internal,
                                 **minimiser_settings)
 
     result = {GPU : result}
     return result
 
 
-def minimise(i, struct, swarm, external, internal, GPU_split, minimiser_settings):
-    structure_files = struct.to_json()
+def minimise(i, struct, swarm, external, internal, GPU_split, 
+            minimiser_settings, start_time=None):
+    structure_files = struct.to_json(return_json=False)
     minimiser_settings["streamlit"] = False
+    minimiser_settings["save_CIF"] = False
     common_args = [external, internal, structure_files, minimiser_settings]
     args = []
     devices = []
@@ -66,8 +71,8 @@ def minimise(i, struct, swarm, external, internal, GPU_split, minimiser_settings
             start = end
             end = start + int(np.ceil(percentage*swarm.n_particles))
         args.append([id,start,end]+common_args)
-    args[0][-1]["streamlit"] = True
-
+    if start_time is None:
+        start_time = time.time()
     with mp.Pool(processes = len(GPU_split)) as p:
         results = p.starmap(multiGPU, args)
     p.close()
@@ -90,5 +95,6 @@ def minimise(i, struct, swarm, external, internal, GPU_split, minimiser_settings
             result["chi_2"] = np.hstack([result["chi_2"], combined[d]["chi_2"]])
         else:
             result["chi_2"] = combined[d]["chi_2"]
-
+    files.save_CIF_of_best_result(struct, result, start_time, 
+                                    minimiser_settings["n_reflections"])
     return result

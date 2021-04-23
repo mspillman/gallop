@@ -74,7 +74,7 @@ class Structure(object):
 
         Args:
             return_json (bool, optional): If True, return a JSON formatted
-                string, else return a dictionary
+                string, else return a dictionary. Default is True.
 
         Returns:
             dict or str: JSON-compatible dict or JSON formatted string
@@ -83,7 +83,7 @@ class Structure(object):
         for k, v in self.__dict__.items():
             if k in ["zmatrices", "lattice", "space_group"]:
                 if k == "zmatrices":
-                    dumpable[k] = [zm.to_json() for zm in v]
+                    dumpable[k] = [zm.to_json(return_json=return_json) for zm in v]
                 elif k == "lattice":
                     dumpable[k] = v.as_dict()
             else:
@@ -98,22 +98,25 @@ class Structure(object):
         else:
             return dumpable
 
-    def from_json(self, attribute_string):
+    def from_json(self, attributes, is_json=True):
         """
         Load a structure object from JSON formatted string
 
         Args:
-            attribute_string (str): JSON formatted string of a structure object
+            attributes (str or dict): JSON formatted string of a structure
                                     produced by the to_json method
+            is_json (bool, optional): Toggles reading dict directly or using a
+                JSON formatted string. Default is True
         """
-        attributes = json.loads(attribute_string)
+        if is_json:
+            attributes = json.loads(attributes)
         for k, v in attributes.items():
             if k in ["zmatrices", "lattice", "space_group"]:
                 if k == "zmatrices":
                     zmatrices = []
                     for zmstring in v:
                         zmat = zm.Z_matrix()
-                        zmat.from_json(zmstring)
+                        zmat.from_json(zmstring, is_json=is_json)
                         zmatrices.append(zmat)
                     setattr(self, k, zmatrices)
                 elif k == "lattice":

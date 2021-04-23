@@ -211,7 +211,7 @@ elif function == "GALLOP":
                         if (GPU_split is not None and n_GPUs >= len(GPU_split)):
                             result = multiGPU.minimise(i, struct, swarm,
                                     external, internal, GPU_split,
-                                    minimiser_settings)
+                                    minimiser_settings, start_time=start_time)
 
                         else:
                             result = optimiser.minimise(struct,
