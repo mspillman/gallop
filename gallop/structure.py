@@ -222,7 +222,7 @@ class Structure(object):
         Much of this code is directly adapted from the PyMatGen code
         for PXRD pattern generation, which can be found here:
         https://pymatgen.org/pymatgen.analysis.diffraction.xrd.html
-        A few modifications have been added to, for example, "absorb"
+        A few modifications have been made. For example, ability to "absorb"
         H atoms by increasing the atomic number used to calculate
         atomic form factors, or increase the occupancy of the non-H
         atoms.
@@ -256,13 +256,13 @@ class Structure(object):
                 all_atoms_elements = np.hstack(all_atoms_elements)
                 if self.ignore_H_atoms:
                     all_atoms_n_H_connected = np.hstack(
-                                            all_atoms_n_H_connected)
+                                                        all_atoms_n_H_connected)
                 else:
                     all_atoms_n_H_connected = np.array(
-                                            all_atoms_n_H_connected)
+                                                        all_atoms_n_H_connected)
 
                 fractional_coords = np.dot(all_atoms_coords,
-                                            self.lattice.inv_matrix)
+                                                        self.lattice.inv_matrix)
             else:
                 if self.ignore_H_atoms:
                     fractional_coords = self.cif_frac_coords_no_H
@@ -286,22 +286,20 @@ class Structure(object):
                 wxyz = np.vstack((fractional_coords.T, np.ones((1,
                                     fractional_coords.shape[0]))))
                 for am in self.affine_matrices:
-                    fractional_expanded.append(np.dot(am,
-                                                    wxyz).T[:,:3])
+                    fractional_expanded.append(np.dot(am, wxyz).T[:,:3])
                     species_expanded.append(all_atoms_elements)
-                    n_H_connected_expanded.append(
-                                            all_atoms_n_H_connected)
+                    n_H_connected_expanded.append(all_atoms_n_H_connected)
                 species_expanded = np.array(species_expanded).ravel()
                 fractional_expanded = np.vstack(fractional_expanded)
-                n_H_connected_expanded = np.hstack(
-                                            n_H_connected_expanded)
+                n_H_connected_expanded = np.hstack(n_H_connected_expanded)
             else:
                 species_expanded = all_atoms_elements
                 fractional_expanded = fractional_coords
                 if not from_cif:
                     n_H_connected_expanded = all_atoms_n_H_connected
 
-            with open(os.path.join("gallop","atomic_scattering_params.json")) as f:
+            with open(
+                os.path.join("gallop","atomic_scattering_params.json")) as f:
                 ATOMIC_SCATTERING_PARAMS = json.load(f)
             f.close()
 
@@ -388,13 +386,12 @@ class Structure(object):
             g_hkl = np.sqrt(np.sum(np.dot(self.hkl,
                 self.lattice.reciprocal_lattice_crystallographic.matrix)**2,
                 axis=1))
+            # Note that:
             # d_hkl = 1/g_hkl
             # tt = np.rad2deg(2 * np.arcsin(wavelength / (2*d_hkl)))
             # s = sin(theta) / wavelength = 1 / 2d = |ghkl| / 2 (d = 1/|ghkl|)
             # s = g_hkl / 2
-            # Store s^2 since we are using it a few times.
             s2 = (g_hkl / 2)**2
-            self.s2 = s2
 
             fs = []
             dw_correction = []
@@ -419,10 +416,15 @@ class Structure(object):
             return prefix
 
     def get_total_degrees_of_freedom(self, verbose=True):
-        """[summary]
+        """
+        Once all ZMs have been added to the structure object, interrogate them
+        to determine the total number of degrees of freedom.
+        This is automatically called by the tensor preparation code, but can
+        also be called directly to print out the information.
 
         Args:
-            verbose (bool, optional): [description]. Defaults to True.
+            verbose (bool, optional): Print out the degrees of freedom.
+                Defaults to True.
         """
         total_dof = 0
         total_external = 0
@@ -442,16 +444,19 @@ class Structure(object):
         self.total_rotation_degrees_of_freedom = total_rotation
         if verbose:
             print("Total degrees of freedom:", total_dof)
-            print("Total external degrees of freedom:", total_external, "(pos:",total_position,"rot:",total_rotation,")")
+            print("Total external degrees of freedom:", total_external,
+                "(pos:",total_position,"rot:",total_rotation,")")
             print("Total internal degrees of freedom:", total_internal)
         zm_torsions = []
         for zm in self.zmatrices:
             if self.ignore_H_atoms:
                 if zm.internal_degrees_of_freedom > 0:
-                    zm_torsions.append(zm.coords_radians_no_H[:,2][zm.torsion_refineable_indices_no_H])
+                    idx = zm.torsion_refineable_indices_no_H
+                    zm_torsions.append(zm.coords_radians_no_H[:,2][idx])
             else:
                 if zm.internal_degrees_of_freedom > 0:
-                    zm_torsions.append(zm.coords_radians[:,2][zm.torsion_refineable_indices])
+                    idx = zm.torsion_refineable_indices
+                    zm_torsions.append(zm.coords_radians[:,2][idx])
         if len(zm_torsions) > 0:
             self.zm_torsions = np.hstack(zm_torsions)
         else:
