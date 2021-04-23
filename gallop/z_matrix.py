@@ -28,24 +28,24 @@ class Z_matrix(object):
             self.torsion_connection_no_H -= 1
             # Generate some initial Cartesian coordinates for the Z-matrices
             self.initial_cartesian = self.zm_to_cart(self.coords_radians,
-                                                    self.bond_connection,
-                                                    self.angle_connection,
-                                                    self.torsion_connection)
+                                                self.bond_connection,
+                                                self.angle_connection,
+                                                self.torsion_connection)
             try:
                 self.initial_cartesian_no_H = self.zm_to_cart(
-                                                    self.coords_radians_no_H,
-                                                    self.bond_connection_no_H,
-                                                    self.angle_connection_no_H,
-                                                    self.torsion_connection_no_H)
+                                                self.coords_radians_no_H,
+                                                self.bond_connection_no_H,
+                                                self.angle_connection_no_H,
+                                                self.torsion_connection_no_H)
                 self.H_atom_torsion_defs = False
             except:
                 print("Error in Z-matrix " + self.filename + \
-                " - check to see if refineable torsions are defined in terms of \
+                ": check to see if refineable torsions are defined in terms of \
                 hydrogen atoms in original Z-matrix")
                 print("All atoms refineable torsions = ",
-                                                self.torsion_refineable.sum())
+                                            self.torsion_refineable.sum())
                 print("Non-H atoms refineable torsions = ",
-                                                self.torsion_refineable_no_H.sum())
+                                            self.torsion_refineable_no_H.sum())
                 self.H_atom_torsion_defs = True
 
             if self.bond_refineable.sum() > 0:
@@ -56,9 +56,9 @@ class Z_matrix(object):
             self.get_degrees_of_freedom()
 
             self.initial_D2      = self.get_initial_D2_for_torch(
-                            self.coords_radians, self.torsion_refineable_indices)
+                        self.coords_radians, self.torsion_refineable_indices)
             self.initial_D2_no_H = self.get_initial_D2_for_torch(
-                    self.coords_radians_no_H, self.torsion_refineable_indices_no_H)
+                self.coords_radians_no_H, self.torsion_refineable_indices_no_H)
 
     def __repr__(self):
         file_info = "Filename: " + self.filename
@@ -153,9 +153,17 @@ class Z_matrix(object):
                             dw_factors[element[-1]] = float(line[10])
                 i+=1
         in_zm.close()
-        bond_length, self.bond_connection, self.bond_refineable   = np.array(bond_length), np.array(bond_connection).astype(int), np.array(bond_refineable).astype(int)
-        angle, self.angle_connection, self.angle_refineable       = np.array(angle), np.array(angle_connection).astype(int), np.array(angle_refineable).astype(int)
-        torsion, self.torsion_connection, self.torsion_refineable = np.array(torsion), np.array(torsion_connection).astype(int), np.array(torsion_refineable).astype(int)
+        bond_length = np.array(bond_length)
+        self.bond_connection = np.array(bond_connection).astype(int)
+        self.bond_refineable = np.array(bond_refineable).astype(int)
+
+        angle = np.array(angle)
+        self.angle_connection = np.array(angle_connection).astype(int)
+        self.angle_refineable = np.array(angle_refineable).astype(int)
+
+        torsion = np.array(torsion)
+        self.torsion_connection = np.array(torsion_connection).astype(int)
+        self.torsion_refineable = np.array(torsion_refineable).astype(int)
 
         self.coords = np.array([bond_length, angle, torsion]).astype(float).T
         self.elements = element
@@ -166,14 +174,14 @@ class Z_matrix(object):
 
     def read_Gaussian_zm(self, filename):
         """
-        This might work, it might not. It's been tested very briefly on how it
+        This might work, it might not. It's been tested *very* briefly on how it
         handles rigid bodies, which appears to work fine. However, the Gaussian
         format has no flags to determine which torsion angles are refineable.
         In addition, there may be further issues with the definition of torsions
         where if one of the angles is set to refine, some of the attached atoms
         will rotate and some won't.
         A Z-matrix constructed with the MakeZmatrix.exe program that is bundled
-        with DASH is a much better option if you have that available to you.
+        with DASH is a *much* better option if you have that available to you.
         """
         variables_dict = {}
         zmat = []
@@ -196,8 +204,9 @@ class Z_matrix(object):
                             if coords:
                                 if len(line) == 7:
                                     zmat.append(line)
-                                # Replace the zeros that aren't needed in internal coordinates to bring
-                                # in line with DASH format
+                                # Replace the zeros that aren't needed in
+                                # internal coordinates to bring in line with
+                                # DASH format
                                 else:
                                     temp = []
                                     for j in range(7-len(line)):
@@ -233,13 +242,18 @@ class Z_matrix(object):
         self.torsion_refineable_indices = np.where(self.torsion_refineable == 1)[0]
 
     def remove_H_from_zm(self):
-        coords_no_H, bond_connection_no_H, angle_connection_no_H, torsion_connection_no_H = [], [], [], []
-        bond_refineable_no_H, angle_refineable_no_H, torsion_refineable_no_H, elements_no_H = [], [], [], []
+        coords_no_H, bond_connection_no_H = [], []
+        angle_connection_no_H, torsion_connection_no_H = [], []
+        bond_refineable_no_H, angle_refineable_no_H = [], []
+        torsion_refineable_no_H, elements_no_H = [], []
         old_vs_new_index = []
         n_H_connected = np.zeros_like(self.bond_connection)
         i = 1
         j = 0
-        for x in zip(self.elements, self.coords, self.bond_refineable, self.angle_refineable, self.torsion_refineable, self.bond_connection, self.angle_connection, self.torsion_connection):
+        for x in zip(self.elements, self.coords, self.bond_refineable,
+                            self.angle_refineable, self.torsion_refineable,
+                            self.bond_connection, self.angle_connection,
+                                                self.torsion_connection):
             if x[0] != "H":
                 old_vs_new_index.append([i, i-j])
                 elements_no_H.append(x[0])
@@ -262,7 +276,6 @@ class Z_matrix(object):
         bond_refineable_no_H    = np.array(bond_refineable_no_H).astype(int)
         angle_refineable_no_H   = np.array(angle_refineable_no_H).astype(int)
         torsion_refineable_no_H = np.array(torsion_refineable_no_H).astype(int)
-        #n_H_connected = n_H_connected[old_vs_new_index[:,0]-1]
         n_H_connected = n_H_connected[np.array(self.elements) != "H"]
 
         for x in old_vs_new_index:
@@ -281,9 +294,12 @@ class Z_matrix(object):
         self.elements_no_H = elements_no_H
         self.n_H_connected = n_H_connected
 
-        self.bond_refineable_indices_no_H = np.where(self.bond_refineable_no_H == 1)[0]
-        self.angle_refineable_indices_no_H = np.where(self.angle_refineable_no_H == 1)[0]
-        self.torsion_refineable_indices_no_H = np.where(self.torsion_refineable_no_H == 1)[0]
+        self.bond_refineable_indices_no_H = np.where(
+                                        self.bond_refineable_no_H == 1)[0]
+        self.angle_refineable_indices_no_H = np.where(
+                                        self.angle_refineable_no_H == 1)[0]
+        self.torsion_refineable_indices_no_H = np.where(
+                                        self.torsion_refineable_no_H == 1)[0]
 
 
     def zm_angles_to_radians(self, zm):
@@ -295,7 +311,8 @@ class Z_matrix(object):
 
     def zm_to_cart(self, zm, bond_connection, angle_connection, torsion_connection):
         """
-        Uses the Natural Extension Reference Frame method to convert from Internal to Cartesian coordinates.
+        Uses the Natural Extension Reference Frame method to convert from
+        Internal to Cartesian coordinates.
         Paper here: https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.20237
         """
 
@@ -331,7 +348,9 @@ class Z_matrix(object):
         cart = np.zeros_like(D2)
         cart[0:3] = D2[0:3]
         for i in range(3, zm.shape[0]):
-            C, B, A = cart[bond_connection[i]], cart[angle_connection[i]], cart[torsion_connection[i]]
+            C = cart[bond_connection[i]]
+            B = cart[angle_connection[i]]
+            A = cart[torsion_connection[i]]
             bc = normalize(C - B)
             AB = B - A
             n = normalize(cross_product(AB, bc))
@@ -343,24 +362,27 @@ class Z_matrix(object):
     def get_initial_D2_for_torch(self, zm, ref):
         """
         Used by PyTorch based SDPD for converting internal to external coords.
-        The idea is that the NeRF method of internal -> Cartesian uses a D2 matrix
-        The elements of this matrix can be modified to accommodate changes in the molecule
-        such as torsion angles, bond angles or bond lengths.
+        The idea is that the NeRF method of internal -> Cartesian uses a D2
+        matrix. The elements of this matrix can be modified to accommodate
+        changes in the molecule such as torsion angles, bond angles or bond
+        lengths.
 
-        Currently, only the torsion angles are refineable, and therefore the rest of the
-        D2 matrix is static. All that needs to be done is to generate the matrix as normal
-        (see paper for details) and then multiply the relevant elements by the torsion angles.
+        Currently, only the torsion angles are refineable, and therefore the
+        rest of the D2 matrix is static. All that needs to be done is to
+        generate the matrix as normal (see paper for details) and then multiply
+        the relevant elements by the torsion angles.
 
-        To accomplish this, generate the D2 matrix, then divide the relevant elements by
-        the existing refineable torsion angle values.
+        To accomplish this, generate the D2 matrix, then divide the relevant
+        elements by the existing refineable torsion angle values.
 
         Args:
             zm (numpy array): the molecular z-matrix
             ref (numpy array): The indices of the refineable torsion angles
 
         Returns:
-            numpy array: D2 matrix, with the elements that rely on the refineable torsion angles
-                        divided by the initial torsion angles, to speed up internal -> Cartesian conversion.
+            numpy array: D2 matrix, with the elements that rely on the
+                        refineable torsion angles divided by the initial torsion
+                        angles, to speed up internal -> Cartesian conversion.
         """
 
         R = zm[:,0] # lengths
