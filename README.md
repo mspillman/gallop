@@ -35,7 +35,7 @@ If you make use of GALLOP in your work, please cite the following papers:
 ### Libraries
 GALLOP makes use of a number of libraries, without which its development would have been significantly more challenging. In particular:
 
-[PyMatGen](https://pymatgen.org/) - the PXRD pattern calculator was used as the inspiration for what eventually became GALLOP. GALLOP still makes use of a number of PyMatGen features to handle things like space group symmetries.
+[PyMatGen](https://pymatgen.org/) - the PyMatGen PXRD pattern calculator was used as the inspiration for what eventually became GALLOP. GALLOP still makes use of a number of PyMatGen features to handle things like space group symmetries.
 
 [PyTorch](https://pytorch.org/) - the original code that eventually became GALLOP was originally written using numpy. PyTorch served as a near drop-in replacement that allowed automatic differentiation and running on GPUs/TPUs.
 
