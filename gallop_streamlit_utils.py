@@ -23,7 +23,8 @@ def improve_GPU_memory_use(struct, minimiser_settings):
     This works by initialising the JIT compilation to optimise for gradient-free
     chi2 calcs, which slows down the backward pass used to find the gradients,
     but reduces the memory requirements a little. Doesn't result in massive
-    benefits so not really recommended.
+    benefits so not really recommended unless you really need an extra few
+    particles.
     """
     swarm = optimiser.Swarm(Structure=struct, n_particles=1, n_swarms=1,
                             global_update_freq=20)
