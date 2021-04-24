@@ -1,6 +1,5 @@
-import gallop.tensor_prep as tensor_prep
-
 import torch
+import gallop.tensor_prep as tensor_prep
 
 
 @torch.jit.script
@@ -83,8 +82,6 @@ def get_rotation_matrices(rot):
     Get rotation matrices from quaternions
     Obtained formulae from here:
     https://uk.mathworks.com/help/robotics/ref/quaternion.rotmat.html
-    Easier than coding quaternion multiplication, and already significantly
-    faster than ZM->Cart conversion which is the main bottleneck in the code.
 
     Args:
         rot (Tensor): unit quaternions representing the rotation of a Single
@@ -225,13 +222,15 @@ def get_asymmetric_coords(external, internal, position, rotation, torsion,
                                         bond_connection[i], angle_connection[i],
                                         torsion_connection[i],
                                         torsion_refineable_indices[i])
-            else:   # Rigid body
+            else:
+                # Rigid body
                 cart_coords = init_cart_coords[i]
 
             fractional_coords = rotate_and_translate(cart_coords, R,
                                                 translation, lattice_inv_matrix)
             asymmetric_unit.append(fractional_coords)
-        else:       # Single atoms
+        else:
+            # Single atoms/ions
             fractional_coords = translation
             asymmetric_unit.append(fractional_coords)
 
@@ -243,12 +242,12 @@ def get_asymmetric_coords(external, internal, position, rotation, torsion,
 def get_asymmetric_coords_from_numpy(Structure, external, internal,
     n_samples=None, device=None, dtype=torch.float32, verbose=True):
     """
-    Convenience function mostly for saving a CIF at the end of a run.
+    Convenience function used mostly for saving a CIF at the end of a run.
 
     Args:
         Structure (class): Structure object
-        external ([type]): external degrees of freedom
-        internal ([type]): internal degrees of freedom
+        external (numpy array): external degrees of freedom
+        internal (numpy array): internal degrees of freedom
         n_samples (int, optional): The number of samples. Defaults to None,
             which results in a single set of coordinates
         device (torch device, optional): If None, will check to see if a GPU

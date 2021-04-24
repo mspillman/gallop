@@ -1,5 +1,3 @@
-import gallop.zm_to_cart as zm_to_cart
-
 import numpy as np
 import pymatgen as pmg
 from pymatgen.symmetry import groups
@@ -12,7 +10,9 @@ import time
 import os
 import pickle
 
-def get_data_from_DASH_sdi(Structure, filename, percentage_cutoff_inv_cov=20):
+import gallop.zm_to_cart as zm_to_cart
+
+def get_data_from_DASH_sdi(filename, percentage_cutoff_inv_cov=20):
     """
     Read in a DASH .sdi file to obtain numpy arrays of:
         - hkls
@@ -22,41 +22,36 @@ def get_data_from_DASH_sdi(Structure, filename, percentage_cutoff_inv_cov=20):
     As well as:
         - pymatgen lattice
         - pymatgen Space group
-        - centrosymmetric bool
-        - space group affine matrices
 
     Args:
-        Structure (class): [description]
-        filename (str): [description]
-        percentage_cutoff (int, optional):  the minimum percentage
-                        correlation to be included in the inverse
-                        covariance matrix. Defaults to 20 to be
-                        comparable with DASH, however, this doesn't
-                        affect the speed of GALLOP so can be freely
-                        set without impacting performance.
-
-    Doesn't return anything, parameters are added to the supplied
-    Structure object
+        filename (str): The filename of the .sdi to read in. The associated
+            hcv, dsl and tic files should also be in the same directory and
+            accessible.
+        percentage_cutoff (int, optional):  the minimum percentage correlation
+                        to be included in the inverse covariance matrix.
+                        Defaults to 20 to be comparable with DASH, however, this
+                        doesn't affect the speed of GALLOP on GPU so can be
+                        freely set without impacting performance.
+    Returns:
+        dict: A dictionary with the required information
     """
-    Structure.hcv, Structure.tic, Structure.dsl, Structure.unit_cell, Structure.sg_number,\
-                                Structure.sg_setting = read_DASH_sdi(filename)
-    Structure.wavelength = read_DASH_dsl(Structure.dsl)
-    Structure.original_sg_number = Structure.sg_number
-    Structure.hkl, Structure.intensities, Structure.sigma,\
-        Structure.inverse_covariance_matrix = read_DASH_hcv(
-            Structure.hcv, percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
-    Structure.twotheta = read_DASH_tic(Structure.tic)
-    Structure.lattice = pmg.Lattice.from_parameters(Structure.unit_cell[0],
-                                                    Structure.unit_cell[1],
-                                                    Structure.unit_cell[2],
-                                                    Structure.unit_cell[3],
-                                                    Structure.unit_cell[4],
-                                                    Structure.unit_cell[5])
-    Structure.space_group = groups.SpaceGroup.from_int_number(
-                                                            Structure.sg_number)
-    Structure.centrosymmetric = Structure.check_centre_of_symmetry()
-    Structure.affine_matrices = Structure.get_affine_matrices()
-    Structure.data_resolution = Structure.get_resolution(Structure.twotheta[-1])
+    data = {}
+    data["hcv"], data["tic"], data["dsl"], data["unit_cell"], \
+                data["sg_number"], data["sg_setting"] = read_DASH_sdi(filename)
+    data["wavelength"] = read_DASH_dsl(data["dsl"])
+    data["original_sg_number"] = data["sg_number"]
+    data["hkl"], data["intensities"], data["sigma"],\
+        data["inverse_covariance_matrix"] = read_DASH_hcv(
+            data["hcv"], percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
+    data["twotheta"] = read_DASH_tic(data["tic"])
+    data["lattice"] = pmg.Lattice.from_parameters(data["unit_cell"][0],
+                                                    data["unit_cell"][1],
+                                                    data["unit_cell"][2],
+                                                    data["unit_cell"][3],
+                                                    data["unit_cell"][4],
+                                                    data["unit_cell"][5])
+    data["space_group"] = groups.SpaceGroup.from_int_number(data["sg_number"])
+    return data
 
 
 def get_DASH_inverse_covariance_matrix(
@@ -75,14 +70,13 @@ def get_DASH_inverse_covariance_matrix(
         sigma (numpy array): The square-root of the diagonal elements of
             the inverse covariance matrix
         percentage_cutoff_inv_cov (int, optional): the minimum percentage
-            correlation to be included in the inverse
-            covariance matrix. Defaults to 20 to be
-            comparable with DASH, however, this doesn't
-            affect the speed of GALLOP so can be freely
-            set without impacting performance.
+            correlation to be included in the inverse covariance matrix.
+            Defaults to 20 to be comparable with DASH, however, this doesn't
+            affect the speed of GALLOP so can be freely set without impacting
+            performance.
 
     Returns:
-        [type]: [description]
+        numpy array: The inverse covariance matrix
     """
     matrix = np.zeros((len(off_diag_elements), len(off_diag_elements)))
     for i in range(0,len(off_diag_elements)):
@@ -152,6 +146,15 @@ def read_DASH_hcv(filename, percentage_cutoff_inv_cov=20):
     return hkl, I, sigma, inverse_covariance
 
 def read_DASH_dsl(filename):
+    """
+    Read a DASH dsl file to obtain the wavelength used
+
+    Args:
+        filename (str): Filename of the dsl file
+
+    Returns:
+        float: the wavelength used
+    """
     with open(filename) as in_dsl:
         for line in in_dsl:
             line = list(filter(None,line.strip().split(" ")))
@@ -210,7 +213,7 @@ def read_DASH_sdi(filename):
     return hcv, tic, dsl, unit_cell, sg, sg_setting
 
 
-def get_data_from_GSAS_gpx(Structure, filename, percentage_cutoff_inv_cov=20):
+def get_data_from_GSAS_gpx(filename, percentage_cutoff_inv_cov=20):
     """
     Read in a GSAS project file (.gpx) to obtain numpy arrays of:
         - hkls
@@ -219,11 +222,8 @@ def get_data_from_GSAS_gpx(Structure, filename, percentage_cutoff_inv_cov=20):
     As well as:
         - pymatgen lattice
         - pymatgen Space group
-        - centrosymmetric bool
-        - space group affine matrices
 
     Args:
-        Structure (class): [description]
         filename (str): [description]
         percentage_cutoff_inv_cov (int, optional):  the minimum percentage
                         correlation to be included in the inverse
@@ -231,17 +231,16 @@ def get_data_from_GSAS_gpx(Structure, filename, percentage_cutoff_inv_cov=20):
                         comparable with DASH, however, this doesn't
                         affect the speed of GALLOP so can be freely
                         set without impacting performance.
-
-    Doesn't return anything, parameters are added to the supplied
-    Structure object
+    Returns:
+        dict: A dictionary with the required information
     """
     data, names = IndexGPX(filename)
 
     instrument_params = data[names[-2][0]][names[-2][4]][0]
     if "Lam" in instrument_params.keys():
-        Structure.wavelength = instrument_params["Lam"][1]
+        wavelength = instrument_params["Lam"][1]
     elif "Lam1" in instrument_params.keys():
-        Structure.wavelength = instrument_params["Lam1"][1]
+        wavelength = instrument_params["Lam1"][1]
 
     space_group = data["Phases"][names[-1][-1]]["General"]["SGData"]["SpGrp"]
     cell = data["Phases"][names[-1][-1]]["General"]["Cell"][1:-1]
@@ -261,24 +260,22 @@ def get_data_from_GSAS_gpx(Structure, filename, percentage_cutoff_inv_cov=20):
     names_subset = data["Covariance"]["data"]["varyList"]
     names_all = data["Covariance"]["data"]["varyListStart"]
     cov_subset = data["Covariance"]["data"]["covMatrix"]
-    I_subset = data["Covariance"]["data"]["variables"]
-    sigma_subset = data["Covariance"]["data"]["sig"]
 
     intensities, inverse_covariance_matrix = get_GSAS_inv_cov_matrix(cov_subset,
                             names_all, names_subset, I,
                             percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
-
-    Structure.hkl = hkl
-    Structure.intensities = intensities
-    Structure.dspacing = dspacing
-    Structure.inverse_covariance_matrix = inverse_covariance_matrix
-    Structure.lattice = pmg.Lattice.from_parameters(cell[0], cell[1], cell[2],
+    data = {}
+    data["wavelength"] = wavelength
+    data["hkl"] = hkl
+    data["intensities"] = intensities
+    data["dspacing"] = dspacing
+    data["inverse_covariance_matrix"] = inverse_covariance_matrix
+    data["lattice"] = pmg.Lattice.from_parameters(cell[0], cell[1], cell[2],
                                                     cell[3], cell[4], cell[5])
-    Structure.space_group = pmg.symmetry.groups.SpaceGroup(space_group)
-    Structure.sg_number = int(Structure.space_group.int_number)
-    Structure.original_sg_number = Structure.sg_number
-    Structure.centrosymmetric = Structure.check_centre_of_symmetry()
-    Structure.affine_matrices = Structure.get_affine_matrices()
+    data["space_group"] = pmg.symmetry.groups.SpaceGroup(space_group)
+    data["sg_number"] = int(data["space_group"].int_number)
+    data["original_sg_number"] = data["sg_number"]
+    return data
 
 def IndexGPX(GPXfile):
     '''
@@ -304,7 +301,6 @@ def IndexGPX(GPXfile):
     '''
     gpxIndex = {}
     gpxNamelist = []
-    gpxSize = os.path.getsize(GPXfile)
     fp = open(GPXfile,'rb')
     Project = {}
     try:
@@ -326,7 +322,7 @@ def IndexGPX(GPXfile):
 def get_GSAS_inv_cov_matrix(cov_subset, names_all, names_subset, I,
                                                 percentage_cutoff_inv_cov=20):
     """
-    Inverts the covariance matrix from GSAS, and uses this to rebuild a full
+    Inverts the covariance matrix from GSAS, and use this to rebuild a full
     inverse covariance matrix that includes the hkls that were excluded in
     the GSAS-II Pawley fitting procedure (due to overlap/equivalence etc)
 
@@ -368,7 +364,7 @@ def get_GSAS_inv_cov_matrix(cov_subset, names_all, names_subset, I,
 
     # Now we have the inverse correlation rather than covariance matrix,
     # we can build it up to include all of the peaks, then rebuild the inverse
-    # covariance matrix from that. We also need to modify the intensties and
+    # covariance matrix from that. We also need to modify the intensities and
     # 1/sigmas of the peaks that were excluded from the Pawley fit.
     # Effectively, this is converting the output to look like a DASH hcv, from
     # which the same logic is then used to rebuild the inverse covariance matrix
@@ -436,6 +432,12 @@ def get_TOPAS_matrix(lines):
     """
     Read some lines from a TOPAS output file that correspond to
     a Covariance matrix and return a numpy array of the matrix
+
+    Args:
+        lines (List): List of the lines in a TOPAS output file
+
+    Returns:
+        numpy array: The topas covariance matrix
     """
     matrix = []
     for line in lines:
@@ -444,7 +446,7 @@ def get_TOPAS_matrix(lines):
             if "iprm" in line[0]:
                 try:
                     temp.append(float(item))
-                except:
+                except ValueError:
                     minus_idx = [i for i, ltr in enumerate(item) if ltr == "-"]
                     split = item.split("-")
                     if len(minus_idx) > 1:
@@ -456,15 +458,16 @@ def get_TOPAS_matrix(lines):
         matrix.append(temp)
     return np.array(matrix)
 
-def get_data_from_TOPAS_output(Structure, filename,
-                                                percentage_cutoff_inv_cov=20):
+def get_data_from_TOPAS_output(filename, percentage_cutoff_inv_cov=20):
     """
     Note: This assumes that the only refined parameters in the Pawley refinement
     are the peak intensities.
     Args:
-        Structure ([type]): [description]
         filename ([type]): [description]
         percentage_cutoff_inv_cov (int, optional): [description]. Defaults to 20
+
+    Returns:
+        dict: A dictionary of the required information
     """
 
     lines = []
@@ -531,11 +534,12 @@ def get_data_from_TOPAS_output(Structure, filename,
     # negative values on the inverse matrix diagonal which prevents me from
     # converting to the inverse correlation matrix.
     ############################################################################
-
-    Structure.hkl = hkl.astype(int)
-    Structure.intensities = I_mult_corrected
-    Structure.inverse_covariance_matrix = np.linalg.inv(C_matrix_mult_corrected)
-    Structure.lattice = pmg.Lattice.from_parameters(cell["a"],
+    data = {}
+    data["percentage_cutoff_inv_cov"] = percentage_cutoff_inv_cov
+    data["hkl"] = hkl.astype(int)
+    data["intensities"] = I_mult_corrected
+    data["inverse_covariance_matrix"] = np.linalg.inv(C_matrix_mult_corrected)
+    data["lattice"] = pmg.Lattice.from_parameters(cell["a"],
                                                     cell["b"],
                                                     cell["c"],
                                                     cell["al"],
@@ -543,13 +547,13 @@ def get_data_from_TOPAS_output(Structure, filename,
                                                     cell["ga"])
     space_group = pmg.symmetry.groups.SpaceGroup(cell["space_group"])
 
-    Structure.sg_number = int(space_group.int_number)
-    Structure.original_sg_number = Structure.sg_number
-    Structure.space_group = space_group
-    Structure.centrosymmetric = Structure.check_centre_of_symmetry()
-    Structure.affine_matrices = Structure.get_affine_matrices()
-    Structure.dspacing = dspacing
-    Structure.twotheta = twotheta
+    data["sg_number"] = int(space_group.int_number)
+    data["original_sg_number"] = data["sg_number"]
+    data["space_group"] = space_group
+    data["dspacing"] = dspacing
+    data["twotheta"] = twotheta
+    data["wavelength"] = wavelength
+    return data
 
 
 def get_CIF_atomic_coords_and_species(Structure, filename,
@@ -557,7 +561,7 @@ def get_CIF_atomic_coords_and_species(Structure, filename,
     """
     Read a CIF and extract the fractional atomic-coordinates.
     It is assumed that a GALLOP Structure object has been created
-    that already contains the correct unit cell.
+    that already contains the correct unit cell and PXRD Pawley data.
 
     These coordinates are added to the Structure object.
     Args:
@@ -609,10 +613,9 @@ class DASHCifWriter:
 
     Modification is to stop the unit cell (and hence coordinates) from being
     "standardised". This means that the output CIF is in the same setting as
-    the input data.
+    the input data which allows for easier comparison etc.
     """
-    def __init__(self, struct, symprec=None, write_magmoms=False,
-                significant_figures=8, angle_tolerance=5.0, sg_number=1,
+    def __init__(self, struct, symprec=None, significant_figures=8, sg_number=1,
                 comment=None):
         """
         Args:
@@ -620,8 +623,6 @@ class DASHCifWriter:
             symprec (float): If not none, finds the symmetry of the structure
                 and writes the cif with symmetry information. Passes symprec
                 to the SpacegroupAnalyzer.
-            write_magmoms (bool): If True, will write magCIF file. Incompatible
-                with symprec
             significant_figures (int): Specifies precision for formatting of
                 floats. Defaults to 8.
             angle_tolerance (float): Angle tolerance for symmetry finding.
@@ -652,7 +653,7 @@ class DASHCifWriter:
         block["_chemical_formula_sum"] = no_oxi_comp.formula
         block["_cell_volume"] = format_str.format(latt.volume)
 
-        reduced_comp, fu = no_oxi_comp.get_reduced_composition_and_factor()
+        _, fu = no_oxi_comp.get_reduced_composition_and_factor()
         block["_cell_formula_units_Z"] = str(int(fu))
 
         if symprec is None:
@@ -695,10 +696,6 @@ class DASHCifWriter:
         atom_site_fract_z = []
         atom_site_label = []
         atom_site_occupancy = []
-        atom_site_moment_label = []
-        atom_site_moment_crystalaxis_x = []
-        atom_site_moment_crystalaxis_y = []
-        atom_site_moment_crystalaxis_z = []
         count = 0
         for site in struct:
             for sp, occu in sorted(site.species.items()):
@@ -732,20 +729,20 @@ class DASHCifWriter:
         comment_for_file = "# Generated using pymatgen and GALLOP"
         if comment is not None:
             comment_for_file += "\n" + comment
-        self._cf = CifFile(d, comment=comment_for_file)
+        self.cf = CifFile(d, comment=comment_for_file)
 
     @property
     def ciffile(self):
         """
         Returns: CifFile associated with the CifWriter.
         """
-        return self._cf
+        return self.cf
 
     def __str__(self):
         """
         Returns the cif as a string.
         """
-        return self._cf.__str__()
+        return self.cf.__str__()
 
     def write_file(self, filename):
         """
@@ -783,6 +780,9 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
         n_reflections = len(Structure.hkl)
     elif n_reflections > len(Structure.hkl):
         n_reflections = len(Structure.hkl)
+    # For the purpose of outputting a CIF, include the H-atoms back in. However,
+    # the GALLOP runs may not be finished, so save whatever the parameter is set
+    # to, then restore this setting once the CIF has been written.
     ignore_H_setting = Structure.ignore_H_atoms
 
     Structure.ignore_H_atoms = False
@@ -794,9 +794,6 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
 
     species = []
     for zm in Structure.zmatrices:
-        #if Structure.ignore_H_atoms:
-        #    species += zm.elements_no_H
-        #else:
         species += zm.elements
 
     output_structure = pmg.Structure(lattice=Structure.lattice, species=species,
@@ -821,11 +818,11 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
         filename = (filename_root
                 + "_{:04d}_{:.3f}_chisqd_{}_refs.cif")
         filename = filename.format(run, chi_2.min(), n_reflections)
-    ciffile = writer._cf.data[list(writer._cf.data.keys())[0]]
+    ciffile = writer.cf.data[list(writer.cf.data.keys())[0]]
     # Add the filename to the data_ string in the CIF to make it easier to
     # navigate multiple structures in Mercury
     ciffile.header = filename
-    writer._cf.data = {filename : ciffile}
+    writer.cf.data = {filename : ciffile}
     writer.write_file(filename)
-
+    # Restore the Structure ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting

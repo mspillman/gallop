@@ -1,11 +1,31 @@
 import numpy as np
 import json
 
-"""
-TODO - extract occupancies from the ZM
-"""
+#
+# Things to add - extract occupancies from the ZM
+#
 
 class Z_matrix(object):
+    """
+    The GALLOP representation of Z-matrices.
+    This has convenience methods for reading in DASH Z-matrices, as well as
+    a very limited capability to read in gaussian formatted Z-matrices.
+    Methods are included to strip out hydrogen atoms, as well as generate
+    Cartesian coordinates.
+
+    One common issue that is encountered is when refineable torsion angles are
+    defined in terms of hydrogen atoms. This causes the method to remove the H
+    atoms to fail.
+
+    A simple fix for this is to:
+        1. If not already available, generate a CIF of the structure from which
+            the ZMs are being derived.
+        2. Reorder the atoms in the CIF such that all non-H atoms come first.
+        3. Regenerate the ZMs using makeZmatrix.exe (bundled with DASH)
+
+    The new ZMs will no longer have H-atoms defining torsion angles and should
+    not give any errors with this class.
+    """
     def __init__(self, filename=None, zmformat="DASH"):
         if filename is not None:
             # Read in the Z-matrix
@@ -38,7 +58,7 @@ class Z_matrix(object):
                                                 self.angle_connection_no_H,
                                                 self.torsion_connection_no_H)
                 self.H_atom_torsion_defs = False
-            except:
+            except IndexError:
                 print("Error in Z-matrix " + self.filename + \
                 ": check to see if refineable torsions are defined in terms of \
                 hydrogen atoms in original Z-matrix")
@@ -122,15 +142,22 @@ class Z_matrix(object):
             self.rotation_degrees_of_freedom = 4
             self.internal_degrees_of_freedom = self.torsion_refineable.sum()
 
-    def update_refineable_indices(self):
-        self.bond_refineable_indices = np.where(self.bond_refineable == 1)[0]
-        self.angle_refineable_indices = np.where(self.angle_refineable == 1)[0]
-        self.torsion_refineable_indices = np.where(
-                                                self.torsion_refineable == 1)[0]
-        self.remove_H_from_zm()
-        self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
+    #def update_refineable_indices(self):
+    #    self.bond_refineable_indices = np.where(self.bond_refineable == 1)[0]
+    #    self.angle_refineable_indices = np.where(self.angle_refineable == 1)[0]
+    #    self.torsion_refineable_indices = np.where(
+    #                                           self.torsion_refineable == 1)[0]
+    #    self.remove_H_from_zm()
+    #    self.coords_radians_no_H = self.zm_angles_to_radians(self.coords_no_H)
 
     def read_DASH_zm(self, input_filename):
+        """
+        Read in a DASH Z-matrix
+
+        Args:
+            input_filename (string): filename of ZM to read in. Expected to be
+            in the current directory, or a properly formatted path.
+        """
         element = []
         dw_factors = {}
         bond_length, bond_connection, bond_refineable = [], [], []
@@ -140,22 +167,22 @@ class Z_matrix(object):
             i = 0
             for line in in_zm:
                 line = list(filter(None, line.strip().split(" ")))
-                if i > 1:
-                    if i == 2:
-                        natoms = int(line[0])
-                    else:
-                        element.append(line[0])
-                        bond_length.append(line[1])
-                        bond_refineable.append(line[2])
-                        bond_connection.append(line[7])
-                        angle.append(line[3])
-                        angle_refineable.append(line[4])
-                        angle_connection.append(line[8])
-                        torsion.append(line[5])
-                        torsion_refineable.append(line[6])
-                        torsion_connection.append(line[9])
-                        if element[-1] not in dw_factors:
-                            dw_factors[element[-1]] = float(line[10])
+                if i > 2:
+                    #if i == 2:
+                    #    natoms = int(line[0])
+                    #else:
+                    element.append(line[0])
+                    bond_length.append(line[1])
+                    bond_refineable.append(line[2])
+                    bond_connection.append(line[7])
+                    angle.append(line[3])
+                    angle_refineable.append(line[4])
+                    angle_connection.append(line[8])
+                    torsion.append(line[5])
+                    torsion_refineable.append(line[6])
+                    torsion_connection.append(line[9])
+                    if element[-1] not in dw_factors:
+                        dw_factors[element[-1]] = float(line[10])
                 i+=1
         in_zm.close()
         bond_length = np.array(bond_length)
@@ -187,7 +214,7 @@ class Z_matrix(object):
         where if one of the angles is set to refine, some of the attached atoms
         will rotate and some won't.
         A Z-matrix constructed with the MakeZmatrix.exe program that is bundled
-        with DASH is a *much* better option if you have that available to you.
+        with DASH is a *much* better option if it is available.
         """
         variables_dict = {}
         zmat = []
@@ -249,6 +276,9 @@ class Z_matrix(object):
                                                 self.torsion_refineable == 1)[0]
 
     def remove_H_from_zm(self):
+        """
+        Remove hydrogen atoms from the Z-matrix.
+        """
         coords_no_H, bond_connection_no_H = [], []
         angle_connection_no_H, torsion_connection_no_H = [], []
         bond_refineable_no_H, angle_refineable_no_H = [], []
@@ -310,6 +340,19 @@ class Z_matrix(object):
 
 
     def zm_angles_to_radians(self, zm):
+        """
+        Convert angles from degrees to radians
+
+        Args:
+            zm (numpy array): the Z-matrix coordinates array, shape = n_atoms, 3
+                where the second and third columns are bond angles and torsions
+                in degrees.
+
+        Returns:
+            numpy array: Z-matrix coordinates array, shape = n_atoms, 3
+                where the second and third columns are bond angles and torsions
+                in radians.
+        """
         zm_radians = np.copy(zm)
         zm_radians[:,1] = np.deg2rad(zm_radians[:,1])
         zm_radians[:,2] = np.deg2rad(zm_radians[:,2])

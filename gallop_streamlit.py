@@ -1,24 +1,20 @@
-#GALLOP related
+import time
+import os
+import glob
+import base64
+import json
+import datetime
+from zipfile import ZipFile, ZIP_DEFLATED
+import torch
+import streamlit as st
+import numpy as np
+import pandas as pd
+import altair as alt
 import gallop_streamlit_utils as gsu
 import gallop.z_matrix as z_matrix
 import gallop.optimiser as optimiser
 import gallop.structure as structure
 import gallop.multiGPU as multiGPU
-
-#Others needed
-import streamlit as st
-import numpy as np
-import pandas as pd
-import time
-import torch
-import torch.multiprocessing as mp
-import os
-import altair as alt
-from zipfile import ZipFile, ZIP_DEFLATED
-import glob
-import base64
-import json
-import datetime
 
 st.set_page_config(page_title='GALLOP WebApp', page_icon = None,
                     layout = 'centered', initial_sidebar_state = 'auto')
@@ -52,7 +48,7 @@ elif function == "GALLOP":
         st.write("No files uploaded. Upload files or select from examples")
     elif all_files and len(zms) > 0:
         if load_settings and json_settings is not None:
-                all_settings.update(json_settings)
+            all_settings.update(json_settings)
 
         st.text("")
         st.text("")
@@ -69,7 +65,8 @@ elif function == "GALLOP":
             else:
                 structure_name = os.path.split(out)[-1].split(".out")[0]
             all_settings["structure_name"] = structure_name
-        struct = structure.Structure(name=all_settings["structure_name"],
+        struct = structure.Structure(
+                                name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
         if pawley_program == "DASH":
             struct.add_data(sdi)
@@ -81,11 +78,11 @@ elif function == "GALLOP":
             check = z_matrix.Z_matrix(z)
             if all_settings["ignore_H_atoms"] and not check.H_atom_torsion_defs:
                 struct.add_zmatrix(z)
-            elif ignore_H_atoms and check.H_atom_torsion_defs:
-                st.markdown("**Problem with z-matrix "+z+" - H-atoms used to \
-                    define refineable torsion angles. Please generate a new ZM \
-                    to allow H-atoms to be ignored or refresh the page and \
-                    uncheck the ignore H atoms box.**")
+            elif all_settings["ignore_H_atoms"] and check.H_atom_torsion_defs:
+                st.markdown("**Problem with z-matrix "+z+" - H-atoms used to "
+                    "define refineable torsion angles. Please generate a new ZM "
+                    "to allow H-atoms to be ignored or refresh the page and "
+                    "uncheck the ignore H atoms box.**")
                 st.write("Attempting to continue with H-atoms included")
                 struct.ignore_H_atoms = False
                 struct.add_zmatrix(z)
@@ -105,8 +102,8 @@ elif function == "GALLOP":
         minimiser_settings["n_iterations"] = all_settings["n_LO_iters"]
         minimiser_settings["learning_rate_schedule"] = \
                                         all_settings["learning_rate_schedule"]
-        n_refs = int(np.ceil(
-                (all_settings["reflection_percentage"]/100.)*len(struct.hkl)))
+        n_refs = int(np.ceil((all_settings["reflection_percentage"]/100.)
+                    *len(struct.hkl)))
         if n_refs > len(struct.hkl):
             n_refs = len(struct.hkl)
         minimiser_settings["n_reflections"] = n_refs
@@ -129,8 +126,8 @@ elif function == "GALLOP":
 
         if all_settings["memory_opt"]:
             gsu.improve_GPU_memory_use(struct, minimiser_settings)
-            st.write("Attempting to reduce GPU memory use at the expense of\
-                    reduced Local Optimisation speed")
+            st.write("Attempting to reduce GPU memory use at the expense of "
+                    "reduced Local Optimisation speed")
         n_particles = all_settings["swarm_size"]*all_settings["n_swarms"]
         swarm = optimiser.Swarm(
                     Structure = struct,
@@ -157,18 +154,20 @@ elif function == "GALLOP":
         st.write("")
         st.markdown("**Progress**")
         if all_settings["find_lr"]:
-            all_settings, minimiser_settings = gsu.find_learning_rate(
-                                                all_settings,
-                                                minimiser_settings, struct,
-                                                external, internal)
+            all_settings, minimiser_settings, failed = gsu.find_learning_rate(
+                                                            all_settings,
+                                                            minimiser_settings,
+                                                            struct,
+                                                            external,
+                                                            internal)
         else:
             minimiser_settings["learning_rate"] = all_settings["lr"]
 
         if not failed:
             # Now dump all of the settings used to a JSON so it can be inspected
-            # and even read in at a later stage.
-            with open(os.path.join(os.getcwd(),
-                                struct.name+"_GALLOP_Settings.json"), "w") as f:
+            # or read in at a later stage.
+            settings_file = struct.name+"_GALLOP_Settings.json"
+            with open(os.path.join(os.getcwd(),settings_file), "w") as f:
                 json.dump(all_settings, f, indent=4)
             f.close()
 
@@ -219,18 +218,18 @@ elif function == "GALLOP":
                                                 internal=internal,
                                                 run=i, start_time=start_time,
                                                 **minimiser_settings)
-                    except Exception as e:
+                    except RuntimeError as e:
                         if "memory" in str(e):
                             st.error("GPU memory error! Reset GALLOP, then:")
-                            st.error("Try reducing number of particles, the \
-                                    number of reflections or use the Reduce \
-                                    performance option in Local optimiser \
-                                    settings.")
+                            st.write("Try reducing number of particles, the "
+                                    "number of reflections or use the Reduce "
+                                    "performance option in Local optimiser "
+                                    "settings.")
                             st.write("Error code below:")
                             st.write("")
                             st.text(str(e))
                         else:
-                            st.write("An error occurred:")
+                            st.error("An unknown error occurred:")
                             st.text(str(e))
                         break
                 chi_2 = result["chi_2"]
@@ -258,8 +257,8 @@ elif function == "GALLOP":
                     zipObj.close()
                     filename = zipname.split(date)[1].strip("\\")
                     with open(os.path.join(os.getcwd(), zipname), "rb") as f:
-                        bytes = f.read()
-                        b64 = base64.b64encode(bytes).decode()
+                        file_bytes = f.read()
+                        b64 = base64.b64encode(file_bytes).decode()
                         href = f'<a href="data:file/zip;base64,{b64}\
                                 " download=\'{filename}\'>\
                                 Click for CIFs</a>'
@@ -271,10 +270,10 @@ elif function == "GALLOP":
                     st.write("")
                     st.write("")
                     labels = np.ones_like(chi_2)
-                    for i in range(all_settings["n_swarms"]):
-                        begin = i*all_settings["swarm_size"]
-                        end = (i+1)*all_settings["swarm_size"]
-                        labels[begin:end] *= i
+                    for j in range(all_settings["n_swarms"]):
+                        begin = j*all_settings["swarm_size"]
+                        end = (j+1)*all_settings["swarm_size"]
+                        labels[begin:end] *= j
                         labels[begin:end] += 1
                     chi2_info = pd.DataFrame({
                         "chi2" : chi_2,
@@ -291,4 +290,3 @@ elif function == "GALLOP":
 
                 external, internal = swarm.update_position(result=result,
                                                             verbose=False)
-

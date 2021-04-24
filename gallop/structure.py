@@ -1,13 +1,10 @@
-import gallop.z_matrix as zm
-import gallop.files as files
-
-import numpy as np
-import torch
 import json
 import os
+import numpy as np
 import pymatgen as pmg
 from pymatgen.symmetry import groups
-
+import gallop.z_matrix as zm
+import gallop.files as files
 
 class Structure(object):
     """
@@ -61,8 +58,34 @@ class Structure(object):
         self.zmatrices = []
         self.absorb_H_Z_increase = absorb_H_Z_increase
         self.absorb_H_occu_increase = absorb_H_occu_increase
+
         self.original_sg_number = None
         self.total_dof_calculated = False
+        self.sg_number = None
+        self.wavelength = None
+        self.hkl = None
+        self.twotheta = []
+        self.space_group = None
+        self.lattice = None
+        self.cif_frac_coords_no_H = None
+        self.cif_species_no_H = None
+        self.cif_frac_coords = None
+        self.cif_species = None
+        self.data_file = None
+        self.dspacing = None
+        self.data_resolution = None
+        self.source = None
+        self.centrosymmetric = None
+        self.affine_matrices = None
+        self.cif_dwfactors = None
+        self.dwfactors_asymmetric = None
+        self.dwfactors = None
+        self.total_degrees_of_freedom = None
+        self.total_external_degrees_of_freedom = None
+        self.total_internal_degrees_of_freedom = None
+        self.total_position_degrees_of_freedom = None
+        self.total_rotation_degrees_of_freedom = None
+        self.zm_torsions = None
 
     def __repr__(self):
         return self.name
@@ -127,8 +150,8 @@ class Structure(object):
                     setattr(self, k, np.array(v[0]))
                 else:
                     setattr(self, k, v[0])
-        setattr(self, "space_group",groups.SpaceGroup.from_int_number(
-                                                                self.sg_number))
+        setattr(self, "space_group",
+                        groups.SpaceGroup.from_int_number(self.sg_number))
 
     def add_zmatrix(self, filename, verbose=True):
         """
@@ -158,7 +181,7 @@ class Structure(object):
         return (np.around(d, decimal_places))
 
     def add_data(self, filename, source="DASH",
-                percentage_cutoff_inv_cov=20):
+                percentage_cutoff=20):
         """
         Add PXRD data to a Z-matrix
 
@@ -175,35 +198,39 @@ class Structure(object):
         """
         self.data_file = filename
         if source.lower() == "dash":
-            files.get_data_from_DASH_sdi(self,filename,
-                        percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
+            data = files.get_data_from_DASH_sdi(filename,
+                        percentage_cutoff_inv_cov=percentage_cutoff)
+            for k, v in data.items():
+                setattr(self, k, v)
             self.dspacing = self.get_resolution(self.twotheta)
             self.data_resolution = self.get_resolution(self.twotheta[-1])
             self.source = "dash"
         elif "gsas" in source.lower():
-            files.get_data_from_GSAS_gpx(self,filename,
-                            percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
+            data = files.get_data_from_GSAS_gpx(filename,
+                            percentage_cutoff_inv_cov=percentage_cutoff)
+            for k, v in data.items():
+                setattr(self, k, v)
             self.data_resolution = self.dspacing[-1]
             self.source = "gsas"
         elif "topas" == source.lower():
-            files.get_data_from_TOPAS_output(self,filename,
-                            percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
+            data = files.get_data_from_TOPAS_output(filename,
+                            percentage_cutoff_inv_cov=percentage_cutoff)
+            for k, v in data.items():
+                setattr(self, k, v)
             self.source = "topas"
-
         else:
             print("This program is not yet supported.")
             print("Currently supported programs:")
             print(" - DASH")
             print(" - GSAS-II")
-            #print(" - TOPAS")
+            print(" - TOPAS")
+        self.centrosymmetric = self.check_centre_of_symmetry()
+        self.affine_matrices = self.get_affine_matrices()
 
     def check_centre_of_symmetry(self):
         """
         Check if a structure is centrosymmetric
 
-        Args:
-            Structure (class):  GALLOP Structure with a space_group
-                                assigned
         Returns:
             bool: True if centrosymmetric
         """
@@ -231,7 +258,7 @@ class Structure(object):
         return np.array(affine_matrices)
 
     def generate_intensity_calculation_prefix(self,
-                                            debye_waller_factors={},
+                                            debye_waller_factors=None,
                                             just_asymmetric=False,
                                             from_cif=False):
         """
@@ -249,6 +276,8 @@ class Structure(object):
         This can either just be the atoms in the asymmetric unit,
         or the whole unit cell.
         """
+        if debye_waller_factors is None:
+            debye_waller_factors = {}
         if len(self.zmatrices) == 0 and not from_cif:
             print("No Z-matrices have been added!")
         else:
@@ -256,26 +285,24 @@ class Structure(object):
                 all_atoms_coords = []
                 all_atoms_elements = []
                 all_atoms_n_H_connected = []
-                for zm in self.zmatrices:
+                for zmat in self.zmatrices:
                     if self.ignore_H_atoms:
                         all_atoms_coords.append(
-                            zm.initial_cartesian_no_H)
+                            zmat.initial_cartesian_no_H)
                         all_atoms_elements.append(
-                            zm.elements_no_H)
+                            zmat.elements_no_H)
                         all_atoms_n_H_connected.append(
-                            zm.n_H_connected)
+                            zmat.n_H_connected)
                     else:
-                        all_atoms_coords.append(zm.initial_cartesian)
-                        all_atoms_elements.append(zm.elements)
+                        all_atoms_coords.append(zmat.initial_cartesian)
+                        all_atoms_elements.append(zmat.elements)
 
                 all_atoms_coords = np.vstack(all_atoms_coords)
                 all_atoms_elements = np.hstack(all_atoms_elements)
                 if self.ignore_H_atoms:
-                    all_atoms_n_H_connected = np.hstack(
-                                                        all_atoms_n_H_connected)
+                    all_atoms_n_H_connected = np.hstack(all_atoms_n_H_connected)
                 else:
-                    all_atoms_n_H_connected = np.array(
-                                                        all_atoms_n_H_connected)
+                    all_atoms_n_H_connected = np.array(all_atoms_n_H_connected)
 
                 fractional_coords = np.dot(all_atoms_coords,
                                                         self.lattice.inv_matrix)
@@ -289,20 +316,19 @@ class Structure(object):
                 just_asymmetric = True
 
             if not just_asymmetric:
-                """
-                Apply symmetry of space group to locate all atoms
-                within the unit cell. This is a dummy structure,
-                and the purpose is only to extract the atomic
-                scattering parameters etc, which are independent
-                of position in the unit cell.
-                """
+                # Apply symmetry of space group to locate all atoms
+                # within the unit cell. This is a dummy structure,
+                # and the purpose is only to extract the atomic
+                # scattering parameters etc, which are independent
+                # of position in the unit cell.
                 species_expanded = []
                 fractional_expanded = []
                 n_H_connected_expanded = []
-                wxyz = np.vstack((fractional_coords.T, np.ones((1,
+                xyzw = np.vstack((fractional_coords.T, np.ones((1,
                                     fractional_coords.shape[0]))))
                 for am in self.affine_matrices:
-                    fractional_expanded.append(np.dot(am, wxyz).T[:,:3])
+                    expanded = np.array(np.dot(am, xyzw).T)
+                    fractional_expanded.append(expanded[:,:3])
                     species_expanded.append(all_atoms_elements)
                     n_H_connected_expanded.append(all_atoms_n_H_connected)
                 species_expanded = np.array(species_expanded).ravel()
@@ -323,7 +349,7 @@ class Structure(object):
             coeffs = []
             occus = []
             dwfactors = []
-            atomic_symbols = {
+            atomic_numbers = {
                 1 : "H", 2 : "He", 3 : "Li", 4 : "Be", 5 : "B",
                 6 : "C", 7 : "N", 8 : "O", 9 : "F", 10 : "Ne",
                 11 : "Na", 12 : "Mg", 13 : "Al", 14 : "Si", 15 : "P",
@@ -362,10 +388,9 @@ class Structure(object):
             i = 0
             for site in dummy_structure:
                 for sp in site.species:
-                    if ((not from_cif)
-                        and self.ignore_H_atoms
-                        and self.absorb_H_Z_increase):
-                            zs.append(sp.Z+n_H_connected_expanded[i])
+                    if ((not from_cif) and self.ignore_H_atoms \
+                                                and self.absorb_H_Z_increase):
+                        zs.append(sp.Z+n_H_connected_expanded[i])
                     else:
                         zs.append(sp.Z)
                     try:
@@ -373,14 +398,14 @@ class Structure(object):
                             and self.ignore_H_atoms
                             and self.absorb_H_Z_increase):
                             new_Z = sp.Z+n_H_connected_expanded[i]
-                            c = ATOMIC_SCATTERING_PARAMS[atomic_symbols[new_Z]]
+                            c = ATOMIC_SCATTERING_PARAMS[atomic_numbers[new_Z]]
                         else:
                             c = ATOMIC_SCATTERING_PARAMS[sp.symbol]
-                    except KeyError:
+                    except KeyError as no_key:
                         raise ValueError("Unable to calculate intensity \
                                         calculation prefix arrays"
                                         "there are no scattering coefficients\
-                                        for:" " %s." % sp.symbol)
+                                        for:" " %s." % sp.symbol) from no_key
                     coeffs.append(c)
                     dwfactors.append(debye_waller_factors.get(sp.symbol, 0))
                     # DOUBLE CHECK THIS IS CORRECT FOR OCCUPANCY != 1
@@ -447,12 +472,12 @@ class Structure(object):
         total_internal = 0
         total_position = 0
         total_rotation = 0
-        for zm in self.zmatrices:
-            total_dof += zm.degrees_of_freedom
-            total_external += zm.external_degrees_of_freedom
-            total_internal += zm.internal_degrees_of_freedom
-            total_position += zm.position_degrees_of_freedom
-            total_rotation += zm.rotation_degrees_of_freedom
+        for zmat in self.zmatrices:
+            total_dof += zmat.degrees_of_freedom
+            total_external += zmat.external_degrees_of_freedom
+            total_internal += zmat.internal_degrees_of_freedom
+            total_position += zmat.position_degrees_of_freedom
+            total_rotation += zmat.rotation_degrees_of_freedom
         self.total_degrees_of_freedom = total_dof
         self.total_external_degrees_of_freedom = total_external
         self.total_internal_degrees_of_freedom = total_internal
@@ -464,15 +489,15 @@ class Structure(object):
                 "(pos:",total_position,"rot:",total_rotation,")")
             print("Total internal degrees of freedom:", total_internal)
         zm_torsions = []
-        for zm in self.zmatrices:
+        for zmat in self.zmatrices:
             if self.ignore_H_atoms:
-                if zm.internal_degrees_of_freedom > 0:
-                    idx = zm.torsion_refineable_indices_no_H
-                    zm_torsions.append(zm.coords_radians_no_H[:,2][idx])
+                if zmat.internal_degrees_of_freedom > 0:
+                    idx = zmat.torsion_refineable_indices_no_H
+                    zm_torsions.append(zmat.coords_radians_no_H[:,2][idx])
             else:
-                if zm.internal_degrees_of_freedom > 0:
-                    idx = zm.torsion_refineable_indices
-                    zm_torsions.append(zm.coords_radians[:,2][idx])
+                if zmat.internal_degrees_of_freedom > 0:
+                    idx = zmat.torsion_refineable_indices
+                    zm_torsions.append(zmat.coords_radians[:,2][idx])
         if len(zm_torsions) > 0:
             self.zm_torsions = np.hstack(zm_torsions)
         else:

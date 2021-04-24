@@ -1,20 +1,20 @@
+import torch
+
 import gallop.intensities as intensities
 import gallop.zm_to_cart as zm_to_cart
 import gallop.tensor_prep as tensor_prep
 
-import torch
-
 @torch.jit.script
-def calc_chisqd(intensities, inverse_covariance_matrix, observed_intensities,
-    sum_1_1):
+def calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+        observed_intensities, sum_1_1):
     """
     Given sets of calculated intensities, the Pawley-derived inverse covariance
     matrix, and the extracted observed intensities, calculate chi2 according to
     the equation described by David et al.
 
     Args:
-        intensities (Tensor): Tensor of shape (n_samples, n_peaks) containing
-            the calculated intensity of each hkl
+        calculated_intensities (Tensor): Tensor of shape (n_samples, n_peaks)
+            containing the calculated intensity of each hkl
         inverse_covariance_matrix (Tensor): Tensor of shape (n_peaks, n_peaks)
             obtained from the Pawley fit of the diffraction data
         observed_intensities (Tensor): Tensor of shape (n_peaks,) - observed
@@ -26,23 +26,24 @@ def calc_chisqd(intensities, inverse_covariance_matrix, observed_intensities,
     Returns:
         Tensor: the chi2 value for each calculated pattern
     """
-    sum_1_2 = torch.einsum("ij,j->i",intensities,sum_1_1)
+    sum_1_2 = torch.einsum("ij,j->i",calculated_intensities,sum_1_1)
 
-    sum_2_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix, intensities)
-    sum_2_2 = torch.einsum("ij,ij->i",intensities,sum_2_1)
+    sum_2_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,
+                                        calculated_intensities)
+    sum_2_2 = torch.einsum("ij,ij->i",calculated_intensities,sum_2_1)
 
     # Scaling factor for calculated intensities.
     scale = (sum_1_2 / sum_2_2).reshape(-1,1)
 
     # Difference between observed and scaled calculated intensities
-    diff = observed_intensities.repeat(intensities.shape[0],1)\
-            - (intensities*scale)
+    diff = observed_intensities.repeat(calculated_intensities.shape[0],1)\
+            - (calculated_intensities*scale)
 
     # Finally calculate chisqd - d.A.d
     chi_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,diff) # A.d
     chi_2 = torch.einsum("ij,ij->i",diff,chi_1) # d.(A.d)
 
-    return chi_2 / (intensities.shape[1] - 2)
+    return chi_2 / (calculated_intensities.shape[1] - 2)
 
 
 

@@ -1,19 +1,18 @@
 import torch
 
 # Not PEP8 compliant in most of the file but it's nicer to have equations on
-# one line - it looks ugly otherwise!
+# one line - it looks ugly otherwise! Widescreen monitor advised :)
 
 @torch.jit.script
 def get_symmetry_equivalent_points(frac_coords, nsamples_ones, affine_matrices):
     """
-    This code is a generic way to find all symmetry related points in the unit
-    cell from the affine-matrices of the space group. There are faster ways
+    This code is a generic way to find all symmetry related positions in the
+    unit cell from the affine-matrices of the space group. There are faster ways
     to generate intensities for some space groups, but these need to be coded
     separately. This function works in the generic case.
     """
     wxyz = torch.cat((frac_coords, nsamples_ones), dim=-1)
     frac_all = torch.einsum("bij,nkj->nbik",wxyz,affine_matrices)[:,:,:,:3]
-    #return torch.cat([x for x in frac_all], dim=1)
     n_samples = frac_coords.shape[0]
     n_atoms = frac_coords.shape[1]*affine_matrices.shape[0]
     return frac_all.permute(1,0,2,3).reshape(n_samples,n_atoms,3)
@@ -90,7 +89,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 3:
         # P2
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
         ky = 2 * pi * torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
 
         chl = torch.cos(hl)
@@ -105,8 +105,11 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 4:
         # P21
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + hkl[1].view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - hkl[1].view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + hkl[1].view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - hkl[1].view(1,peaks,1)/4)
 
         chl = torch.cos(hl)
         cky = torch.cos(ky)
@@ -127,7 +130,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         # B = 4 * cos(2pi (h+k/4))*cos(2pi(hx+lz))*sin(2piky)
         # This would require a minimum of 3 x trig functions to determine
         # whereas the following only requires 2.
-        chl = torch.cos(2. * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])))
+        chl = torch.cos(2.*pi*(torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                                + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])))
         ky = 2 * pi * torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
 
         A = 4 * chl * torch.cos(ky)
@@ -139,8 +143,11 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 7:
         # Pc
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + hkl[2].view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - hkl[2].view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + hkl[2].view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - hkl[2].view(1,peaks,1)/4)
 
         chl = torch.cos(hl)
         shl = torch.sin(hl)
@@ -154,8 +161,11 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 9:
         # Cc
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + hkl[2].view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - hkl[2].view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + hkl[2].view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - hkl[2].view(1,peaks,1)/4)
         hk = (2 * pi * (hkl[0] + hkl[1])/4).view(1,peaks,1)
 
         chl = torch.cos(hl)
@@ -171,15 +181,19 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 11:
         # P21/m
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + hkl[1].view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - hkl[1].view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + hkl[1].view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - hkl[1].view(1,peaks,1)/4)
 
         A = 4 * torch.cos(hl) * torch.cos(ky)
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 12:
         # C2/m
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
         ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]))
         hk = (2 * pi * (hkl[0] + hkl[1])/4).view(1,peaks,1)
         c_sqd_hk = torch.cos(hk)**2
@@ -188,32 +202,44 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 13:
         # P2/c
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + hkl[2].view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - hkl[2].view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + hkl[2].view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - hkl[2].view(1,peaks,1)/4)
         A = 4 * torch.cos(hl) * torch.cos(ky)
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 14:
         # P21/c
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + (hkl[1] + hkl[2]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - (hkl[1] + hkl[2]).view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + (hkl[1] + hkl[2]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - (hkl[1] + hkl[2]).view(1,peaks,1)/4)
         A = 4 * torch.cos(hl) * torch.cos(ky)
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 15:
         # C2/c
         # The initial term involving only h and k could be calculated in advance.
-        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + hkl[2].view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - hkl[2].view(1,peaks,1)/4)
+        hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + hkl[2].view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - hkl[2].view(1,peaks,1)/4)
 
-        A = 8 * ((torch.cos((2 * pi * (hkl[0] + hkl[1]))/4))**2).view(1,peaks,1) * torch.cos(hl) * torch.cos(ky)
+        A = 8 * (((torch.cos((2 * pi * (hkl[0] + hkl[1]))/4))**2).view(1,peaks,1)
+                    * torch.cos(hl) * torch.cos(ky))
 
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 18:
         # P21212
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + (hkl[0] + hkl[1]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - (hkl[0] + hkl[1]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + (hkl[0] + hkl[1]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - (hkl[0] + hkl[1]).view(1,peaks,1)/4)
         lz = 2 * pi * torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
 
         chx = torch.cos(hx)
@@ -233,9 +259,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 19:
         # P212121
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) - (hkl[0] - hkl[1]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - (hkl[1] - hkl[2]).view(1,peaks,1)/4)
-        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) - (hkl[2] - hkl[0]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        - (hkl[0] - hkl[1]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - (hkl[1] - hkl[2]).view(1,peaks,1)/4)
+        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        - (hkl[2] - hkl[0]).view(1,peaks,1)/4)
 
         chx = torch.cos(hx)
         cky = torch.cos(ky)
@@ -254,9 +283,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 29:
         # Pca21
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) - (hkl[0] + hkl[2]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) + (hkl[0]).view(1,peaks,1)/4)
-        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + (hkl[2]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        - (hkl[0] + hkl[2]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        + (hkl[0]).view(1,peaks,1)/4)
+        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + (hkl[2]).view(1,peaks,1)/4)
         chx = torch.cos(hx)
         cky = torch.cos(ky)
         clz = torch.cos(lz)
@@ -271,9 +303,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 33:
         # Pna21
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) - (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) + (hkl[0] + hkl[1]).view(1,peaks,1)/4)
-        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + (hkl[2]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        - (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        + (hkl[0] + hkl[1]).view(1,peaks,1)/4)
+        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + (hkl[2]).view(1,peaks,1)/4)
         chx = torch.cos(hx)
         cky = torch.cos(ky)
         clz = torch.cos(lz)
@@ -288,9 +323,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 60:
         # Pbcn
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + (hkl[0] + hkl[1]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) + (hkl[2]).view(1,peaks,1)/4)
-        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) - (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        + (hkl[0] + hkl[1]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        + (hkl[2]).view(1,peaks,1)/4)
+        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        - (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
         chx = torch.cos(hx)
         cky = torch.cos(ky)
         clz = torch.cos(lz)
@@ -300,9 +338,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 61:
         # Pbca
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) - (hkl[0] - hkl[1]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - (hkl[1] - hkl[2]).view(1,peaks,1)/4)
-        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) - (hkl[2] - hkl[0]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        - (hkl[0] - hkl[1]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        - (hkl[1] - hkl[2]).view(1,peaks,1)/4)
+        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        - (hkl[2] - hkl[0]).view(1,peaks,1)/4)
         chx = torch.cos(hx)
         cky = torch.cos(ky)
         clz = torch.cos(lz)
@@ -312,9 +353,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 62:
         # Pnma
-        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) - (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
-        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) + (hkl[1]).view(1,peaks,1)/4)
-        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + (hkl[0] + hkl[2]).view(1,peaks,1)/4)
+        hx = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                        - (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
+        ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                        + (hkl[1]).view(1,peaks,1)/4)
+        lz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                        + (hkl[0] + hkl[2]).view(1,peaks,1)/4)
         chx = torch.cos(hx)
         cky = torch.cos(ky)
         clz = torch.cos(lz)
@@ -324,11 +368,17 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 88:
         # I41/a
-        chkl  = torch.cos(2 * pi * (hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
-        chxky = torch.cos(2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1]) - (hkl[1]).view(1,peaks,1)/4))
-        clz_k = torch.cos(2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + (hkl[1]).view(1,peaks,1)/4))
-        chykx = torch.cos(2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1]) - torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0]) - (hkl[0]).view(1,peaks,1)/4))
-        clz_h = torch.cos(2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]) + (hkl[0]).view(1,peaks,1)/4))
+        chkl  = torch.cos(2*pi*(hkl[0] + hkl[1] + hkl[2]).view(1,peaks,1)/4)
+        chxky = torch.cos(2*pi*(torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
+                                + torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
+                                - (hkl[1]).view(1,peaks,1)/4))
+        clz_k = torch.cos(2*pi*(torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                                + (hkl[1]).view(1,peaks,1)/4))
+        chykx = torch.cos(2*pi*(torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1])
+                                - torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0])
+                                - (hkl[0]).view(1,peaks,1)/4))
+        clz_h = torch.cos(2*pi*(torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+                                + (hkl[0]).view(1,peaks,1)/4))
 
         A = 8 * chkl * ((chkl * chxky * clz_k) + (chykx * clz_h))
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
@@ -337,8 +387,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         # R-3
         # Using Rhombohedral coordinates
         hxkylz = 2 * pi * torch.einsum("ji,klj->kil", hkl, asymmetric_frac_coords)
-        kxlyhz = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,1]) + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,2]))
-        lxhykz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1]) + torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,2]))
+        kxlyhz = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0])
+                            + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,1])
+                            + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,2]))
+        lxhykz = 2 * pi * (torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,0])
+                            + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1])
+                            + torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,2]))
 
         chx = torch.cos(hxkylz)
         ckx = torch.cos(kxlyhz)
@@ -350,8 +404,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         #i = -1*(hkl[0] + hkl[1])
         #chkl   = torch.cos(2 * pi * (hkl[1] + hkl[2] - hkl[0]).view(1,peaks,1)/3)
         #hxkylz = 2 * pi * torch.einsum("ji,klj->kil", hkl, asymmetric_frac_coords)
-        #kxiyhz = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,1]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
-        #ixhylz = 2 * pi * (torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,0]) + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1]) + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
+        #kxiyhz = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0])
+        #                   + torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,1])
+        #                   + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
+        #ixhylz = 2 * pi * (torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,0])
+        #                   + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1])
+        #                   + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
         #chx = torch.cos(hxkylz)
         #ckx = torch.cos(kxiyhz)
         #cix = torch.cos(ixhylz)#

@@ -4,7 +4,27 @@ import numpy as np
 
 def get_zm_related_tensors(Structure, n_samples, dtype, device):
     """
-    Get tensors about the ZMs from the numpy arrays in the Structure
+    Get tensors about the ZMs from the numpy arrays in the Structure.
+
+    The external and internal DoF tensors may contain information
+    pertaining to multiple fragments. The information needs to be indexed
+    such that positions, rotations and torsions are assigned consistently
+    and correctly. Example below has 2 fragments, with 6 torsions each.
+    Each fragment therefore requires:
+        3 x position, 4 x quaternions, 6 x torsions
+    The layout of the DoF of the tensors is as follows:
+        external = n_samples*[pos_1_x, pos_1_y, pos_1_z, pos_2_x, pos_2_y,
+                                pos_2_z, rot_1_q1, rot_1_q2, rot_1_q3, rot_1_q4,
+                                rot_2_q1, rot_2_q2, rot_2_q3, rot_2_q4]
+        internal = n_samples*[tor_1_1, tor_1_2, tor_1_3, tor_1_4, tor_1_5,
+                                tor_1_6, tor_2_1, tor_2_2, tor_2_3, tor_2_4,
+                                tor_2_5, tor_2_6]
+    This function makes lists of numpy arrays: position_indices,
+    rotation_indices, torsion_indices that denote what information
+    pertains to each fragment. In the above example:
+        position_indices = [[0,1,2], [3,4,5]]
+        rotation_indices = [[6,7,8,9], [10,11,12,13]]
+        torsion_indices  = [[0,1,2,3,4,5], [6,7,8,9,10,11]]
 
     Args:
         Structure (class): GALLOP structure object
@@ -13,7 +33,20 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
         device (torch device): device to move tensors to
 
     Returns:
-        dict: Dictionary of the tensors
+        dict: Dictionary of the tensors. The complete dict of values returned
+        by this function is given below:
+            tensors = {"zmatrices_degrees_of_freedom" : zm_degrees_of_freedom,
+                    "position" : zm_position_indices,
+                    "rotation" : zm_rotation_indices,
+                    "torsion" : zm_torsion_indices,
+                    "initial_D2" : init_D2,
+                    "torsion_refineable_indices" : torsion_refineable_indices,
+                    "bond_connection" : bond_connection,
+                    "angle_connection" : angle_connection,
+                    "torsion_connection" : torsion_connection,
+                    "init_cart_coords" : init_cart_coords,
+                    "nsamples_ones" : nsamples_ones
+                    }
     """
     position_indices = []
     rotation_indices = []
@@ -30,28 +63,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
     # First loop over each of the z-matrices and get information about
     # connectivity, degrees of freedom etc
     for i, zm in enumerate(Structure.zmatrices):
-        """
-        The external and internal tensors may contain information pertaining
-        to multiple fragments. The information needs to be indexed such that
-        positions, rotations and torsions are assigned consistently and
-        correctly. Example below has 2 fragments, with 6 torsions each.
-        Each therefore requires:
-            3 x position, 4 x quaternions, 6 x torsions
-        Layout of the tensors:
-        external = n_samples x [pos_1_x, pos_1_y, pos_1_z, pos_2_x, pos_2_y,
-                                pos_2_z, rot_1_q1, rot_1_q2, rot_1_q3, rot_1_q4,
-                                rot_2_q1, rot_2_q2, rot_2_q3, rot_2_q4]
-        internal = n_samples x [tor_1_1, tor_1_2, tor_1_3, tor_1_4, tor_1_5,
-                                tor_1_6, tor_2_1, tor_2_2, tor_2_3, tor_2_4,
-                                tor_2_5, tor_2_6]
-        This loop will make lists of numpy arrays: position_indices,
-        rotation_indices, torsion_indices that denote what information pertains
-        to each fragment. In this example:
-            position_indices = [[0,1,2], [3,4,5]]
-            rotation_indices = [[6,7,8,9], [10,11,12,13]]
-            torsion_indices  = [[0,1,2,3,4,5], [6,7,8,9,10,11]]
-        """
-
+        # First generate the indices needed
         if i == 0:
             position_indices.append(np.arange(zm.position_degrees_of_freedom))
             rotation_indices.append(np.arange(zm.rotation_degrees_of_freedom))
@@ -59,15 +71,15 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
         else:
             try:
                 max_pos = np.hstack(position_indices).max()
-            except:
+            except ValueError:
                 max_pos = -1
             try:
                 max_rot = np.hstack(rotation_indices).max()
-            except:
+            except ValueError:
                 max_rot = -1
             try:
                 max_tor = np.hstack(torsion_indices).max()
-            except:
+            except ValueError:
                 max_tor = -1
             position_indices.append(np.arange(zm.position_degrees_of_freedom)
                                             + max_pos + 1)
@@ -77,10 +89,10 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
                                             + max_tor + 1)
         zm_degrees_of_freedom.append(zm.degrees_of_freedom)
 
-        # Get initial D2 matrix and torsion refineable indices for
+        # Now get initial D2 matrix and torsion refineable indices for
         # internal -> Cartesian conversion
-        # and get initial cartesian coordinates for rigid bodies. See (S)NeRF
-        # paper for details.
+        # and get initial Cartesian coordinates for rigid bodies. See (S)NeRF
+        # paper and gallop.z_matrix for more details.
         if Structure.ignore_H_atoms:
             init_D2_stacked = zm.initial_D2_no_H.reshape(1,
                         zm.initial_D2_no_H.shape[0],
@@ -88,12 +100,11 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
             torsion_refineable_indices.append(torch.from_numpy(
                 zm.torsion_refineable_indices_no_H).type(torch.long).to(device))
             if zm.degrees_of_freedom == 7:
-                init_cart_coords.append(
-                    torch.from_numpy(zm.initial_cartesian_no_H.reshape(1,
+                init_cart_coords.append(torch.from_numpy(
+                        zm.initial_cartesian_no_H.reshape(1,
                         zm.initial_cartesian_no_H.shape[0],
-                        zm.initial_cartesian_no_H.shape[1]).repeat(
-                            n_samples,axis=0)).type(dtype).to(device)
-                            )
+                        zm.initial_cartesian_no_H.shape[1])
+                        .repeat(n_samples,axis=0)).type(dtype).to(device))
             else:
                 init_cart_coords.append([])
         else:
@@ -105,8 +116,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
                     zm.torsion_refineable_indices).type(torch.long).to(device)
                 )
             if zm.degrees_of_freedom == 7:
-                init_cart_coords.append(
-                    torch.from_numpy(
+                init_cart_coords.append(torch.from_numpy(
                         zm.initial_cartesian.reshape(1,
                             zm.initial_cartesian.shape[0],
                             zm.initial_cartesian.shape[1]).repeat(
@@ -117,7 +127,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
 
         init_D2.append(torch.from_numpy(init_D2_stacked).type(dtype).to(device))
 
-        # Get the molecular connectivity information
+        # Next get the molecular connectivity information
         if Structure.ignore_H_atoms:
             bond_connection.append(
                 torch.from_numpy(
@@ -148,13 +158,15 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
         else:
             n_atoms_asymmetric += zm.coords.shape[0]
 
-    # Correct the external DoF indices for rotations
+    # Now correct the external DoF indices for rotations
     # The external input has the following layout:
     # pos_zm_1, pos_zm_2, ... , pos_zm_n, rot_zm_1, rot_zm_2, ... , rot_zm_n
+    # so the previously generated indices need to be corrected for the total
+    # number of positional indexes that are also included.
     for r in rotation_indices:
         try:
             r+=np.hstack(position_indices).max()+1
-        except:
+        except ValueError:
             pass
 
     # Add this information to the Structure object for easy access
@@ -178,7 +190,10 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
         zm_torsion_indices.append(
                                 torch.from_numpy(t).type(torch.long).to(device))
 
-    # nsamples_ones needed for fall-back Structure factor calculation method
+    # nsamples_ones needed for fall-back Structure factor calculation method.
+    # It is concatenated with the x,y,z fractional coordinates, which then
+    # allows for multiplication with the affine matrices to generate symmetry
+    # equivalent positions.
     nsamples_ones = torch.ones(n_samples,
                                 n_atoms_asymmetric,
                                 1).type(dtype).to(device)
@@ -266,7 +281,8 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     """
     Gather all of the information needed to run calculations on the GPU. This
     will differ depending on if the input is a set of external/internal degrees
-    of freedom (standard) or if the input is directly from a CIF
+    of freedom (standard) or if the input is directly from a CIF (used for
+    mostly for debugging and comparison to DASH-derived values)
 
     Args:
         Structure (Structure Class): Class containing all of the data and
@@ -326,7 +342,7 @@ def get_all_required_tensors(Structure, external=None, internal=None,
             external = torch.from_numpy(external).type(dtype).to(device)
             if requires_grad:
                 external.requires_grad = True
-        except:
+        except TypeError:
             print("Can't convert input",external,"to pytorch tensor")
 
     if internal is None:
@@ -344,7 +360,7 @@ def get_all_required_tensors(Structure, external=None, internal=None,
             internal = torch.from_numpy(internal).type(dtype).to(device)
             if requires_grad:
                 internal.requires_grad = True
-        except:
+        except TypeError:
             print("Can't convert input",internal,"to pytorch tensor")
 
     if include_dw_factors:
@@ -382,7 +398,8 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     else:
         tensors = {**tensors, **get_zm_related_tensors(Structure,
                                                     n_samples, dtype, device)}
-
+    # Calculate terms that are used in the intensity calculations, which include
+    # the atomic scattering factors etc.
     full_prefix = Structure.generate_intensity_calculation_prefix(
                         debye_waller_factors=dw_factors, just_asymmetric=False,
                         from_cif=from_CIF)[:n_reflections]

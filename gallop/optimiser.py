@@ -1,19 +1,19 @@
-import gallop.chi2 as chi2
-import gallop.tensor_prep as tensor_prep
-import gallop.files as files
-
-import torch
-import numpy as np
 import time
-import tqdm
-import matplotlib.pyplot as plt
 import os
 import random
+import torch
+import tqdm
 import pyDOE
+import numpy as np
+import matplotlib.pyplot as plt
 import torch_optimizer as t_optim
 
+from gallop import chi2
+from gallop import tensor_prep
+from gallop import files
 
-def seed_everything(seed=1234, change_backend=True):
+
+def seed_everything(seed=1234, change_backend=False):
     """
     Set random seeds for everything.
     Note that at the moment, CUDA (which is used by PyTorch) is not
@@ -25,6 +25,9 @@ def seed_everything(seed=1234, change_backend=True):
     Args:
         seed (int, optional): Set the random seed to be used.
             Defaults to 1234.
+        change_backend (bool, optional): Whether to change the backend used to
+            try to make the code more reproducible. At the moment, it doesn't
+            seem to help... default to False
     """
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -48,7 +51,8 @@ def get_minimiser_settings(Structure):
             Keys = n_reflections, include_dw_factors, chi2_solved, n_iterations,
             n_cooldown, learning_rate, learning_rate_schedule, verbose,
             use_progress_bar, print_every, check_min, dtype, device,
-            ignore_reflections_for_chi2_calc, optimizer, loss, eps, save_CIF
+            ignore_reflections_for_chi2_calc, optimizer, loss, eps, save_CIF,
+            streamlit
     """
     settings = {}
     settings["n_reflections"] = len(Structure.hkl)
@@ -81,7 +85,7 @@ def adjust_lr_1_over_sqrt(optimizer, iteration, learning_rate):
     Args:
         optimizer (pytorch optimizer): A pytorch compatible optimizer
         iteration (int): The current iteration
-        learning_rate (float): The base-learning rate to use
+        learning_rate (float): The initial learning rate used
 
     Returns:
         float: the new learning rate
@@ -96,15 +100,27 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
                         upperb1=0.95, lowb1=0.85, upperb2=0.9, lowb2=0.9):
     """
     See here: https://sgugger.github.io/the-1cycle-policy.html
-    low = lowest learning rate
-    high = highest learning rate
-    final = iteration when final lr decrease occurs
-    """
 
+    Args:
+        optimizer (pytorch optimizer): the optimizer object
+        iteration (int): current learning rate
+        low (float): initial learning rate
+        high (float): maximum learning rate
+        final (float): the cooldown iterations at the end of the run
+        num_iterations (int): the number of iterations that will be performed
+        upperb1 (float, optional): maximum beta1 / momentum. Defaults to 0.95.
+        lowb1 (float, optional): minimum beta1 / momentum. Defaults to 0.85.
+        upperb2 (float, optional): maximum beta2. Defaults to 0.9.
+        lowb2 (float, optional): minimum beta2. Defaults to 0.9.
+
+    Returns:
+        float: the learning rate
+    """
     increment = (high-low)/(final//2)
     b1_increment = (upperb1 - lowb1) / (final//2)
     b2_increment = (upperb2 - lowb2) / (final//2)
     final_increment = low/(num_iterations-final)
+    lr, b1, b2 = 0, 0, 0
     if iteration < final//2:
         lr = increment*(iteration)+low
         b1 = upperb1 - b1_increment*iteration
@@ -123,25 +139,15 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
         param_group["momentum"] = b1
     return lr
 
-def find_learning_rate(Structure, external=None, internal=None, n_samples=10000,
-    n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
-    n_reflections=None, min_lr=-4, max_lr=0, n_trials=200,
-    multiplication_factor=1., optimizer="Adam", verbose=True, amsgrad=False,
-    learning_rate=1e-1, betas=[0.9,0.9], loss="sum", plot=True, logplot=True,
-    use_progress_bar=True, eps=1e-8, ignore_reflections_for_chi2_calc=False,
-    include_dw_factors=True,
-    b_bounds_1_cycle = {"upperb1":0.95, "lowb1":0.85, "upperb2":0.9,
-    "lowb2":0.9}, chi2_solved=None, learning_rate_schedule="array",
-    print_every=100, check_min=1, save_CIF=False, figsize=(6,6),
-    streamlit=False):
+def find_learning_rate(Structure, external=None, internal=None,
+    min_lr=-4, max_lr=0, n_trials=200, minimiser_settings=None, plot=False,
+    multiplication_factor=0.75, logplot=True, figsize=(10,6)):
     """
     See here: https://sgugger.github.io/the-1cycle-policy.html
     In contrast to the advice in the article (which is for training neural
     networks), in this work, it seems to work better to take the absolute
     minimum point that is obtained.
 
-    Most arguments are the same as that used for minimise (see docstring)
-    The ones unique to this function are detailed below
     Args:
         min_lr (int, optional): Minimum (log10) learning rate to try.
             Defaults to -5 (which is equivalent to 10^-4).
@@ -156,6 +162,7 @@ def find_learning_rate(Structure, external=None, internal=None, n_samples=10000,
             Defaults to True.
         logplot (bool, optional): If plotting, use a logarithmic x-axis.
             Defaults to True.
+        figsize (tuple, optional): The size of the figure. Defaults to (10,6)
 
     Returns:
         tuple: Tuple containing the trial learning rate values, the losses
@@ -163,51 +170,55 @@ def find_learning_rate(Structure, external=None, internal=None, n_samples=10000,
                 loss value
     """
 
-    # Set the learning rates to be tested
-    trial_values = np.logspace(min_lr, max_lr, n_trials)
-
-    # Get the losses at each learning rate
-    result = minimise(Structure, run=-1, learning_rate_schedule="array",
-        learning_rate=trial_values, external=external,
-        internal=internal, n_samples=n_samples,
-        n_iterations=n_trials, n_cooldown=n_cooldown, device=device,
-        dtype=dtype, n_reflections=n_reflections,
-        b_bounds_1_cycle=b_bounds_1_cycle, optimizer=optimizer,
-        verbose=False, betas=betas, eps=eps, loss=loss,
-        save_trajectories=False, save_loss=True,
-        include_dw_factors=include_dw_factors,
-        ignore_reflections_for_chi2_calc=ignore_reflections_for_chi2_calc,
-        use_progress_bar=use_progress_bar, save_CIF=False, streamlit=streamlit)
-
-    losses = result["losses"]
+    if minimiser_settings is not None:
+        # Set the learning rates to be tested
+        trial_values = np.logspace(min_lr, max_lr, n_trials)
+        lr_minimiser_settings = minimiser_settings.copy()
+        lr_minimiser_settings["learning_rate"] = trial_values
+        lr_minimiser_settings["learning_rate_schedule"] = "array"
+        lr_minimiser_settings["n_iterations"] = len(trial_values)
+        lr_minimiser_settings["run"] = -1
+        lr_minimiser_settings["external"] = external
+        lr_minimiser_settings["internal"] = internal
+        lr_minimiser_settings["Structure"] = Structure
+        lr_minimiser_settings["save_CIF"] = False
+        lr_minimiser_settings["save_loss"] = True
 
 
-    if plot:
-        plt.figure(figsize=figsize)
-        plt.plot(trial_values, losses)
-        if logplot:
-            plt.xscale('log')
-        plt.show()
+        # Get the losses at each learning rate
+        result = minimise(**lr_minimiser_settings)
 
-    minimum_point = trial_values[losses == losses.min()][0]
-    return trial_values, losses, multiplication_factor * minimum_point
+        losses = result["losses"]
+
+
+        if plot:
+            plt.figure(figsize=figsize)
+            plt.plot(trial_values, losses)
+            if logplot:
+                plt.xscale('log')
+            plt.show()
+
+        minimum_point = trial_values[losses == losses.min()][0]
+        return trial_values, losses, multiplication_factor * minimum_point
+    else:
+        print("ERROR! Minimiser Settings are needed!")
+        return None
 
 
 def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
     n_reflections=None, learning_rate_schedule="1cycle",
-    b_bounds_1_cycle = {"upperb1":0.95, "lowb1":0.85, "upperb2":0.9,
-    "lowb2":0.9}, check_min=1, optimizer="Adam", verbose=False, print_every=100,
-    learning_rate=3e-2, betas=[0.9,0.9], eps=1e-8, loss="sum", start_time=None,
+    b_bounds_1_cycle=None, check_min=1, optimizer="Adam", verbose=False, print_every=100,
+    learning_rate=3e-2, betas=None, eps=1e-8, loss="sum", start_time=None,
     run=1, save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None,
     ignore_reflections_for_chi2_calc=False, use_progress_bar=True,
     save_CIF=True, streamlit=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
-    internal degrees of freedom together with the observed intensities and
-    inverse covariance matrix, and optimise the chi-squared factor of agreement
-    between the calculated and observed intensities.
+    internal degrees of freedom (as numpy arrays) together with the observed
+    intensities and inverse covariance matrix, and optimise the chi-squared
+    factor of agreement between the calculated and observed intensities.
 
     This forms one part of the GALLOP algorithm, the other part is a particle
     swarm optimisation step which is used to generate the starting positions
@@ -227,7 +238,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         n_iterations (int, optional): Total number of iterations to run the
             local-optimisation algorithm. Defaults to 500.
         n_cooldown (int, optional): Used in the 1-cycle learning rate policy.
-            The number of iterations at the end of a local optimsation run with
+            The number of iterations at the end of a local optimisation run with
             a low learning rate. Defaults to 100.
         device (torch.device, optional):    Where to run the calculations. If
             None, then check to see if a GPU exists and use it by default.
@@ -240,7 +251,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             One of: "1cycle", "sqrt", "constant", "array".
             "1cycle"    -   rapidly increase then decrease the learning rate,
                             before a "cooldown" period with a lower learning
-                            rates
+                            rates. See this link for more details:
+                            https://sgugger.github.io/the-1cycle-policy.html
             "sqrt"      -   decay the learning rate after each iteration
                             according to:
                                 lr = learning_rate * 1/np.sqrt((iteration)+1.)
@@ -254,7 +266,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             rate will be read from the array at each iteration.
             Defaults to 3e-2.
         b_bounds_1_cycle (dict, optional): Used in the 1cycle learning rate
-            policy to set the upper and lower beta values.
+            policy to set the upper and lower beta values. If set to None,
+            then the following values will be used:
+            {"upperb1":0.95, "lowb1":0.85, "upperb2":0.9, "lowb2":0.9}
         check_min (int, optional):  The number of iterations after which the
             best value of chi2 obtained so far is checked. Defaults to 1.
         optimizer (str or torch-compatible optimizer): Either a string or a
@@ -266,18 +280,29 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             to print out the information on the run progress. Also controls
             how often the best chi2 value is updated for the progress-bar.
         betas (list, optional): beta1 and beta2 values to use in Adam. Defaults
-            to [0.9, 0.9] which is equivalent to [beta1=0.9, beta2=0.9]
+            to [0.9, 0.9] (if None set) which is equivalent to
+            [beta1=0.9, beta2=0.9]
         eps (float, optional): Epsilon value to use in Adam or Adam derived
             optimizers. Defaults to 1e-8.
         loss (str or function, optional):   Pytorch requires a scalar to
             determine the gradients so the series of chi2 values obtained from
             the n_samples must be combined through some function before the
-            gradient is determined. If string, must be one of:
+            gradient is determined. Different functions can be used to scaled
+            the gradients in different ways. This may be advantageous if there
+            is a significant difference in the magnitude of the gradient when
+            chi2 is large vs when it is small. If string, must be one of:
             sum, sse, xlogx
-                sum     -   add all the chi2 values together
-                sse     -   sum(chi2^2) (sum of squared errors)
-                xlogx   -   sum(chi2 * log(chi2))
-            If a function, must take in a pytorch tensor and return a scalar.
+                sum     -   add all the chi2 values together. The gradient for
+                            each independent run will be the derivative of chi2
+                            with respect to the degrees of freedom.
+                sse     -   sum(chi2^2) (sum of squared errors). The gradient
+                            for each independent run will be the derivative of
+                            chi2 (wrt DoF) multiplied by 2*chi2.
+                xlogx   -   sum(chi2 * log(chi2)). The gradient for each
+                            independent run will be the derivative of chi2 (wrt
+                            DoF) multiplied by log(chi2) + 1.
+            If a function, this function must must take as input a pytorch
+            tensor and return a scalar.
             Defaults to "sum".
         start_time (time.time(), optional): The start time of a run or set of
             runs. Useful in full GALLOP runs, but if set to None then the start
@@ -307,7 +332,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         save_CIF (bool, optional): Save a CIF of the best structure found
             after optimising. Defaults to True.
         streamlit (bool, optional): If using the streamlit webapp interface,
-            this set to True enables pretty print outputs etc. Defaults to False
+            this is set to True to enable a progress bar etc. Defaults to False
 
     Returns:
         dictionary: A dictionary containing the optimised external and internal
@@ -316,7 +341,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             trajectories of the particles, the chi_2 values and loss values
             at each iteration.
     """
-
+    if b_bounds_1_cycle is None:
+        b_bounds_1_cycle = {"upperb1":0.95, "lowb1":0.85, "upperb2":0.9,
+                            "lowb2":0.9}
+    if betas is None:
+        betas = [0.9,0.9]
     if streamlit:
         import streamlit as st
 
@@ -398,7 +427,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 lr = learning_rate[i]
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = lr
-            except:
+            except IndexError:
                 print("Error in learning rate array")
                 if len(learning_rate) < i:
                     print("Insufficient entries in list, using last value")
@@ -413,7 +442,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
                         learning_rate, n_iterations-n_cooldown, n_iterations)
             else:
-                print("An error has occured with lr scheduling")
+                print("An error has occurred with lr scheduling")
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
@@ -438,7 +467,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             else:
                 try:
                     L = loss(chi_2)
-                except:
+                except RuntimeError:
                     print("Unknown / incompatible loss function",loss)
                     print("Allowable arguments = sse (sum of squared errors),",
                         "sum, xlogx or a suitable function that returns a",
@@ -522,8 +551,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     return result
 
 def plot_torsion_difference(Structure, result, n_swarms=1,
-    verbose=False, figsize=(10,10), xlim={"left" : 0, "right" : None},
-    ylim={"bottom" : 0, "top" : None}, cmap="tab20", call_show=True):
+    verbose=False, figsize=(10,10), xlim=None,
+    ylim=None, cmap="tab20", call_show=True):
     """
     Calculate the average difference between the known torsions (obtained
     from the Z-matrix input) to those obtained in an SDPD attempt.
@@ -550,6 +579,10 @@ def plot_torsion_difference(Structure, result, n_swarms=1,
             plot. If False, the plot can be used in a subplot along with other
             plots by the user in the parent script or notebook.
     """
+    if xlim is None:
+        xlim = {"left" : 0, "right" : None}
+    if ylim is None:
+        ylim = {"bottom" : 0, "top" : None}
     true_torsions = Structure.zm_torsions
     internal = result["internal"]
     chi_2 = result["chi_2"]
@@ -629,7 +662,7 @@ class Swarm(object):
                 swarm to allow communication of information from different
                 regions of the hypersurface. Setting this to an integer will
                 activate the global update when:
-                    run number % global_update_freq == 0
+                    run number % global_update_freq == 0 and run number > 0
                 Defaults to 10.
             vmax (float, optional): The absolute maximum velocity a particle can
                 achieve if limit_velocity is True.
@@ -654,6 +687,7 @@ class Swarm(object):
         self.global_update = global_update
         self.global_update_freq = global_update_freq
         self.vmax = vmax
+        self.best_subswarm_chi2 = []
 
     def get_initial_positions(self, method="latin", latin_criterion=None):
         """
@@ -674,13 +708,13 @@ class Swarm(object):
             tuple: Tuple of numpy arrays containing the initial external and
             internal degrees of freedom
         """
-        if not hasattr(self.Structure, "total_internal_degrees_of_freedom"):
+        if self.Structure.total_internal_degrees_of_freedom is None:
             self.Structure.get_total_degrees_of_freedom()
 
         assert method in ["uniform", "latin"], "method must be latin or uniform"
         if self.n_particles % self.n_swarms != 0:
             print("n_particles should be divisible by n_swarms.")
-            self.n_particles = n_swarms * (n_particles // n_swarms)
+            self.n_particles = self.n_swarms * (self.n_particles//self.n_swarms)
             print("Setting n_particles to", self.n_particles)
         subswarm = self.n_particles // self.n_swarms
         init_external = []
@@ -690,9 +724,8 @@ class Swarm(object):
         total_rot = self.Structure.total_rotation_degrees_of_freedom
         tot_external = total_pos+total_rot
         total_tors = self.Structure.total_internal_degrees_of_freedom
-        ext_names = ["ext"+str(x) for x in range(total_pos+total_rot)]
-        int_names = ["int"+str(x) for x in range(total_tors)]
-        for i in tqdm.tqdm(range(self.n_swarms)):
+        # Separate hypercube for each subswarm
+        for _ in tqdm.tqdm(range(self.n_swarms)):
             if method == "latin":
                 all_dof = np.array(pyDOE.lhs(total_pos + total_rot + total_tors,
                             samples=subswarm, criterion=latin_criterion))
@@ -701,9 +734,9 @@ class Swarm(object):
                 rot = external[:,total_pos:]
                 tor = all_dof[:,total_pos+total_rot:]
                 rot -= 0.5
-                rot *= 2 # Rotation to range [-1,1]
+                rot *= 2. # Rotation to range [-1,1]
                 tor -= 0.5
-                tor *= 2 * np.pi # Torsions to range [-pi,pi]
+                tor *= 2. * np.pi # Torsions to range [-pi,pi]
                 init_external.append(np.hstack([pos,rot]))
                 init_internal.append(tor)
 
@@ -782,11 +815,15 @@ class Swarm(object):
         Convert the swarm representation of position back to the external
         and internal degrees of freedom expected by GALLOP
 
+        Args:
+            position (numpy array): The internal swarm representation of the
+                particle positions, where the positions and torsion angles have
+                been projected onto the unit circle.
+
         Returns:
             tuple: Tuple of numpy arrays containing the external and internal
                 degrees of freedom
         """
-        total_external = self.Structure.total_external_degrees_of_freedom
         total_position = self.Structure.total_position_degrees_of_freedom
         total_rotation = self.Structure.total_rotation_degrees_of_freedom
         total_torsional = self.Structure.total_internal_degrees_of_freedom
@@ -819,7 +856,7 @@ class Swarm(object):
 
     def PSO_velocity_update(self, previous_velocity, position,
         particle_best_pos, best_chi_2, inertia="random", c1=1.5, c2=1.5,
-        inertia_bounds=[0.4,0.9], use_matrix=True):
+        inertia_bounds=(0.4,0.9), use_matrix=True):
         """
         Update the velocity of the particles in the swarm
 
@@ -832,7 +869,7 @@ class Swarm(object):
                 If string, can currently only be "random" or "ranked".
                 If random, then the inertia is randomly set for each particle
                 within the bounds supplied in the parameter inertia_bounds.
-                If "ranked", then set the inertia values linearaly between the
+                If "ranked", then set the inertia values linearly between the
                 bounds, with the lowest inertia for the best particle. If a
                 float, then all particles are assigned the same inertia.
                 Defaults to "random".
@@ -840,9 +877,9 @@ class Swarm(object):
                 Defaults to 1.5.
             c2 (int, optional): c2 (cognitive) parameter in PSO equation.
                 Defaults to 1.5.
-            inertia_bounds (list, optional): The upper and lower bound of the
+            inertia_bounds (tuple, optional): The upper and lower bound of the
                 values that inertia can take if inertia is set to "random" or
-                "ranked". Defaults to [0.4,0.9].
+                "ranked". Defaults to (0.4,0.9)
             use_matrix (bool, optional): Take a different step size in every
                 degree of freedom. Defaults to True.
 
@@ -870,7 +907,7 @@ class Swarm(object):
                 inertia = inertia.reshape(-1,1)
             else:
                 print("Unknown inertia type!", inertia)
-                print("Setting intertia to 0.5")
+                print("Setting inertia to 0.5")
                 inertia = 0.5
         if use_matrix:
             R1 = np.random.uniform(0,1,size=(position.shape[0],
@@ -887,7 +924,7 @@ class Swarm(object):
 
         return new_velocity
 
-    def get_new_velocities(self, global_update = True, verbose = True):
+    def get_new_velocities(self, global_update=True, verbose=True):
         """
         Update the particle velocities using the PSO equations.
         Can either update all particles as a single swarm, or treat them as a
@@ -895,11 +932,11 @@ class Swarm(object):
 
         Args:
             global_update (bool, optional): If True, update all of the particles
-                as a single swarm. If False, then update a total of n_swarms
-                separately. Defaults to True.
-            verbose (bool, optional): Print out information. Defaults to True.
+                as a single swarm. If False, then update n_swarms separately.
+                Defaults to True.
+            verbose (bool, optional): Print out if a global update is being
+                performed. Defaults to True.
         """
-        self.best_subswarm_chi2 = []
         subswarm = self.n_particles // self.n_swarms
         use_ranked_all = False
         if isinstance(self.inertia, str):
@@ -915,18 +952,18 @@ class Swarm(object):
                 print("Global")
             if use_ranked_all:
                 self.velocity = self.PSO_velocity_update(self.velocity,
-                                self.position, self.particle_best_position,
-                                self.best_chi_2, inertia=ranked_inertia,
-                                c1=self.c1, c2=self.c2,
-                                inertia_bounds=self.inertia_bounds,
-                                use_matrix=self.use_matrix)
+                                    self.position, self.particle_best_position,
+                                    self.best_chi_2, inertia=ranked_inertia,
+                                    c1=self.c1, c2=self.c2,
+                                    inertia_bounds=self.inertia_bounds,
+                                    use_matrix=self.use_matrix)
             else:
                 self.velocity = self.PSO_velocity_update(self.velocity,
-                                self.position, self.particle_best_position,
-                                self.best_chi_2, inertia=self.inertia,
-                                c1=self.c1, c2=self.c2,
-                                inertia_bounds=self.inertia_bounds,
-                                use_matrix=self.use_matrix)
+                                    self.position, self.particle_best_position,
+                                    self.best_chi_2, inertia=self.inertia,
+                                    c1=self.c1, c2=self.c2,
+                                    inertia_bounds=self.inertia_bounds,
+                                    use_matrix=self.use_matrix)
             for j in range(self.n_swarms):
                 begin = j*subswarm
                 end = (j+1)*subswarm
@@ -967,8 +1004,9 @@ class Swarm(object):
         chi_2=None, run=None, global_update=False, verbose=True, n_swarms=None):
         """
         Take a set of results from the minimisation algorithm and use
-        them to generate a new set of starting points to be minimised using
-        the particle swarm algorithm.
+        them to generate a new set of starting points to be minimised. This
+        will also update the internal swarm representation of position and
+        velocity.
 
         Args:
             result (dict, optional): The result dict from a GALLOP minimise run.
@@ -985,8 +1023,12 @@ class Swarm(object):
                 as a single swarm. Defaults to False.
             verbose (bool, optional): Print out information. Defaults to True.
             n_swarms (int, optional): If global_update is False, it use the
-                Swarm object initialisation n_swarms parameter. This value can
-                be overwritten if desired by supplying it as an argument.
+                Swarm.n_swarms parameter. This value can be overwritten if
+                desired by supplying it as an argument. This could be useful for
+                strategies that enable small subswarms to communicate, e.g.
+                initially have 2^n swarms, then after some iterations, change to
+                2^(n-1) swarms for 1 or more iterations. This would propagate
+                information between swarms without doing a full global update.
                 Defaults to None.
 
         Returns:
@@ -1035,10 +1077,28 @@ class Swarm(object):
 
     def get_CIF_of_best(self, n_reflections=None, one_for_each_subswarm=True,
                                 filename_root=None, run=None, start_time=None):
+        """
+        Get a CIF of the best results found by the particle swarm
+
+        Args:
+            n_reflections (int, optional): The number of reflections used in the
+                SDPD attempts. May be useful if comparing resolutions, but not
+                normally needed. If None, then n_reflections = all reflections.
+                Defaults to None.
+            one_for_each_subswarm (bool, optional): A separate CIF for every
+                independent subswarm rather than just the best globally.
+                Defaults to True.
+            filename_root (str, optional): Specify the root filename to use.
+                If None, then use the structure name as the root.
+                Defaults to None.
+            run (int, optional): The GALLOP iteration. Defaults to None.
+            start_time (float, optional): A float produced by time.time() that
+                indicates when the run started. Defaults to None.
+        """
         if not one_for_each_subswarm:
             external, internal = self.get_new_external_internal(
                                                     self.particle_best_position)
-            chi_2 = self.chi_2
+            chi_2 = self.best_chi_2
             external = external[chi_2 == chi_2.min()]
             internal = internal[chi_2 == chi_2.min()]
             if external.shape[0] > 1:
@@ -1073,7 +1133,10 @@ class Swarm(object):
             result["external"] = external[i]
             result["internal"] = internal[i]
             result["chi_2"] = chi2s[i]
-            result["GALLOP Iter"] = len(self.swarm_progress)
+            if run is None:
+                result["GALLOP Iter"] = len(self.swarm_progress)
+            else:
+                result["GALLOP Iter"] = run
             if start_time is None:
                 start_time = time.time()
             files.save_CIF_of_best_result(self.Structure, result, start_time,

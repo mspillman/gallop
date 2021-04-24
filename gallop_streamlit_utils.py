@@ -1,20 +1,20 @@
-# GALLOP related
-import gallop.optimiser as optimiser
-import gallop.tensor_prep as tensor_prep
-import gallop.chi2 as chi2
-
 # Others needed
-import streamlit as st
-import torch
-import os
-from io import StringIO
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import glob
 import base64
 import json
 import datetime
+import os
+from io import StringIO
+import torch
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# GALLOP related
+from gallop import optimiser
+from gallop import tensor_prep
+from gallop import chi2
 
 def improve_GPU_memory_use(struct, minimiser_settings):
     """
@@ -95,8 +95,9 @@ def load_save_settings(all_settings):
                     with open(file, "r") as f:
                         json_settings = json.load(f)
                     f.close()
-                    for s in settings:
-                        json_settings.pop(s)
+                    for s in selection:
+                        if s not in settings:
+                            json_settings.pop(s, None)
                     all_settings.update(json_settings)
                     st.success("Loaded settings - note GUI elements will not \
                                 be updated")
@@ -125,10 +126,10 @@ def sidebar():
                     min_value=-1, max_value=None, value=-1, step=1,
                     format=None, key=None)
         if all_settings["seed"] != -1:
-            st.write("Note that setting the seed does not guarantee \
-                    reproducibility due to some CUDA algorithms being \
-                    non-deterministic. See link for more information: \
-                    https://pytorch.org/docs/stable/notes/randomness.html ")
+            st.write("Note that setting the seed does not guarantee "
+                    "reproducibility due to some CUDA algorithms being "
+                    "non-deterministic. See link for more information: "
+                    "https://pytorch.org/docs/stable/notes/randomness.html")
             optimiser.seed_everything(seed=all_settings["seed"],
                                                         change_backend=False)
 
@@ -373,9 +374,6 @@ def get_files():
         with col2:
             load_settings = st.checkbox("Load GALLOP settings from json",
                                                         value=False,key=None)
-            #if st.button("Clear files"):
-            #    #upload_key = time.time()
-            #    st.caching.clear_cache()
         example = None
     if load_settings:
         with st.beta_expander(label="Choose settings to load", expanded=False):
@@ -387,7 +385,7 @@ def get_files():
                         "memory_opt", "n_swarms", "swarm_size", "global_update",
                         "global_update_freq", "c1", "c2", "inertia",
                         "inertia_bounds", "limit_velocity", "vmax", "lr"]
-            s_import = st.multiselect("",settings,default=settings,key="upload")
+            selection=st.multiselect("",settings,default=settings,key="upload")
 
     sdi = None
     gpx  = None
@@ -447,9 +445,9 @@ def get_files():
             json_settings = json.load(f)
         f.close()
 
-        for setting, include in zip(settings, s_import):
-            if not include:
-                json_settings.pop(setting, None)
+        for s in settings:
+            if s not in selection:
+                json_settings.pop(s, None)
 
     return uploaded_files, sdi, gpx, out, json_settings, zms, load_settings, \
             pawley_program,clear_files
@@ -497,9 +495,6 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
     col1, col2 = st.beta_columns([2,2])
     with col1:
         with st.beta_expander(label="Unit Cell", expanded=False):
-
-            abc = np.around(struct.lattice.abc, 3)
-            angles = np.around(struct.lattice.angles, 3)
             space_group = struct.space_group.symbol
             cell_info = [["a", np.around(struct.lattice.a, 3)],
                         ["b", np.around(struct.lattice.b, 3)],
@@ -554,7 +549,7 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                                 min_lr=-4, max_lr=np.log10(0.15),
                                 plot=False,
                                 logplot=False,
-                                **minimiser_settings)
+                                minimiser_settings = minimiser_settings)
         lrs = lr[0].copy()
         losses = lr[1].copy()
         lrs -= lrs.min()
@@ -597,23 +592,24 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                 else:
                     minimiser_settings["learning_rate"] = lr[-1]
                     st.write("Learning rate:", np.around(lr[-1], 4))
-    except Exception as e:
+        failed = False
+    except RuntimeError as e:
         if "memory" in str(e):
-            st.write("GPU memory error! Reset GALLOP, then:")
-            st.write(" Try reducing total number of particles, the number \
-            of reflections or use the Reduce performance option \
-            in Local optimiser settings.")
+            st.error("GPU memory error! Reset GALLOP, then:")
+            st.write("Try reducing total number of particles, the number "
+            "of reflections or use the Reduce performance option "
+            "in Local optimiser settings.")
             st.write("Error code below:")
             st.write("")
             st.text(str(e))
         else:
-            st.write("An error occured:")
+            st.error("An unknown error occured")
             st.write("")
             st.text(str(e))
         failed = True
     all_settings["lr"] = minimiser_settings["learning_rate"]
 
-    return all_settings, minimiser_settings
+    return all_settings, minimiser_settings, failed
 
 
 
@@ -650,8 +646,8 @@ def browse_solved_zips():
                             filename = zipname.split(d[0])[1].strip(
                                                             "\\").strip("/")
                             with open(zipname, "rb") as f:
-                                bytes = f.read()
-                                b64 = base64.b64encode(bytes).decode()
+                                file_bytes = f.read()
+                                b64 = base64.b64encode(file_bytes).decode()
                                 href = f'<a href="data:file/zip;base64,{b64}\
                                     " download=\'{filename}\'>{filename}</a>'
                                 st.markdown(href, unsafe_allow_html=True)

@@ -1,11 +1,10 @@
-import gallop.structure as structure
-import gallop.optimiser as optimiser
-import gallop.files as files
 import torch
 import multiprocessing as mp
 import numpy as np
 import time
-import copy
+from gallop import structure
+from gallop import optimiser
+from gallop import files
 
 def multiGPU(GPU, start, end, external, internal, structure_files,
             minimiser_settings):
@@ -30,30 +29,50 @@ def multiGPU(GPU, start, end, external, internal, structure_files,
         minimiser_settings (dict): Settings needed for the local optimisation
 
     Returns:
-        dict: standard gallop results dictionary, with an extra "GPU" field
-            which can be used to reconstruct the full results needed for the
-            particle swarm update step.
+        dict: standard gallop results dictionary, as the value of a dict with
+            the GPU value as the key. This is used to reconstruct the full
+            results needed for the particle swarm update step.
     """
     minimiser_settings["device"] = torch.device("cuda:"+str(GPU))
     external = external[start:end]
     internal = internal[start:end]
     temp_struct = structure.Structure()
-            #name=structure_files["name"],
-            #ignore_H_atoms=structure_files["ignore_H_atoms"],
-            #absorb_H_occu_increase=structure_files["absorb_H_occu_increase"])
     temp_struct.from_json(structure_files, is_json=False)
-    #struct.add_data(structure_files["data_file"])
-    #for zm in structure_files["zmatrices"]:
-    #    struct.add_zmatrix(zm)
     result = optimiser.minimise(temp_struct, external=external, internal=internal,
                                 **minimiser_settings)
-
     result = {GPU : result}
     return result
 
 
-def minimise(i, struct, swarm, external, internal, GPU_split, 
+def minimise(i, struct, swarm, external, internal, GPU_split,
             minimiser_settings, start_time=None):
+    """[summary]
+
+    Args:
+        i (int): [description]
+        struct (gallop.Structure): [description]
+        swarm (gallop.Swarm): [description]
+        external (np.array): [description]
+        internal (np.array): [description]
+        GPU_split (List of lists): List of lists with the following structure:
+                    [[GPU_1, % on GPU_1],
+                    [GPU_2, % on GPU_2],
+                                ... ...
+                    [GPU_N, % on GPU_N]]
+            The GPU IDs are integers that correspond to the index obtained using
+            torch.cuda.device_count() and torch.cuda.get_device_name(i) where
+            i is produced by range(torch.cuda.device_count()). The percentage is
+            expressed in the range [0,100] rather than [0,1].
+        minimiser_settings (dict): Dictionary with the settings needed for the
+            local optimiser
+        start_time (float, optional): The time at which the runs started. Used
+            in the save_CIF function to add timestamps to the files.
+            Defaults to None.
+
+    Returns:
+        dict: Standard gallop results dictionary as would normally be obtained
+        using the optimiser.minimise function
+    """
     structure_files = struct.to_json(return_json=False)
     minimiser_settings["streamlit"] = False
     minimiser_settings["save_CIF"] = False
@@ -61,8 +80,8 @@ def minimise(i, struct, swarm, external, internal, GPU_split,
     args = []
     devices = []
     for i, g in enumerate(GPU_split):
-        id = int(g[0])
-        devices.append(id)
+        gpuid = int(g[0])
+        devices.append(gpuid)
         percentage = g[1] / 100.
         if i == 0:
             start = 0
@@ -70,7 +89,7 @@ def minimise(i, struct, swarm, external, internal, GPU_split,
         else:
             start = end
             end = start + int(np.ceil(percentage*swarm.n_particles))
-        args.append([id,start,end]+common_args)
+        args.append([gpuid,start,end]+common_args)
     if start_time is None:
         start_time = time.time()
     with mp.Pool(processes = len(GPU_split)) as p:
@@ -78,7 +97,9 @@ def minimise(i, struct, swarm, external, internal, GPU_split,
     p.close()
     p.join()
     combined = results[0]
-    [combined.update(x) for x in results[1:]]
+    for x in results[1:]:
+        combined.update(x)
+    # Now reconstruct the full results dict
     result = {"GALLOP Iter" : i}
     for d in devices:
         if "external" in result.keys():
@@ -95,6 +116,6 @@ def minimise(i, struct, swarm, external, internal, GPU_split,
             result["chi_2"] = np.hstack([result["chi_2"], combined[d]["chi_2"]])
         else:
             result["chi_2"] = combined[d]["chi_2"]
-    files.save_CIF_of_best_result(struct, result, start_time, 
+    files.save_CIF_of_best_result(struct, result, start_time,
                                     minimiser_settings["n_reflections"])
     return result
