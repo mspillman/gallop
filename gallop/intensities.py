@@ -1,7 +1,7 @@
 import torch
 
 # Not PEP8 compliant in most of the file but it's been formatted to try to be
-# readable!
+# readable
 
 @torch.jit.script
 def get_symmetry_equivalent_points(frac_coords, nsamples_ones, affine_matrices):
@@ -48,11 +48,11 @@ def intensities_from_full_cell_contents(frac_all, hkl, intensity_calc_prefix_fs,
     """
     pi = 3.141592653589793
     hxkylz = 2. * pi * torch.einsum("ji,klj->kil", hkl, frac_all)
-    Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs,torch.cos(hxkylz))**2
+    Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs,torch.cos(hxkylz)).sum(dim=2)**2
     if centrosymmetric:
         return Asqd
     else:
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs,torch.sin(hxkylz))**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs,torch.sin(hxkylz)).sum(dim=2)**2
         return Asqd + Bsqd
 
 @torch.jit.script
@@ -99,8 +99,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
     if space_group_number == 1:
         # P1
         hxkylz = 2 * pi * torch.einsum("ji,klj->kil", hkl, asymmetric_frac_coords)
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,torch.cos(hxkylz))**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,torch.sin(hxkylz))**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,torch.cos(hxkylz)).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,torch.sin(hxkylz)).sum(dim=2)**2
         # (a + ib) * (a - ib) = a^2 + b^2
         intensities = Asqd + Bsqd
 
@@ -108,7 +108,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         # P-1
         hxkylz = 2 * pi * torch.einsum("ji,klj->kil", hkl, asymmetric_frac_coords)
         A = 2 * torch.cos(hxkylz)
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 3:
         # P2
@@ -122,8 +122,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
         A = 2 * chl * cky
         B = 2 * chl * sky
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 4:
@@ -141,8 +141,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 2 * chl * cky
         B = 2 * chl * sky
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 5:
@@ -160,8 +160,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 4 * chl * torch.cos(ky)
         B = 4 * chl * torch.sin(ky)
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 7:
@@ -178,8 +178,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 2 * chl * cky
         B = 2 * shl * cky
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 9:
@@ -198,8 +198,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 4 * c_sqd_hk * chl * cky
         B = 4 * c_sqd_hk * shl * cky
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 11:
@@ -211,7 +211,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
                         - hkl[1].view(1,peaks,1)/4)
 
         A = 4 * torch.cos(hl) * torch.cos(ky)
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 12:
         # C2/m
@@ -221,7 +221,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         hk = (2 * pi * (hkl[0] + hkl[1])/4).view(1,peaks,1)
         c_sqd_hk = torch.cos(hk)**2
         A = 8 * c_sqd_hk * torch.cos(hl) * torch.cos(ky)
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 13:
         # P2/c
@@ -231,7 +231,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
                         - hkl[2].view(1,peaks,1)/4)
         A = 4 * torch.cos(hl) * torch.cos(ky)
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 14:
         # P21/c
@@ -241,12 +241,11 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
                         - (hkl[1] + hkl[2]).view(1,peaks,1)/4)
         A = 4 * torch.cos(hl) * torch.cos(ky)
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 15:
         # C2/c
-        # The initial term involving only h and k could potentially be calculated
-        # in advance.
+        # The initial term involving only h and k could be calculated in advance.
         hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
                         + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
                         + hkl[2].view(1,peaks,1)/4)
@@ -256,7 +255,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 8 * (((torch.cos((2 * pi * (hkl[0] + hkl[1]))/4))**2).view(1,peaks,1)
                     * torch.cos(hl) * torch.cos(ky))
 
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 18:
         # P21212
@@ -277,8 +276,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A =  4 * chx * cky * clz
         B = -4 * shx * sky * slz
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 19:
@@ -301,8 +300,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A =  4 * chx * cky * clz
         B = -4 * shx * sky * slz
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 29:
@@ -321,8 +320,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 4 * chx * cky * clz
         B = 4 * chx * cky * slz
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 33:
@@ -341,8 +340,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 4 * chx * cky * clz
         B = 4 * chx * cky * slz
 
-        Asqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
-        Bsqd = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,B)**2
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
         intensities = Asqd + Bsqd
 
     elif space_group_number == 60:
@@ -358,7 +357,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         clz = torch.cos(lz)
 
         A = 8 * chx * cky * clz
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 61:
         # Pbca
@@ -373,7 +372,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         clz = torch.cos(lz)
 
         A = 8 * chx * cky * clz
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 62:
         # Pnma
@@ -388,7 +387,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         clz = torch.cos(lz)
 
         A = 8 * chx * cky * clz
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 88:
         # I41/a
@@ -405,7 +404,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
                                 + (hkl[0]).view(1,peaks,1)/4))
 
         A = 8 * chkl * ((chkl * chxky * clz_k) + (chykx * clz_h))
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     elif space_group_number == 148:
         # R-3
@@ -439,7 +438,7 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         #cix = torch.cos(ixhylz)#
         #A = 2 * (1 + 2*chkl) * chx * ckx * cix
 
-        intensities = torch.einsum("ij,bij->bi",intensity_calc_prefix_fs_asymmetric,A)**2
+        intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
     else:
         # Use a fall-back method to generate all equivalent positions in the unit cell
