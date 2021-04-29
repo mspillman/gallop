@@ -78,20 +78,21 @@ One commonly encountered error is when the resultant Z-matrix has torsion angles
 Other programs can in principle be used to produce Z-matrices suitable for GALLOP. For more information, see the ```gallop.z_matrix``` module documentation.
 
 ### **Run GALLOP via the Web App**
+#### **Cloud operation:**
+Use this [Colab Notebook to try the GALLOP Web App for free]().
+You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
+Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
 In the folder containing GALLOP code, open a command prompt and run the following command:
 ```
 streamlit run .\gallop_streamlit.py
 ```
 This will automatically open a browser window displaying the GALLOP Web App.
-
-#### **Cloud operation:**
-Use this [Colab Notebook to try the GALLOP Web App for free]().
-You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
-Save a copy of the notebook to your own Google drive for easy access in the future.
-
-
 ### **Run GALLOP via Python scripts / Jupyter notebooks**
+#### **Cloud operation:**
+Use this [Colab Notebook to try GALLOP in Python mode for free]().
+You will need a Google account to run the notebook.
+Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
 In general, the script or notebook should:
 1. Import the libraries needed
@@ -140,14 +141,6 @@ for i in range(n_gallop_iters):
     print(swarm.best_subswarm_chi2)
 
 ```
-#### **Cloud operation:**
-Use this [Colab Notebook to try GALLOP in Python mode for free]().
-You will need a Google account to run the notebook.
-Save a copy of the notebook to your own Google drive for easy access in the future.
-
-
-
-
 ------------------------------
 
 ## References and resources
