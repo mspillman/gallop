@@ -123,7 +123,7 @@ minimiser_settings["n_iterations"] = 500
 minimiser_settings["save_CIF"] = True
 
 # Automatically set the learning rate for the local optimiser
-lr = optimiser.find_learning_rate(mystructure, external=external,internal=internal)
+lr = optimiser.find_learning_rate(mystructure, external=external, internal=internal)
 minimiser_settings["learning_rate"] = lr[-1]
 
 # Set the total number of iterations for the GALLOP run
@@ -135,7 +135,7 @@ for i in range(n_gallop_iters):
     # Local optimisation step
     result = optimiser.minimise(mystructure, external=external, internal=internal,
                 run=i, start_time=start_time, **minimiser_settings)
-    # Particle swarm step
+    # Particle swarm step to generate new starting positions to minimise.
     external, internal = swarm.update_position(result=result)
     print(swarm.best_subswarm_chi2)
 
