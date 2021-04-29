@@ -296,7 +296,6 @@ def sidebar():
 
     st.sidebar.write("")
     reset = st.sidebar.button("Reset GALLOP")
-
     # This code for resetting streamlit is a bit of an ugly hack, but it
     # works. If there's a more elegant way to do it, it's not easy to find!
     # The code writes out a short script - batch on Windows, otherwise a .py
