@@ -140,8 +140,8 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
     return lr
 
 def find_learning_rate(Structure, external=None, internal=None,
-    min_lr=-4, max_lr=0, n_trials=200, minimiser_settings=None, plot=False,
-    multiplication_factor=0.75, logplot=True, figsize=(10,6)):
+    min_lr=-4, max_lr=np.log10(0.15), n_trials=200, minimiser_settings=None,
+    plot=False, multiplication_factor=0.75, logplot=True, figsize=(10,6)):
     """
     See here: https://sgugger.github.io/the-1cycle-policy.html
     In contrast to the advice in the article (which is for training neural
@@ -152,7 +152,7 @@ def find_learning_rate(Structure, external=None, internal=None,
         min_lr (int, optional): Minimum (log10) learning rate to try.
             Defaults to -5 (which is equivalent to 10^-4).
         max_lr (int, optional): Maximum (log10) learning rate to try.
-            Defaults to 0 (which is equivalent to 10^-0.5).
+            Defaults to log10(0.15).
         n_trials (int, optional): Number of trials between min_lr and max_lr.
             Defaults to 200.
         multiplication_factor (float, optional): multiply the lowest points

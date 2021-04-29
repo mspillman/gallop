@@ -8,11 +8,9 @@ Contents:
 
 ------------------------------
 ## Local Installation
-GALLOP is able to easily make use of cloud-based GPU resources, and as such, does not require a GPU to be available on a users machine to be used. However, some users may wish to install GALLOP locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it should be possible to install GALLOP on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools.
+GALLOP is able to easily make use of cloud-based GPU resources, and as such, does not require a GPU to be available on a users machine to be used. However, some users may wish to install GALLOP locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it should be possible to install GALLOP on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
 For optimal performance, an NVidia GPU is recommended. It may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU, though this has not been tested.
-
-Administrator privileges may be required.
 
 <br />
 
@@ -67,17 +65,17 @@ Helper functions are available within GALLOP to read Pawley fitting outputs from
 
 - GSAS-II: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** parameters apart from the intensities (i.e. peak shape, unit cell, background etc). Reset the intensity values, then ensure that only the intensities will refine. Ensure that for this final refinement, the optimisation algorithm is set to *analytic Jacobian*. This is critical, as the default *Hessian* optimiser modifies the covariance matrix in ways that produce errors in GALLOP. After saving, GALLOP will read in the ```.gpx``` file.
 
-- TOPAS: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refineable parameters in the ```.inp```, and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp```. GALLOP will read in the resultant ```.out``` file.
+- TOPAS: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refined parameters in the ```.inp```, and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp```. GALLOP will read in the resultant ```.out``` file.
 
 ### **Z-matrices**
 GALLOP is able to read Z-matrices that have been produced by the ```MakeZmatrix.exe``` program that is bundled with DASH.
 
-One commonly encountered error is when the resultant Z-matrix has refineable torsion angles defined in terms of one or more hydrogen atoms. To fix this issue, follow the following steps:
+One commonly encountered error is when the resultant Z-matrix has torsion angles to be refined that are defined in terms of one or more hydrogen atoms. To fix this issue, use the following steps:
 1. Produce a CIF of the structure from which the Z-matrix is being generated
-2. Reorder the atoms in the CIF such that all hydrogen atoms are recorded after all non-hydrogen atoms.
-3. Regenerate the Z-matrices with DASH/MakeZmatrix.exe
+2. Reorder the atoms in the CIF such that all hydrogen atoms are listed *after* all non-hydrogen atoms.
+3. Regenerate the Z-matrices with DASH / MakeZmatrix.exe
 
-Other programs can in principle be used to produce Z-matrices suitable for GALLOP. For more information, see the gallop.z_matrix module documentation.
+Other programs can in principle be used to produce Z-matrices suitable for GALLOP. For more information, see the ```gallop.z_matrix``` module documentation.
 
 ### **Run GALLOP via the Web App**
 #### **Local operation:**
@@ -95,7 +93,53 @@ Save a copy of the notebook to your own Google drive for easy access in the futu
 
 ### **Run GALLOP via Python scripts / Jupyter notebooks**
 #### **Local operation:**
+In general, the script or notebook should:
+1. Import the libraries needed
+2. Create a GALLOP Structure object
+3. Add data and Z-matrices to the Structure
+4. Create a GALLOP Swarm object, and generate the initial positions of the particles
+5. Define the settings needed for the local optimisation
+6. Optionally find an appropriate learning_rate for the local optimiser
+6. Have a loop that performs some number of local optimisation steps, followed by a swarm update step.
 
+A simple example is given below:
+```python
+import time
+from gallop.structure import Structure
+from gallop import optimiser
+
+# Create structure object, then add data and Z-matrices
+mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
+mystructure.add_data("Famotidine.sdi", source="DASH")
+mystructure.add_z_matrix("FOGVIG03_1.z_matrix")
+
+# Create swarm object and get the initial particle positions
+swarm = optimiser.Swarm(Structure=mystructure, n_particles=10000, n_swarms=10)
+external, internal = swarm.get_initial_positions()
+
+# Get the minimiser settings and optionally modify them
+minimiser_settings = optimiser.get_minimiser_settings(mystructure)
+minimiser_settings["n_iterations"] = 500
+minimiser_settings["save_CIF"] = True
+
+# Automatically set the learning rate for the local optimiser
+lr = optimiser.find_learning_rate(mystructure, external=external,internal=internal)
+minimiser_settings["learning_rate"] = lr[-1]
+
+# Set the total number of iterations for the GALLOP run
+n_gallop_iters = 20
+
+# Now write the GALLOP loop
+start_time = time.time()
+for i in range(n_gallop_iters):
+    # Local optimisation step
+    result = optimiser.minimise(mystructure, external=external, internal=internal,
+                run=i, start_time=start_time, **minimiser_settings)
+    # Particle swarm step
+    external, internal = swarm.update_position(result=result)
+    print(swarm.best_subswarm_chi2)
+
+```
 #### **Cloud operation:**
 Use this [Colab Notebook to try GALLOP in Python mode for free]().
 You will need a Google account to run the notebook.
