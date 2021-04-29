@@ -112,7 +112,7 @@ from gallop import optimiser
 # Create structure object, then add data and Z-matrices
 mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
 mystructure.add_data("Famotidine.sdi", source="DASH")
-mystructure.add_z_matrix("FOGVIG03_1.z_matrix")
+mystructure.add_zmatrix("FOGVIG03_1.zmatrix")
 
 # Create swarm object and get the initial particle positions
 swarm = optimiser.Swarm(Structure=mystructure, n_particles=10000, n_swarms=10)
