@@ -133,10 +133,10 @@ n_gallop_iters = 20
 # Now write the GALLOP loop
 start_time = time.time()
 for i in range(n_gallop_iters):
-    # Local optimisation step
+    # Local optimisation
     result = optimiser.minimise(mystructure, external=external, internal=internal,
                 run=i, start_time=start_time, **minimiser_settings)
-    # Particle swarm step to generate new starting positions to minimise.
+    # Particle swarm
     external, internal = swarm.update_position(result=result)
     print(swarm.best_subswarm_chi2)
 
@@ -151,7 +151,7 @@ If you make use of GALLOP in your work, please cite the following papers:
 ### **Relevant articles**
 [Internal to Cartesian](https://pubmed.ncbi.nlm.nih.gov/15898109/) - GALLOP uses the Natural Extension Reference Frame method for converting internal to Cartesian coordinates.
 
-[Correlated Integrated Intensity Chisqd](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than R<sub>wp</sub> and other goodness of fit metrics, but requires the inverse covariance matrix from a Pawley refinement so the Le Bail method of intensity extraction is not suitable.
+[Correlated Integrated Intensity Chisqd](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than R<sub>wp</sub> and other goodness of fit metrics, but requires the inverse of the covariance matrix obtained from a Pawley refinement.
 
 [DASH](https://scripts.iucr.org/cgi-bin/paper?ks5103)
 
@@ -165,7 +165,7 @@ GALLOP makes use of a number of libraries, without which its development would h
 
 [PyTorch](https://pytorch.org/) - the original code that eventually became GALLOP was originally written using numpy. PyTorch served as a near drop-in replacement that allowed automatic differentiation and running on GPUs/TPUs.
 
-[Streamlit](https://streamlit.io/) - this allowed the WebApp to be written entirely in python, which made it significantly easier to integrate with the existing code.
+[Streamlit](https://streamlit.io/) - this allowed the WebApp to be written entirely in python, which made it easier to integrate with the existing code.
 
 ### **GPU/TPU Resources**
 [Google Colaboratory](https://colab.research.google.com) has been invaluable for the free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which give priority access to more powerful GPU resources amongst other benefits. A number of other services also allow free or cheap GPU access, for example:
