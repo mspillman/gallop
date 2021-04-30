@@ -1,9 +1,0 @@
-{
-    "cSpell.words": [
-        "SDPD"
-    ],
-
-    "python.linting.pylintArgs": [
-        "--generated-members=numpy.* ,torch.*"
-        ]
-}
