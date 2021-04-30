@@ -117,3 +117,4 @@ dmypy.json
 reset.bat
 GALLOP_results/
 GALLOP_user_settings/
+.vscode/
