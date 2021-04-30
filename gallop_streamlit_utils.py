@@ -204,7 +204,7 @@ def sidebar():
 
             percentage_cutoff = st.number_input(
                                     "% threshold correlation to ignore",
-                                    min_value=0.1, max_value=100., value=100.,
+                                    min_value=0.1, max_value=100., value=20.,
                                     step=20., format=None, key=None)
             include_dw_factors = st.checkbox("Include DW factors in chi2 calcs",
                                         value=True, key=None)
