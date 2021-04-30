@@ -109,7 +109,7 @@ import time
 from gallop.structure import Structure
 from gallop import optimiser
 
-# Create structure object, then add data and Z-matrices
+# Create a Structure object, then add data and Z-matrices
 mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
 mystructure.add_data("Famotidine.sdi", source="DASH")
 mystructure.add_zmatrix("FOGVIG03_1.zmatrix")

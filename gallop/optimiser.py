@@ -197,6 +197,18 @@ def find_learning_rate(Structure, external=None, internal=None,
             if logplot:
                 plt.xscale('log')
             plt.show()
+        if multiplication_factor is None:
+            minpoint = np.argmin(losses)
+            final_1 = (trial_values[minpoint:]
+                        - trial_values[minpoint:].min())[-1]
+            final_0pt5 = 0.5 * final_1
+            final_0pt25 = 0.25 * final_1
+            if losses[-1] < final_0pt25:
+                multiplication_factor = 1.0
+            elif losses[-1] < final_0pt5:
+                multiplication_factor = 0.75
+            else:
+                multiplication_factor = 0.5
 
         minimum_point = trial_values[losses == losses.min()][0]
         return trial_values, losses, multiplication_factor * minimum_point
