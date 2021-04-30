@@ -190,7 +190,7 @@ def sidebar():
                                     max_value=all_settings["n_LO_iters"],
                                     value=100, step=1, format=None, key=None)
             loss = st.selectbox("Loss function to minimise",
-                                ["chisqd", "chisqd * log(chisqd)", "chisqd^2"])
+                                ["chisqd * log(chisqd)", "chisqd", "chisqd^2"])
             if loss == "chisqd * log(chisqd)":
                 loss = "xlogx"
             elif loss == "chisqd":
@@ -198,9 +198,14 @@ def sidebar():
             else:
                 loss = "sse"
             reflection_percentage = st.number_input(
-                                        "% of reflections to include",
-                                        min_value=1, max_value=100, value=100,
-                                        step=1, format=None, key=None)
+                                    "% of reflections to include",
+                                    min_value=0.1, max_value=100., value=100.,
+                                    step=10., format=None, key=None)
+
+            percentage_cutoff = st.number_input(
+                                    "% threshold correlation to ignore",
+                                    min_value=0.1, max_value=100., value=100.,
+                                    step=20., format=None, key=None)
             include_dw_factors = st.checkbox("Include DW factors in chi2 calcs",
                                         value=True, key=None)
             memory_opt = st.checkbox(
@@ -216,6 +221,7 @@ def sidebar():
             reflection_percentage = 100
             include_dw_factors = True
             memory_opt = False
+            percentage_cutoff = 20.
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -228,6 +234,7 @@ def sidebar():
     all_settings["reflection_percentage"] = reflection_percentage
     all_settings["include_dw_factors"] = include_dw_factors
     all_settings["memory_opt"] = memory_opt
+    all_settings["percentage_cutoff"] = percentage_cutoff
 
     # Particle Swarm settings
     with st.sidebar.beta_expander(label="Particle Swarm", expanded=False):

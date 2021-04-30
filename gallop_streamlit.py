@@ -70,11 +70,14 @@ elif function == "GALLOP":
                                 name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
         if pawley_program == "DASH":
-            struct.add_data(sdi)
+            struct.add_data(sdi, source="DASH",
+                        percentage_cutoff=all_settings["percentage_cutoff"])
         elif pawley_program == "GSAS-II":
-            struct.add_data(gpx, source="GSAS")
+            struct.add_data(gpx, source="GSAS",
+                        percentage_cutoff=all_settings["percentage_cutoff"])
         else:
-            struct.add_data(out, source="TOPAS")
+            struct.add_data(out, source="TOPAS",
+                        percentage_cutoff=all_settings["percentage_cutoff"])
         for z in zms:
             check = z_matrix.Z_matrix(z)
             if all_settings["ignore_H_atoms"] and not check.H_atom_torsion_defs:
