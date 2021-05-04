@@ -74,6 +74,8 @@ def get_minimiser_settings(Structure):
     settings["eps"] = 1e-8
     settings["save_CIF"] = True
     settings["streamlit"] = False
+    settings["torsion_shadowing"] = False
+    settings["Z_prime"] = 1
     return settings
 
 
@@ -220,9 +222,10 @@ def find_learning_rate(Structure, external=None, internal=None,
 def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
     n_reflections=None, learning_rate_schedule="1cycle",
-    b_bounds_1_cycle=None, check_min=1, optimizer="Adam", verbose=False, print_every=100,
-    learning_rate=3e-2, betas=None, eps=1e-8, loss="sum", start_time=None,
-    run=1, save_trajectories=False, save_grad=False, save_loss=False,
+    b_bounds_1_cycle=None, check_min=1, optimizer="Adam", verbose=False,
+    print_every=100, learning_rate=3e-2, betas=None, eps=1e-8, loss="sum",
+    start_time=None, run=1, torsion_shadowing=False, Z_prime=1,
+    save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None,
     ignore_reflections_for_chi2_calc=False, use_progress_bar=True,
     save_CIF=True, streamlit=False):
@@ -321,6 +324,13 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             time will automatically be determined.
         run (int, optional): If a set of runs are being performed, then the run
             number can be passed for printing. Defaults to 1.
+        torsion_shadowing (bool, optional) : Pin the torsion angles for Z'>1
+            structures so that all fragments have the same torsion angles. This
+            can result in faster solutions, and once a "good" result is found,
+            this can be set to False to allow each fragment to refine freely.
+            Defaults to False
+        Z_prime (int, optional): If using torsion_shadowing, this is the Z' for
+            the current unit cell. Defaults to 1.
         save_trajectories (bool, optional): Store the DoF, chi_2 and loss value
             after every iteration. This will be slow, as it requires transfer
             from the GPU to CPU. Defaults to False.
@@ -370,7 +380,14 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     trajectories = []
     gradients = []
     losses = []
-
+    if torsion_shadowing:
+        # Only pay attention to the first block of torsions accounting for Z'>1.
+        # This assumes that all of the fragments have similar torsion angles.
+        # This can significantly speed up solving Z'>1 structures where this
+        # assumption is valid.
+        n_torsion_fragments = len(tensors["torsion"])
+        first_frag = int(n_torsion_fragments / Z_prime)
+        tensors["torsion"] = tensors["torsion"][:first_frag]*Z_prime
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
@@ -549,6 +566,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             "chi_2"        : chi_2.detach().cpu().numpy(),
             "GALLOP Iter"  : run
             }
+    if torsion_shadowing:
+        torsions = result["internal"]
+        torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
+        torsions = np.tile(torsions, (1,Z_prime))
+        result["internal"] = torsions
     if save_CIF:
         files.save_CIF_of_best_result(Structure, result, start_time,
                                         n_reflections)

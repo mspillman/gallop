@@ -126,6 +126,8 @@ elif function == "GALLOP":
                                         all_settings["device"].split(" = ")[0])
         minimiser_settings["loss"] = all_settings["loss"]
         minimiser_settings["optimizer"] = all_settings["optim"].lower()
+        minimiser_settings["torsion_shadowing"] = all_settings["torsion_shadowing"]
+        minimiser_settings["Z_prime"] = all_settings["Z_prime"]
 
         if all_settings["memory_opt"]:
             gsu.improve_GPU_memory_use(struct, minimiser_settings)
@@ -203,6 +205,10 @@ elif function == "GALLOP":
                                                 all_settings["global_update"]):
                     itertext = "GALLOP iteration " + str(i+1)
                     itertext += " Global update after this iter"
+                elif ((i+1)==all_settings["shadow_iters"] and 
+                                            all_settings["torsion_shadowing"]):
+                    itertext = "GALLOP iteration " + str(i+1)
+                    itertext += " Removing torsion shadowing after this iteration"
                 else:
                     itertext = "GALLOP iteration " + str(i+1)
                 iter_placeholder.text(itertext)
@@ -293,3 +299,6 @@ elif function == "GALLOP":
 
                 external, internal = swarm.update_position(result=result,
                                                             verbose=False)
+                if ((i+1)==all_settings["shadow_iters"] and 
+                                            all_settings["torsion_shadowing"]):
+                    minimiser_settings["torsion_shadowing"] = False

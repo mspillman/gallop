@@ -1,16 +1,21 @@
 # **GALLOP**
 **Gradient Accelerated LocaL Optimisation and Particle Swarm: a fast method for crystal structure determination from powder diffraction data.**
 
+Contents:
+- [Introduction](#introduction)
+- [Local Installation](#local-installation)
+- [Using GALLOP](#using-gallop)
+- [References and Resources](#references-and-resources)
+
+## **Introduction**
+
 GALLOP is a recently developed hybrid-algorithm for crystal structure determination from powder diffraction data (SDPD). This repository provides an implementation of GALLOP, which is capable of running on graphical processing units (GPUs). This provides significant performance advantages, and allows complex crystal structures to be solved extremely rapidly.
 
 Other software is required for PXRD data indexing and Pawley fitting. At the moment, GALLOP accepts input files produced by [DASH](https://www.ccdc.cam.ac.uk/solutions/csd-materials/components/dash/), [GSAS-II](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [TOPAS](http://www.topas-academic.net/). Z-matrices of the molecular fragments of interest are also required. Once all data is prepared, GALLOP can be used *via* a convenient web-based GUI or as part of a Python program.
 
 This repository contains several links to Jupyter Notebooks hosted on [Google Colaboratory](https://colab.research.google.com), which allows users to try out GALLOP for free. A paid tier is also available which gives priority access to more performant GPUs.
 
-Contents:
-- [Local Installation](#local-installation)
-- [Using GALLOP](#using-gallop)
-- [References and Resources](#references-and-resources)
+
 
 ------------------------------
 ## **Local Installation**
@@ -184,6 +189,6 @@ GALLOP makes use of a number of libraries, without which its development would h
 
 - [Vast.ai](https://vast.ai/) - cheap access to a wide variety of GPUs not offered by other services.
 
-A wide variety of bigger commercial providers are also available.
+A wide variety of bigger commercial providers (e.g. AWS, GCP, Azure) are also available.
 
 

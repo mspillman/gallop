@@ -189,6 +189,18 @@ def sidebar():
                 n_cooldown = st.number_input("Cooldown iters", min_value=1,
                                     max_value=all_settings["n_LO_iters"],
                                     value=100, step=1, format=None, key=None)
+            torsion_shadowing = st.checkbox("Use torsion shadowing",value=False)
+            if torsion_shadowing:
+                Z_prime = st.number_input("Enter Z-prime of structure",
+                                min_value=1, max_value=None, value=1, step=1,
+                                format=None, key=None)
+                shadow_iters = st.number_input("Number of shadowing iterations",
+                                min_value=1, 
+                                max_value=all_settings["n_GALLOP_iters"],
+                                value=10, step=1, format=None, key=None)
+            else:
+                Z_prime = False
+                shadow_iters = 0
             loss = st.selectbox("Loss function to minimise",
                                 ["chisqd * log(chisqd)", "chisqd", "chisqd^2"])
             if loss == "chisqd * log(chisqd)":
@@ -222,6 +234,9 @@ def sidebar():
             include_dw_factors = True
             memory_opt = False
             percentage_cutoff = 20.
+            torsion_shadowing = False
+            Z_prime = 1
+            shadow_iters = 0
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -235,6 +250,9 @@ def sidebar():
     all_settings["include_dw_factors"] = include_dw_factors
     all_settings["memory_opt"] = memory_opt
     all_settings["percentage_cutoff"] = percentage_cutoff
+    all_settings["torsion_shadowing"] = torsion_shadowing
+    all_settings["Z_prime"] = Z_prime
+    all_settings["shadow_iters"] = shadow_iters
 
     # Particle Swarm settings
     with st.sidebar.beta_expander(label="Particle Swarm", expanded=False):
