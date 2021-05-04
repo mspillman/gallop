@@ -527,6 +527,16 @@ def get_data_from_TOPAS_output(filename, percentage_cutoff_inv_cov=20):
     I = np.array(I)
     I_mult_corrected = I/m
     C_matrix_mult_corrected = np.diag(1/m) @ C_matrix @ np.diag(1/m)
+    #npeaks = len(hkl)
+    #while not np.all(
+    #    np.linalg.eigvals(
+    #    np.linalg.inv(C_matrix_mult_corrected[:npeaks][:,:npeaks])) > 0):
+    #    npeaks -= 1
+    #if npeaks < len(hkl):
+    #    print("WARNING - inverse covariance matrix is not positive definite.")
+    #    print("Recommend reducing peak count to",npeaks)
+    #    print("This is",round(100*float(npeaks)/len(hkl),2),"% of the peaks "
+    #            "in the Pawley file")
 
     ############################################################################
     # Still need to work out how to implement the % correlation cutoff

@@ -1,6 +1,10 @@
 # GALLOP
 **Gradient Accelerated LocaL Optimisation and Particle Swarm: a fast method for crystal structure determination from powder diffraction data.**
 
+GALLOP is a newly developed algorithm for crystal structure determination from powder diffraction data (SDPD). This repository provides an implementation of GALLOP, which may be used *via* a convenient included web app or used as part of a Python program.
+
+This repository contains several links to Jupyter Notebooks hosted on [Google Colaboratory](https://colab.research.google.com), which provides both free and paid access to GPUs via the web.
+
 Contents:
 - [Local Installation](#local-installation)
 - [Using GALLOP](#using-gallop)
@@ -8,9 +12,9 @@ Contents:
 
 ------------------------------
 ## Local Installation
-GALLOP is able to easily make use of cloud-based GPU resources, and as such, does not require a GPU to be available on a users machine to be used. However, some users may wish to install GALLOP locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it should be possible to install GALLOP on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
+GALLOP is able to easily make use of cloud-based GPU resources, and as such, does not require a GPU to be available on a users machine. However, some users may wish to make use of GALLOP locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run GALLOP on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
-For optimal performance, an NVidia GPU is recommended. It may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU, though this has not been tested.
+For optimal performance, an NVidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU, though this has not been tested.
 
 <br />
 
@@ -46,7 +50,7 @@ PyTorch should be installed first using the instructions on the PyTorch website.
 >>> import torch
 >>> print(torch.cuda.is_available())
 ```
-If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU. If it prints False, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that GALLOP will work using CPU-only PyTorch, but it will likely be extremely slow.
+If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that GALLOP will work using CPU-only PyTorch, but it will likely be extremely slow.
 
 Once PyTorch is properly installed, the remaining libraries can be installed using the following command, run from powershell or command prompt.
 ```
@@ -63,14 +67,14 @@ Helper functions are available within GALLOP to read Pawley fitting outputs from
 
 - DASH: follow the Pawley fitting procedure as normal, and ensure that the resultant ```.sdi, .dsl, .hcv``` and ```.tic``` files are available.
 
-- GSAS-II: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** parameters apart from the intensities (i.e. peak shape, unit cell, background etc). Reset the intensity values, then ensure that only the intensities will refine. Ensure that for this final refinement, the optimisation algorithm is set to *analytic Jacobian*. This is critical, as the default *Hessian* optimiser modifies the covariance matrix in ways that produce errors in GALLOP. After saving, GALLOP will read in the ```.gpx``` file.
+- GSAS-II: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** parameters apart from the intensities (i.e. peak shape, unit cell, background etc). Reset the intensity values, then ensure that only the intensities will be refined. For this final refinement, the optimisation algorithm should be set to *analytic Jacobian*. This is critical, as the default *analytic Hessian* optimiser modifies the covariance matrix in ways that produce errors in GALLOP. After saving, GALLOP will read in the ```.gpx``` file.
 
-- TOPAS: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refined parameters in the ```.inp```, and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp```. GALLOP will read in the resultant ```.out``` file.
+- TOPAS: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refined parameters in the ```.inp```, and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp``` file. GALLOP will read in the resultant ```.out``` file.
 
 ### **Z-matrices**
 GALLOP is able to read Z-matrices that have been produced by the ```MakeZmatrix.exe``` program that is bundled with DASH.
 
-One commonly encountered error is when the resultant Z-matrix has torsion angles to be refined that are defined in terms of one or more hydrogen atoms. To fix this issue, use the following steps:
+One commonly encountered error is when a Z-matrix has torsion angles to be refined that are defined in terms of one or more hydrogen atoms. To fix this issue, use the following steps:
 1. Produce a CIF of the structure from which the Z-matrix is being generated
 2. Reorder the atoms in the CIF such that all hydrogen atoms are listed *after* all non-hydrogen atoms.
 3. Regenerate the Z-matrices with DASH / MakeZmatrix.exe

@@ -97,7 +97,6 @@ elif function == "GALLOP":
                 u.read()
                 name = u.name.replace(" ", "_")
                 os.remove(name)
-            upload_key = time.time()
 
         minimiser_settings = optimiser.get_minimiser_settings(struct)
         minimiser_settings["streamlit"] = True

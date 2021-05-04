@@ -187,9 +187,9 @@ class Structure(object):
 
         Args:
             filename (str): filename of file from which to read the data
-            source (str, optional): data source. Currently only "DASH" is
-                accepted as an argument. More programs may be added in the
-                future. Defaults to "DASH".
+            source (str, optional): data source. Currently only "DASH", "GSAS"
+                or "TOPAS" are accepted as an argument.
+                More programs may be added in the future. Defaults to "DASH".
             percentage_cutoff_hcv (int, optional): the minimum percentage
             correlation to be included in the inverse covariance
             matrix. Defaults to 20 to be comparable with DASH,

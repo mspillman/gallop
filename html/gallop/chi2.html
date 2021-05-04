@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>gallop.chi2 API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gallop.chi2</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import torch
+
+import gallop.intensities as intensities
+import gallop.zm_to_cart as zm_to_cart
+import gallop.tensor_prep as tensor_prep
+
+@torch.jit.script
+def calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+        observed_intensities, sum_1_1):
+    &#34;&#34;&#34;
+    Given sets of calculated intensities, the Pawley-derived inverse covariance
+    matrix, and the extracted observed intensities, calculate chi2 according to
+    the equation described by David et al.
+
+    Args:
+        calculated_intensities (Tensor): Tensor of shape (n_samples, n_peaks)
+            containing the calculated intensity of each hkl
+        inverse_covariance_matrix (Tensor): Tensor of shape (n_peaks, n_peaks)
+            obtained from the Pawley fit of the diffraction data
+        observed_intensities (Tensor): Tensor of shape (n_peaks,) - observed
+            intensities obtained by Pawley fit
+        sum_1_1 (Tensor): Pre-calculated first term of the scaling factor,
+            equivalent to:
+            torch.mv(inverse_covariance_matrix, observed_intensities)
+
+    Returns:
+        Tensor: the chi2 value for each calculated pattern
+    &#34;&#34;&#34;
+    sum_1_2 = torch.einsum(&#34;ij,j-&gt;i&#34;,calculated_intensities,sum_1_1)
+
+    sum_2_1 = torch.einsum(&#34;ij,kj-&gt;ki&#34;,inverse_covariance_matrix,
+                                        calculated_intensities)
+    sum_2_2 = torch.einsum(&#34;ij,ij-&gt;i&#34;,calculated_intensities,sum_2_1)
+
+    # Scaling factor for calculated intensities.
+    scale = (sum_1_2 / sum_2_2).reshape(-1,1)
+
+    # Difference between observed and scaled calculated intensities
+    diff = observed_intensities.repeat(calculated_intensities.shape[0],1)\
+            - (calculated_intensities*scale)
+
+    # Finally calculate chisqd - d.A.d
+    chi_1 = torch.einsum(&#34;ij,kj-&gt;ki&#34;,inverse_covariance_matrix,diff) # A.d
+    chi_2 = torch.einsum(&#34;ij,ij-&gt;i&#34;,diff,chi_1) # d.(A.d)
+
+    return chi_2 / (calculated_intensities.shape[1] - 2)
+
+
+
+def get_chi_2(external, internal, position, rotation, torsion, initial_D2,
+        zmatrices_degrees_of_freedom, bond_connection, angle_connection,
+        torsion_connection, torsion_refineable_indices, lattice_inv_matrix,
+        init_cart_coords, hkl, intensity_calc_prefix_fs,
+        intensity_calc_prefix_fs_asymmetric, nsamples_ones, affine_matrices,
+        centrosymmetric, space_group_number, observed_intensities,
+        chisqd_scale_sum_1_1, inverse_covariance_matrix):
+    &#34;&#34;&#34;
+    Convenience function to get chi2 directly from external/internal rather
+    than performing the three steps required:
+    1. coords, 2. intensities, 3. chi2
+
+    The required arguments are produced and packaged into a dictionary by the
+    gallop.tensor_prep code
+
+    Args:
+        external (Tensor): The external degrees of freedom
+        internal (Tensor): The internal degrees of freedom
+        position (list): List of tensors with the indices of the positional
+            degrees of freedom (dtype=torch.long)
+        rotation (list): List of tensors with the indices of the rotational
+            degrees of freedom (dtype=torch.long)
+        torsion (list): List of tensors with the indices of the torsional
+            degrees of freedom (dtype=torch.long)
+        initial_D2 (list): List of tensors of the initial_D2 matrices for each
+            ZM with &gt;0 internal DOFs
+        zmatrices_degrees_of_freedom (list): List of ints of the total number
+            of degrees of freedom for each Z-matrix
+        bond_connection (list): List of tensors with the indices of the bonded
+            atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+            (dtype=torch.long)
+        angle_connection (list): List of tensors with the indices of the angle
+            atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+            (dtype=torch.long)
+        torsion_connection (list): List of tensors with the indices of the
+            torsion atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+            (dtype=torch.long)
+        torsion_refineable_indices (list): List of tensors with the indices of
+            the refineable torsion angles obtained from the ZMs. Only for ZMs
+            with &gt; 0 torsions. (dtype=torch.long)
+        lattice_inv_matrix (Tensor): Inverse of the lattice matrix
+            representation to convert Cartesian -&gt; fractional coords
+        init_cart_coords (list): List of tensors with Cartesian coordinates
+            of rigid bodies (dtype=torch.long)
+        hkl (Tensor): The Miller indices of the reflections
+        intensity_calc_prefix_fs (Tensor): The atomic scattering factors, occus
+            and Debye-Waller factors (optional) for all atoms in the unit cell
+        intensity_calc_prefix_fs_asymmetric (Tensor): The atomic scattering
+            factors, occus and Debye-Waller factors (optional) for atoms in the
+            asymmetric unit.
+        nsamples_ones (Tensor): A tensor of shape (n_samples, n_atoms, 1) that
+            is required for the fall-back method of intensity calculation
+        affine_matrices (Tensor): A set of N 4x4 matrices obtained from the
+            space group used in the fall-back method of intensity calculation,
+            where N is the number of symmetry equivalent positions in the unit
+            cell.
+        centrosymmetric (bool): True if the space group is centrosymmetric
+        space_group_number (int): The number of the space group
+        observed_intensities (Tensor): The observed intensities obtained from
+            a Pawley fit
+        chisqd_scale_sum_1_1 (Tensor): Pre-calculated term used in a scaling
+            factor in chi_2 calculation
+        inverse_covariance_matrix (Tensor): The inverse_covariance_matrix
+            obtained from the Pawley fit
+
+    Returns:
+        Tensor: The chi_2 values corresponding to the n_samples
+    &#34;&#34;&#34;
+    asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                                external, internal, position, rotation, torsion,
+                                initial_D2, zmatrices_degrees_of_freedom,
+                                bond_connection, angle_connection,
+                                torsion_connection, torsion_refineable_indices,
+                                lattice_inv_matrix, init_cart_coords)
+
+    calculated_intensities = intensities.calculate_intensities(
+                                asymmetric_frac_coords, hkl,
+                                intensity_calc_prefix_fs,
+                                intensity_calc_prefix_fs_asymmetric,
+                                nsamples_ones, affine_matrices, centrosymmetric,
+                                space_group_number)
+
+    chisqd = calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+                        observed_intensities, chisqd_scale_sum_1_1)
+
+    return chisqd
+
+
+def get_chi2_from_CIF(Structure, n_reflections=None, include_dw_factors=True,
+    dtype=torch.float32, device=None):
+    &#34;&#34;&#34;
+    Read in a CIF and calculate the chi_2 value given the data in the Structure
+    object.
+
+    Args:
+        Structure (class): GALLOP Structure object with the hkls, observed
+            intensities and inverse covariance matrix present.
+        n_reflections (int, optional): If None, uses all available reflections
+            for the chi_2 calculation. Defaults to None.
+        include_dw_factors (bool, optional): Include Debye-Waller factors in
+            the intensity calculation. Defaults to True.
+        dtype (torch dtype, optional): The data type to use.
+            Defaults to torch.float32.
+        device (torch device, optional): Where to run the calculations.
+            If None, checks to see if a GPU is present and runs on it if so.
+            Defaults to None.
+
+    Returns:
+        numpy array: The chi_2 value obtained from the CIF
+    &#34;&#34;&#34;
+    tensors = tensor_prep.get_all_required_tensors(
+                Structure, device=device, dtype=dtype,
+                n_reflections=n_reflections, verbose=False,
+                include_dw_factors=include_dw_factors, from_CIF=True
+                )
+    centrosymmetric = tensors[&#34;centrosymmetric&#34;]
+    space_group_number = tensors[&#34;space_group_number&#34;]
+    asymmetric_frac_coords = tensors[&#34;asymmetric_frac_coords&#34;]
+    hkl = tensors[&#34;hkl&#34;]
+    i_calc_prefix_fs = tensors[&#34;intensity_calc_prefix_fs&#34;]
+    i_calc_prefix_fs_asymmetric = tensors[&#34;intensity_calc_prefix_fs_asymmetric&#34;]
+    nsamples_ones = tensors[&#34;nsamples_ones&#34;]
+    affine_matrices = tensors[&#34;affine_matrices&#34;]
+    inverse_covariance_matrix = tensors[&#34;inverse_covariance_matrix&#34;]
+    observed_intensities = tensors[&#34;observed_intensities&#34;]
+    chisqd_scale_sum_1_1 = tensors[&#34;chisqd_scale_sum_1_1&#34;]
+
+
+    calculated_intensities = intensities.calculate_intensities(
+                        asymmetric_frac_coords, hkl, i_calc_prefix_fs,
+                        i_calc_prefix_fs_asymmetric, nsamples_ones,
+                        affine_matrices, centrosymmetric, space_group_number)
+
+    chisqd = calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+                        observed_intensities, chisqd_scale_sum_1_1)
+
+    del tensors
+
+    return chisqd.detach().cpu().numpy()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gallop.chi2.get_chi2_from_CIF"><code class="name flex">
+<span>def <span class="ident">get_chi2_from_CIF</span></span>(<span>Structure, n_reflections=None, include_dw_factors=True, dtype=torch.float32, device=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read in a CIF and calculate the chi_2 value given the data in the Structure
+object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>Structure</code></strong> :&ensp;<code>class</code></dt>
+<dd>GALLOP Structure object with the hkls, observed
+intensities and inverse covariance matrix present.</dd>
+<dt><strong><code>n_reflections</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>If None, uses all available reflections
+for the chi_2 calculation. Defaults to None.</dd>
+<dt><strong><code>include_dw_factors</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Include Debye-Waller factors in
+the intensity calculation. Defaults to True.</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>torch dtype</code>, optional</dt>
+<dd>The data type to use.
+Defaults to torch.float32.</dd>
+<dt><strong><code>device</code></strong> :&ensp;<code>torch device</code>, optional</dt>
+<dd>Where to run the calculations.
+If None, checks to see if a GPU is present and runs on it if so.
+Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>numpy array</code></dt>
+<dd>The chi_2 value obtained from the CIF</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_chi2_from_CIF(Structure, n_reflections=None, include_dw_factors=True,
+    dtype=torch.float32, device=None):
+    &#34;&#34;&#34;
+    Read in a CIF and calculate the chi_2 value given the data in the Structure
+    object.
+
+    Args:
+        Structure (class): GALLOP Structure object with the hkls, observed
+            intensities and inverse covariance matrix present.
+        n_reflections (int, optional): If None, uses all available reflections
+            for the chi_2 calculation. Defaults to None.
+        include_dw_factors (bool, optional): Include Debye-Waller factors in
+            the intensity calculation. Defaults to True.
+        dtype (torch dtype, optional): The data type to use.
+            Defaults to torch.float32.
+        device (torch device, optional): Where to run the calculations.
+            If None, checks to see if a GPU is present and runs on it if so.
+            Defaults to None.
+
+    Returns:
+        numpy array: The chi_2 value obtained from the CIF
+    &#34;&#34;&#34;
+    tensors = tensor_prep.get_all_required_tensors(
+                Structure, device=device, dtype=dtype,
+                n_reflections=n_reflections, verbose=False,
+                include_dw_factors=include_dw_factors, from_CIF=True
+                )
+    centrosymmetric = tensors[&#34;centrosymmetric&#34;]
+    space_group_number = tensors[&#34;space_group_number&#34;]
+    asymmetric_frac_coords = tensors[&#34;asymmetric_frac_coords&#34;]
+    hkl = tensors[&#34;hkl&#34;]
+    i_calc_prefix_fs = tensors[&#34;intensity_calc_prefix_fs&#34;]
+    i_calc_prefix_fs_asymmetric = tensors[&#34;intensity_calc_prefix_fs_asymmetric&#34;]
+    nsamples_ones = tensors[&#34;nsamples_ones&#34;]
+    affine_matrices = tensors[&#34;affine_matrices&#34;]
+    inverse_covariance_matrix = tensors[&#34;inverse_covariance_matrix&#34;]
+    observed_intensities = tensors[&#34;observed_intensities&#34;]
+    chisqd_scale_sum_1_1 = tensors[&#34;chisqd_scale_sum_1_1&#34;]
+
+
+    calculated_intensities = intensities.calculate_intensities(
+                        asymmetric_frac_coords, hkl, i_calc_prefix_fs,
+                        i_calc_prefix_fs_asymmetric, nsamples_ones,
+                        affine_matrices, centrosymmetric, space_group_number)
+
+    chisqd = calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+                        observed_intensities, chisqd_scale_sum_1_1)
+
+    del tensors
+
+    return chisqd.detach().cpu().numpy()</code></pre>
+</details>
+</dd>
+<dt id="gallop.chi2.get_chi_2"><code class="name flex">
+<span>def <span class="ident">get_chi_2</span></span>(<span>external, internal, position, rotation, torsion, initial_D2, zmatrices_degrees_of_freedom, bond_connection, angle_connection, torsion_connection, torsion_refineable_indices, lattice_inv_matrix, init_cart_coords, hkl, intensity_calc_prefix_fs, intensity_calc_prefix_fs_asymmetric, nsamples_ones, affine_matrices, centrosymmetric, space_group_number, observed_intensities, chisqd_scale_sum_1_1, inverse_covariance_matrix)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convenience function to get chi2 directly from external/internal rather
+than performing the three steps required:
+1. coords, 2. intensities, 3. chi2</p>
+<p>The required arguments are produced and packaged into a dictionary by the
+gallop.tensor_prep code</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>external</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The external degrees of freedom</dd>
+<dt><strong><code>internal</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The internal degrees of freedom</dd>
+<dt><strong><code>position</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of the positional
+degrees of freedom (dtype=torch.long)</dd>
+<dt><strong><code>rotation</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of the rotational
+degrees of freedom (dtype=torch.long)</dd>
+<dt><strong><code>torsion</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of the torsional
+degrees of freedom (dtype=torch.long)</dd>
+<dt><strong><code>initial_D2</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors of the initial_D2 matrices for each
+ZM with &gt;0 internal DOFs</dd>
+<dt><strong><code>zmatrices_degrees_of_freedom</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of ints of the total number
+of degrees of freedom for each Z-matrix</dd>
+<dt><strong><code>bond_connection</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of the bonded
+atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+(dtype=torch.long)</dd>
+<dt><strong><code>angle_connection</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of the angle
+atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+(dtype=torch.long)</dd>
+<dt><strong><code>torsion_connection</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of the
+torsion atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+(dtype=torch.long)</dd>
+<dt><strong><code>torsion_refineable_indices</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with the indices of
+the refineable torsion angles obtained from the ZMs. Only for ZMs
+with &gt; 0 torsions. (dtype=torch.long)</dd>
+<dt><strong><code>lattice_inv_matrix</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>Inverse of the lattice matrix
+representation to convert Cartesian -&gt; fractional coords</dd>
+<dt><strong><code>init_cart_coords</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of tensors with Cartesian coordinates
+of rigid bodies (dtype=torch.long)</dd>
+<dt><strong><code>hkl</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The Miller indices of the reflections</dd>
+<dt><strong><code>intensity_calc_prefix_fs</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The atomic scattering factors, occus
+and Debye-Waller factors (optional) for all atoms in the unit cell</dd>
+<dt><strong><code>intensity_calc_prefix_fs_asymmetric</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The atomic scattering
+factors, occus and Debye-Waller factors (optional) for atoms in the
+asymmetric unit.</dd>
+<dt><strong><code>nsamples_ones</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>A tensor of shape (n_samples, n_atoms, 1) that
+is required for the fall-back method of intensity calculation</dd>
+<dt><strong><code>affine_matrices</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>A set of N 4x4 matrices obtained from the
+space group used in the fall-back method of intensity calculation,
+where N is the number of symmetry equivalent positions in the unit
+cell.</dd>
+<dt><strong><code>centrosymmetric</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the space group is centrosymmetric</dd>
+<dt><strong><code>space_group_number</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the space group</dd>
+<dt><strong><code>observed_intensities</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The observed intensities obtained from
+a Pawley fit</dd>
+<dt><strong><code>chisqd_scale_sum_1_1</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>Pre-calculated term used in a scaling
+factor in chi_2 calculation</dd>
+<dt><strong><code>inverse_covariance_matrix</code></strong> :&ensp;<code>Tensor</code></dt>
+<dd>The inverse_covariance_matrix
+obtained from the Pawley fit</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tensor</code></dt>
+<dd>The chi_2 values corresponding to the n_samples</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_chi_2(external, internal, position, rotation, torsion, initial_D2,
+        zmatrices_degrees_of_freedom, bond_connection, angle_connection,
+        torsion_connection, torsion_refineable_indices, lattice_inv_matrix,
+        init_cart_coords, hkl, intensity_calc_prefix_fs,
+        intensity_calc_prefix_fs_asymmetric, nsamples_ones, affine_matrices,
+        centrosymmetric, space_group_number, observed_intensities,
+        chisqd_scale_sum_1_1, inverse_covariance_matrix):
+    &#34;&#34;&#34;
+    Convenience function to get chi2 directly from external/internal rather
+    than performing the three steps required:
+    1. coords, 2. intensities, 3. chi2
+
+    The required arguments are produced and packaged into a dictionary by the
+    gallop.tensor_prep code
+
+    Args:
+        external (Tensor): The external degrees of freedom
+        internal (Tensor): The internal degrees of freedom
+        position (list): List of tensors with the indices of the positional
+            degrees of freedom (dtype=torch.long)
+        rotation (list): List of tensors with the indices of the rotational
+            degrees of freedom (dtype=torch.long)
+        torsion (list): List of tensors with the indices of the torsional
+            degrees of freedom (dtype=torch.long)
+        initial_D2 (list): List of tensors of the initial_D2 matrices for each
+            ZM with &gt;0 internal DOFs
+        zmatrices_degrees_of_freedom (list): List of ints of the total number
+            of degrees of freedom for each Z-matrix
+        bond_connection (list): List of tensors with the indices of the bonded
+            atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+            (dtype=torch.long)
+        angle_connection (list): List of tensors with the indices of the angle
+            atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+            (dtype=torch.long)
+        torsion_connection (list): List of tensors with the indices of the
+            torsion atoms obtained from the ZMs. Only for ZMs with &gt; 0 torsions.
+            (dtype=torch.long)
+        torsion_refineable_indices (list): List of tensors with the indices of
+            the refineable torsion angles obtained from the ZMs. Only for ZMs
+            with &gt; 0 torsions. (dtype=torch.long)
+        lattice_inv_matrix (Tensor): Inverse of the lattice matrix
+            representation to convert Cartesian -&gt; fractional coords
+        init_cart_coords (list): List of tensors with Cartesian coordinates
+            of rigid bodies (dtype=torch.long)
+        hkl (Tensor): The Miller indices of the reflections
+        intensity_calc_prefix_fs (Tensor): The atomic scattering factors, occus
+            and Debye-Waller factors (optional) for all atoms in the unit cell
+        intensity_calc_prefix_fs_asymmetric (Tensor): The atomic scattering
+            factors, occus and Debye-Waller factors (optional) for atoms in the
+            asymmetric unit.
+        nsamples_ones (Tensor): A tensor of shape (n_samples, n_atoms, 1) that
+            is required for the fall-back method of intensity calculation
+        affine_matrices (Tensor): A set of N 4x4 matrices obtained from the
+            space group used in the fall-back method of intensity calculation,
+            where N is the number of symmetry equivalent positions in the unit
+            cell.
+        centrosymmetric (bool): True if the space group is centrosymmetric
+        space_group_number (int): The number of the space group
+        observed_intensities (Tensor): The observed intensities obtained from
+            a Pawley fit
+        chisqd_scale_sum_1_1 (Tensor): Pre-calculated term used in a scaling
+            factor in chi_2 calculation
+        inverse_covariance_matrix (Tensor): The inverse_covariance_matrix
+            obtained from the Pawley fit
+
+    Returns:
+        Tensor: The chi_2 values corresponding to the n_samples
+    &#34;&#34;&#34;
+    asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                                external, internal, position, rotation, torsion,
+                                initial_D2, zmatrices_degrees_of_freedom,
+                                bond_connection, angle_connection,
+                                torsion_connection, torsion_refineable_indices,
+                                lattice_inv_matrix, init_cart_coords)
+
+    calculated_intensities = intensities.calculate_intensities(
+                                asymmetric_frac_coords, hkl,
+                                intensity_calc_prefix_fs,
+                                intensity_calc_prefix_fs_asymmetric,
+                                nsamples_ones, affine_matrices, centrosymmetric,
+                                space_group_number)
+
+    chisqd = calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+                        observed_intensities, chisqd_scale_sum_1_1)
+
+    return chisqd</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gallop" href="index.html">gallop</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gallop.chi2.get_chi2_from_CIF" href="#gallop.chi2.get_chi2_from_CIF">get_chi2_from_CIF</a></code></li>
+<li><code><a title="gallop.chi2.get_chi_2" href="#gallop.chi2.get_chi_2">get_chi_2</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
