@@ -44,16 +44,16 @@ def multiGPU(GPU, start, end, external, internal, structure_files,
     return result
 
 
-def minimise(i, struct, swarm, external, internal, GPU_split,
+def minimise(iteration, struct, swarm, external, internal, GPU_split,
             minimiser_settings, start_time=None):
     """[summary]
 
     Args:
-        i (int): [description]
-        struct (gallop.Structure): [description]
-        swarm (gallop.Swarm): [description]
-        external (np.array): [description]
-        internal (np.array): [description]
+        iteration (int): The current GALLOP iteration
+        struct (gallop.Structure): GALLOP Structure object
+        swarm (gallop.Swarm): GALLOP Swarm object
+        external (np.array): Numpy array of the external degrees of freedom
+        internal (np.array): Numpy array of the internal degrees of freedom
         GPU_split (List of lists): List of lists with the following structure:
                     [[GPU_1, % on GPU_1],
                     [GPU_2, % on GPU_2],
@@ -100,7 +100,7 @@ def minimise(i, struct, swarm, external, internal, GPU_split,
     for x in results[1:]:
         combined.update(x)
     # Now reconstruct the full results dict
-    result = {"GALLOP Iter" : i}
+    result = {"GALLOP Iter" : iteration}
     for d in devices:
         if "external" in result.keys():
             result["external"] = np.vstack([result["external"],
