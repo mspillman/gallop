@@ -1,9 +1,11 @@
-# GALLOP
+# **GALLOP**
 **Gradient Accelerated LocaL Optimisation and Particle Swarm: a fast method for crystal structure determination from powder diffraction data.**
 
-GALLOP is a newly developed algorithm for crystal structure determination from powder diffraction data (SDPD). This repository provides an implementation of GALLOP, which may be used *via* a convenient included web app or used as part of a Python program.
+GALLOP is a recently developed hybrid-algorithm for crystal structure determination from powder diffraction data (SDPD). This repository provides an implementation of GALLOP, which is capable of running on graphical processing units (GPUs). This provides significant performance advantages, and allows complex crystal structures to be solved extremely rapidly.
 
-This repository contains several links to Jupyter Notebooks hosted on [Google Colaboratory](https://colab.research.google.com), which provides both free and paid access to GPUs via the web.
+Other software is required for PXRD data indexing and Pawley fitting. At the moment, GALLOP accepts input files produced by [DASH](https://www.ccdc.cam.ac.uk/solutions/csd-materials/components/dash/), [GSAS-II](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [TOPAS](http://www.topas-academic.net/). Z-matrices of the molecular fragments of interest are also required. Once all data is prepared, GALLOP can be used *via* a convenient web-based GUI or as part of a Python program.
+
+This repository contains several links to Jupyter Notebooks hosted on [Google Colaboratory](https://colab.research.google.com), which allows users to try out GALLOP for free. A paid tier is also available which gives priority access to more performant GPUs.
 
 Contents:
 - [Local Installation](#local-installation)
@@ -11,10 +13,10 @@ Contents:
 - [References and Resources](#references-and-resources)
 
 ------------------------------
-## Local Installation
+## **Local Installation**
 GALLOP is able to easily make use of cloud-based GPU resources, and as such, does not require a GPU to be available on a users machine. However, some users may wish to make use of GALLOP locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run GALLOP on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
-For optimal performance, an NVidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU, though this has not been tested.
+For optimal performance, an NVidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU, though this has not been tested. If using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
 <br />
 
@@ -37,7 +39,7 @@ Once the above are installed, several Python Libraries must also be installed. T
 | Library |Comments|
 |---------|--------|
 | [PyTorch](https://pytorch.org/get-started/locally/) | Must be compatible with the version of CUDA installed. Installation via conda package manager recommended. |
-| [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. v2021.2.8.1 needed |
+| [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
 | [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Allows for non-standard local optimisers such as DiffGrad |
 | [pyDOE](https://pythonhosted.org/pyDOE/) | Latin-hypercube sampling for initial points |
 | [Streamlit](https://streamlit.io/) | Needed for the WebApp |
@@ -56,11 +58,13 @@ Once PyTorch is properly installed, the remaining libraries can be installed usi
 ```
 pip install pymatgen==2021.2.8.1 torch_optimizer pyDOE streamlit tqdm
 ```
+If C++ build tools are not available, this is likely to result in an error.
+
 ------------------------------
 
 <br />
 
-## Using GALLOP
+## **Using GALLOP**
 
 ### **PXRD Data preparation**
 Helper functions are available within GALLOP to read Pawley fitting outputs from DASH, GSAS-II and TOPAS.
@@ -147,7 +151,7 @@ for i in range(n_gallop_iters):
 ```
 ------------------------------
 
-## References and resources
+## **References and resources**
 If you make use of GALLOP in your work, please cite the following papers:
 - Spillman and Shankland 1
 - Spillman and Shankland 2
