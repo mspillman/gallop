@@ -302,3 +302,7 @@ elif function == "GALLOP":
                 if ((i+1)==all_settings["shadow_iters"] and 
                                             all_settings["torsion_shadowing"]):
                     minimiser_settings["torsion_shadowing"] = False
+                    # Add a little random noise to the internal DoF as they will
+                    # all be the same. This is roughly +/- 10 deg
+                    internal += np.random.uniform(-0.157,0.157,
+                                    size=internal.shape)

@@ -191,8 +191,8 @@ def sidebar():
                                     value=100, step=1, format=None, key=None)
             torsion_shadowing = st.checkbox("Use torsion shadowing",value=False)
             if torsion_shadowing:
-                Z_prime = st.number_input("Enter Z-prime of structure",
-                                min_value=1, max_value=None, value=1, step=1,
+                Z_prime = st.number_input("Enter Z' of structure",
+                                min_value=1, max_value=None, value=2, step=1,
                                 format=None, key=None)
                 shadow_iters = st.number_input("Number of shadowing iterations",
                                 min_value=1, 
@@ -215,8 +215,8 @@ def sidebar():
                                     step=10., format=None, key=None)
 
             percentage_cutoff = st.number_input(
-                                    "% threshold correlation to ignore",
-                                    min_value=0.1, max_value=100., value=20.,
+                                    "% correlation to ignore",
+                                    min_value=0.0, max_value=100., value=20.,
                                     step=20., format=None, key=None)
             include_dw_factors = st.checkbox("Include DW factors in chi2 calcs",
                                         value=True, key=None)
