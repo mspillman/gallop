@@ -13,8 +13,6 @@ GALLOP is a recently developed hybrid algorithm for crystal structure determinat
 
 Other software is required for PXRD data indexing and intensity extraction *via* Pawley refinement. At the moment, GALLOP accepts input files produced by [DASH](https://www.ccdc.cam.ac.uk/solutions/csd-materials/components/dash/), [GSAS-II](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [TOPAS](http://www.topas-academic.net/). Z-matrices of the molecular fragments of interest are also required. Once all data is prepared, GALLOP can be used *via* a convenient web-based GUI or as part of a Python program.
 
-This repository contains several links to Jupyter Notebooks hosted on [Google Colaboratory](https://colab.research.google.com), which allows users to try out GALLOP for free. A paid tier is also available which gives priority access to more performant GPUs.
-
 ------------------------------
 ## **Try GALLOP**
 You will need a Google account to run the notebooks linked below. To use the web app, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
@@ -173,6 +171,9 @@ for i in range(n_gallop_iters):
     print(swarm.best_subswarm_chi2)
 
 ```
+### **TPU use**
+
+Instructions coming soon
 
 ------------------------------
 ## **Local Installation**
@@ -186,7 +187,7 @@ For optimal performance, an NVidia GPU is recommended. However, it may be possib
 
 | Dependency | Version |Comments|
 |------------|---------|--------|
-| [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 will probably also work. Anaconda distribution strongly recommended.|
+| [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution strongly recommended.|
 | [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs, though this has not yet been tested thoroughly |
 | [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with CUDA 10.2 or 11.x | Login required. Not strictly necessary for GALLOP, but will allow pytorch to be used with more flexibility |
 | [Visual C++ build tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation (see below).|
@@ -253,7 +254,7 @@ GALLOP makes use of a number of libraries, without which its development would h
 - [Streamlit](https://streamlit.io/) - this allowed the WebApp to be written entirely in python, which made it easier to integrate with the existing code.
 
 ### **GPU/TPU Resources**
-[Google Colaboratory](https://colab.research.google.com) has been invaluable for the free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which give priority access to more powerful GPU resources amongst other benefits. A number of other services also allow free or cheap GPU access, for example:
+[Google Colaboratory](https://colab.research.google.com) has been invaluable for the free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which gives priority access to more powerful GPU resources amongst other benefits. A number of other services also allow free or cheap GPU access, for example:
 
 - [Kaggle](https://www.kaggle.com/) - free access to GPUs and TPUs, run time capped at 30 hours / week
 
