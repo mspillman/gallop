@@ -1,3 +1,10 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Fast conversion from internal to Cartesian coordinates.
+"""
+
 import torch
 import gallop.tensor_prep as tensor_prep
 

@@ -1,3 +1,11 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+GALLOP Structure class, used to hold all of the information need for GALLOP SDPD
+attempts.
+"""
+
 import json
 import os
 import numpy as np

@@ -1,3 +1,10 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Provides functions for the web app
+"""
+
 # Others needed
 import glob
 import base64

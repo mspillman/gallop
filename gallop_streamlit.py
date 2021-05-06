@@ -1,3 +1,10 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+GALLOP web app, built with Streamlit.
+"""
+
 import time
 import os
 import glob
@@ -16,7 +23,7 @@ import gallop.optimiser as optimiser
 import gallop.structure as structure
 import gallop.multiGPU as multiGPU
 
-st.set_page_config(page_title='GALLOP WebApp', page_icon = None,
+st.set_page_config(page_title='GALLOP Web App', page_icon = None,
                     layout = 'centered', initial_sidebar_state = 'auto')
 
 

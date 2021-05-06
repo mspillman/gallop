@@ -1,3 +1,10 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Provides functions to generate all of the tensors needed for local optimisation
+"""
+
 import torch
 import numpy as np
 

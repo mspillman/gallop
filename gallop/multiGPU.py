@@ -1,3 +1,12 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Allows GALLOP to run on multiple GPUs via multiprocessing.
+This may be slower than simply running multiple instances of GALLOP
+simultaneously, so not really recommended unless needed.
+"""
+
 import torch
 import multiprocessing as mp
 import numpy as np

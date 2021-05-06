@@ -1,8 +1,17 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Provides functions for calculating chi-squared given a set of external and
+internal degrees of freedom.
+"""
+
 import torch
 
 import gallop.intensities as intensities
 import gallop.zm_to_cart as zm_to_cart
 import gallop.tensor_prep as tensor_prep
+
 
 @torch.jit.script
 def calc_chisqd(calculated_intensities, inverse_covariance_matrix,

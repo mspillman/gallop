@@ -1,3 +1,10 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Calculates PXRD intensities given fractional atomic coordinates.
+"""
+
 import torch
 
 # Not PEP8 compliant in most of the file but it's been formatted to try to be

@@ -1,3 +1,10 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Provides functions for working with files.
+"""
+
 import numpy as np
 import pymatgen as pmg
 from pymatgen.symmetry import groups

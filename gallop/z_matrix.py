@@ -1,3 +1,9 @@
+# coding: utf-8
+# Copyright (c) Mark Spillman.
+# Distributed under the terms of the GPL v3 License.
+"""
+Z-matrix class, used to read in DASH Z-matrices.
+"""
 import numpy as np
 import json
 
