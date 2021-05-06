@@ -15,8 +15,6 @@ Other software is required for PXRD data indexing and intensity extraction *via*
 
 This repository contains several links to Jupyter Notebooks hosted on [Google Colaboratory](https://colab.research.google.com), which allows users to try out GALLOP for free. A paid tier is also available which gives priority access to more performant GPUs.
 
-<br />
-
 ------------------------------
 ## **Try GALLOP**
 You will need a Google account to run the notebooks linked below. To use the web app, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
@@ -26,8 +24,6 @@ You will need a Google account to run the notebooks linked below. To use the web
 |[Web app]() | Try the GALLOP web app |
 |[Python mode]() | Try GALLOP as part of a Python program |
 
-<br />
-
 ### **PXRD Data preparation**
 GALLOP is able to read Pawley fitting outputs from DASH, GSAS-II and TOPAS.
 
@@ -36,8 +32,6 @@ GALLOP is able to read Pawley fitting outputs from DASH, GSAS-II and TOPAS.
 - GSAS-II: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** parameters apart from the intensities (i.e. peak shape, unit cell, background etc should all be fixed). Reset the intensity values, then ensure that for this final refinement, the optimisation algorithm is set to ```analytic Jacobian```. This is critical, as the default ```analytic Hessian``` optimiser modifies the covariance matrix in ways that produce errors in GALLOP. After saving, GALLOP will read in the ```.gpx``` file.
 
 - TOPAS: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refined parameters in the ```.inp``` (i.e. peak shape, unit cell, background etc should all be fixed), and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp``` file. GALLOP will read in the resultant ```.out``` file.
-
-<br />
 
 ### **Z-matrices**
 GALLOP is able to read Z-matrices that have been produced by the ```MakeZmatrix.exe``` program that is bundled with DASH.
@@ -56,7 +50,7 @@ An example Z-matrix is below, showing the expected format. Lines 1-3 are placeho
 10. Atom index for torsion
 11. Debye-Waller factor for atom
 
-[Points below are not currently needed for GALLOP]
+[Columns 12 onwards are not currently needed for GALLOP]
 
 12. Occupancy of atom
 13. Atom index in file used to generate Z-matrix
@@ -111,8 +105,6 @@ A commonly encountered error in GALLOP is when a Z-matrix has torsion angles to 
 3. Regenerate the Z-matrices with DASH / MakeZmatrix.exe
 
 Other programs can in principle be used to produce Z-matrices suitable for GALLOP. For more information, see the ```gallop.z_matrix``` module documentation.
-
-<br />
 
 ### **Run GALLOP via the Web App**
 #### **Cloud operation:**
@@ -178,7 +170,6 @@ for i in range(n_gallop_iters):
     print(swarm.best_subswarm_chi2)
 
 ```
-<br />
 
 ------------------------------
 ## **Local Installation**
@@ -243,21 +234,21 @@ If you make use of GALLOP in your work, please cite the following papers:
 ### **Relevant articles**
 [Internal to Cartesian](https://pubmed.ncbi.nlm.nih.gov/15898109/) - GALLOP uses the Natural Extension Reference Frame method for converting internal to Cartesian coordinates.
 
-[Correlated Integrated Intensity Chisqd](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than R<sub>wp</sub> and other goodness of fit metrics, but requires the inverse of the covariance matrix obtained from a Pawley refinement.
+[Correlated Integrated Intensity Chisqd](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than *R<sub>wp</sub>* and other goodness of fit metrics, but requires the inverse of the covariance matrix obtained from a Pawley refinement performed with one of the following programs:
 
-[DASH](https://scripts.iucr.org/cgi-bin/paper?ks5103)
+- [DASH](https://scripts.iucr.org/cgi-bin/paper?ks5103)
 
-[GSAS-II](https://scripts.iucr.org/cgi-bin/paper?aj5212)
+- [GSAS-II](https://scripts.iucr.org/cgi-bin/paper?aj5212)
 
-[TOPAS](https://scripts.iucr.org/cgi-bin/paper?jo5037)
+- [TOPAS](https://scripts.iucr.org/cgi-bin/paper?jo5037)
 ### **Python Libraries**
 GALLOP makes use of a number of libraries, without which its development would have been significantly more challenging. In particular:
 
-[PyMatGen](https://pymatgen.org/) - the PyMatGen PXRD pattern calculator was used as the inspiration for what eventually became GALLOP. GALLOP still makes use of a number of PyMatGen features to handle things like space group symmetries.
+- [PyMatGen](https://pymatgen.org/) - the PyMatGen PXRD pattern calculator was used as the inspiration for what eventually became GALLOP. GALLOP still makes use of a number of PyMatGen features to handle things like space group symmetries.
 
-[PyTorch](https://pytorch.org/) - the original code that eventually became GALLOP was originally written using numpy. PyTorch served as a near drop-in replacement that allowed automatic differentiation and running on GPUs/TPUs.
+- [PyTorch](https://pytorch.org/) - the original code that eventually became GALLOP was originally written using numpy. PyTorch served as a near drop-in replacement that allowed automatic differentiation and running on GPUs/TPUs.
 
-[Streamlit](https://streamlit.io/) - this allowed the WebApp to be written entirely in python, which made it easier to integrate with the existing code.
+- [Streamlit](https://streamlit.io/) - this allowed the WebApp to be written entirely in python, which made it easier to integrate with the existing code.
 
 ### **GPU/TPU Resources**
 [Google Colaboratory](https://colab.research.google.com) has been invaluable for the free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which give priority access to more powerful GPU resources amongst other benefits. A number of other services also allow free or cheap GPU access, for example:
@@ -268,6 +259,4 @@ GALLOP makes use of a number of libraries, without which its development would h
 
 - [Vast.ai](https://vast.ai/) - cheap access to a wide variety of GPUs not offered by other services.
 
-A wide variety of bigger commercial providers (e.g. AWS, GCP, Azure) are also available.
-
-
+A wide variety of bigger commercial providers (e.g. AWS, GCP, Azure, Lambda Labs) are also available.
