@@ -236,7 +236,7 @@ If you make use of GALLOP in your work, please cite the following papers:
 ### **Relevant articles**
 [Internal to Cartesian](https://pubmed.ncbi.nlm.nih.gov/15898109/) - GALLOP uses the Natural Extension Reference Frame method for converting internal to Cartesian coordinates.
 
-[Correlated Integrated Intensity Chisqd](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than *R<sub>wp</sub>* and other goodness of fit metrics, but requires the inverse of the covariance matrix obtained from a Pawley refinement performed with one of the following programs:
+[Correlated Integrated Intensity &chi;<sup>2</sup>](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than *R<sub>wp</sub>* and other goodness of fit metrics, but requires the inverse of the covariance matrix obtained from a Pawley refinement performed with one of the following programs:
 
 - [DASH](https://scripts.iucr.org/cgi-bin/paper?ks5103)
 
