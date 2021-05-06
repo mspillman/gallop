@@ -143,7 +143,9 @@ mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
 mystructure.add_data("Famotidine.sdi", source="DASH")
 mystructure.add_zmatrix("FOGVIG03_1.zmatrix")
 
-# Create swarm object and get the initial particle positions
+# Create swarm object and get the initial particle positions.
+# This will make a swarm with 10k particles in total, split into
+# 10 independent subswarms.
 swarm = optimiser.Swarm(Structure=mystructure, n_particles=10000, n_swarms=10)
 external, internal = swarm.get_initial_positions()
 
@@ -152,21 +154,22 @@ minimiser_settings = optimiser.get_minimiser_settings(mystructure)
 minimiser_settings["n_iterations"] = 500
 minimiser_settings["save_CIF"] = True
 
-# Automatically set the learning rate for the local optimiser
+# Automatically set the learning rate (aka step size) for the local optimiser
 lr = optimiser.find_learning_rate(mystructure, external=external, internal=internal)
 minimiser_settings["learning_rate"] = lr[-1]
 
 # Set the total number of iterations for the GALLOP run
 n_gallop_iters = 10
 
-# Now write the GALLOP loop
+# The main GALLOP loop
 start_time = time.time()
 for i in range(n_gallop_iters):
-    # Local optimisation
+    # Local optimisation of particle positions
     result = optimiser.minimise(mystructure, external=external, internal=internal,
                 run=i, start_time=start_time, **minimiser_settings)
-    # Particle swarm
+    # Particle swarm update generates new positions to be optimised
     external, internal = swarm.update_position(result=result)
+    # Print out the best chi2 value found by each subswarm
     print(swarm.best_subswarm_chi2)
 
 ```
@@ -175,7 +178,7 @@ for i in range(n_gallop_iters):
 ## **Local Installation**
 Some users may wish to make use of GALLOP locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run GALLOP on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
-For optimal performance, an NVidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU, though this has not been tested. If using ROCm, please get in touch regarding any installation issues and the performance of the code.
+For optimal performance, an NVidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
 <br />
 
@@ -200,12 +203,12 @@ Once the above are installed, several Python Libraries must also be installed. T
 | [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
 | [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Allows for non-standard local optimisers such as DiffGrad |
 | [pyDOE](https://pythonhosted.org/pyDOE/) | Latin-hypercube sampling for initial points |
-| [Streamlit](https://streamlit.io/) | Needed for the WebApp |
-| [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for non-WebApp use |
+| [Streamlit](https://streamlit.io/) | Needed for the Web App |
+| [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
 <br />
 
-PyTorch should be installed first using the instructions on the PyTorch website. Once installed, test that it is recognising the local GPU by opening a Python prompt and running the following commands:
+PyTorch should be installed first using the instructions on the [PyTorch website](https://pytorch.org/get-started/locally/). Once installed, test that it has been properly installed and is recognising the local GPU by opening a Python prompt and running the following commands:
 
 ```python
 >>> import torch
@@ -222,7 +225,6 @@ pip install pymatgen==2021.2.8.1 torch_optimizer pyDOE streamlit tqdm
 
 If C++ build tools are not available, this is likely to result in an error.
 
-<br />
 
 ------------------------------
 
