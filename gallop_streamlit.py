@@ -201,16 +201,14 @@ elif function == "GALLOP":
             zipname = os.path.join("GALLOP_results",date,zipname)
 
             for i in range(all_settings["n_GALLOP_iters"]):
+                itertext = "GALLOP iteration " + str(i+1)
                 if ((i+1)%all_settings["global_update_freq"] == 0 and i != 0 and
                                                 all_settings["global_update"]):
-                    itertext = "GALLOP iteration " + str(i+1)
-                    itertext += " Global update after this iter"
-                elif ((i+1)==all_settings["shadow_iters"] and 
+                    itertext += " Global update after this iteration"
+                if ((i+1)==all_settings["shadow_iters"] and
                                             all_settings["torsion_shadowing"]):
-                    itertext = "GALLOP iteration " + str(i+1)
                     itertext += " Removing torsion shadowing after this iteration"
-                else:
-                    itertext = "GALLOP iteration " + str(i+1)
+
                 iter_placeholder.text(itertext)
                 with progress_bar_placeholder:
                     try:
