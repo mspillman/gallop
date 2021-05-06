@@ -21,8 +21,8 @@ You will need a Google account to run the notebooks linked below. To use the web
 
 | Notebook | Description |
 |---------|--------|
-|[Web app]() | Try the GALLOP web app |
-|[Python mode]() | Try GALLOP as part of a Python program |
+|[Web app](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the GALLOP web app |
+|[Python mode](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing) | Try GALLOP as part of a Python program |
 
 ### **PXRD Data preparation**
 GALLOP is able to read Pawley fitting outputs from DASH, GSAS-II and TOPAS.
@@ -108,7 +108,7 @@ Other programs can in principle be used to produce Z-matrices suitable for GALLO
 
 ### **Run GALLOP via the Web App**
 #### **Cloud operation:**
-Use this [Colab Notebook to try the GALLOP Web App for free]().
+Use this [Colab Notebook to try the GALLOP Web App for free](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing).
 You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
 Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
@@ -119,7 +119,7 @@ streamlit run .\gallop_streamlit.py
 This will automatically open a browser window displaying the GALLOP Web App.
 ### **Run GALLOP via Python scripts / Jupyter notebooks**
 #### **Cloud operation:**
-Use this [Colab Notebook to try GALLOP in Python mode for free]().
+Use this [Colab Notebook to try GALLOP in Python mode for free](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing).
 You will need a Google account to run the notebook.
 Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
