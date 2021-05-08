@@ -1033,7 +1033,7 @@ class Swarm(object):
                             inertia_bounds=self.inertia_bounds,
                             use_matrix=self.use_matrix)
                 self.velocity[begin:end] = new_vel
-                subswarm_best.append()
+                subswarm_best.append(swarm_chi2.min())
             self.best_subswarm_chi2 = subswarm_best
             self.swarm_progress.append(self.best_subswarm_chi2)
 
