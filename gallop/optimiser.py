@@ -657,7 +657,7 @@ def plot_torsion_difference(Structure, result, n_swarms=1,
 class Swarm(object):
     def __init__(self, Structure, n_particles=10000, n_swarms=10,
         particle_best_position = None, best_chi_2 = None, velocity = None,
-        position = None, best_subswarm_chi_2 = None, inertia="ranked", c1=1.5,
+        position = None, best_subswarm_chi2 = [], inertia="ranked", c1=1.5,
         c2=1.5, inertia_bounds=(0.4,0.9), use_matrix=True, limit_velocity=True,
         global_update=False, global_update_freq=10, vmax=1):
         """
@@ -677,8 +677,8 @@ class Swarm(object):
                 particles. Defaults to None.
             position (numpy array, optional): The current position of the
                 particles. Defaults to None.
-            best_subswarm_chi_2 (list, optional): The best chi_2 found in each
-                subswarm. Defaults to None.
+            best_subswarm_chi2 (list, optional): The best chi_2 found in each
+                subswarm. Defaults to [].
             inertia (float or str, optional): The inertia to use in the velocity
                 update. If random, sample the inertia from a uniform
                 distribution. If "ranked", then solutions ranked in order of
@@ -714,7 +714,7 @@ class Swarm(object):
         self.velocity = velocity
         self.position = position
         self.n_swarms = n_swarms
-        self.best_subswarm_chi_2 = best_subswarm_chi_2
+        self.best_subswarm_chi2 = best_subswarm_chi2
         self.inertia = inertia
         self.c1 = c1
         self.c2 = c2
@@ -728,7 +728,6 @@ class Swarm(object):
         self.global_update = global_update
         self.global_update_freq = global_update_freq
         self.vmax = vmax
-        self.best_subswarm_chi2 = []
 
     def get_initial_positions(self, method="latin", latin_criterion=None):
         """
@@ -1011,6 +1010,7 @@ class Swarm(object):
                 self.best_subswarm_chi2.append(self.best_chi_2[begin:end].min())
             self.swarm_progress.append(self.best_subswarm_chi2)
         else:
+            subswarm_best = []
             for j in range(self.n_swarms):
                 begin = j*subswarm
                 end = (j+1)*subswarm
@@ -1033,7 +1033,8 @@ class Swarm(object):
                             inertia_bounds=self.inertia_bounds,
                             use_matrix=self.use_matrix)
                 self.velocity[begin:end] = new_vel
-                self.best_subswarm_chi2.append(swarm_chi2.min())
+                subswarm_best.append()
+            self.best_subswarm_chi2 = subswarm_best
             self.swarm_progress.append(self.best_subswarm_chi2)
 
         if self.limit_velocity:
