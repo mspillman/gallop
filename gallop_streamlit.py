@@ -99,11 +99,6 @@ elif function == "GALLOP":
                 struct.add_zmatrix(z)
             else:
                 struct.add_zmatrix(z)
-        if clear_files:
-            for u in uploaded_files:
-                u.read()
-                name = u.name.replace(" ", "_")
-                os.remove(name)
 
         minimiser_settings = optimiser.get_minimiser_settings(struct)
         minimiser_settings["streamlit"] = True
@@ -158,6 +153,12 @@ elif function == "GALLOP":
         external = np.array(external)
         internal = np.array(internal)
         failed = False
+
+        if clear_files:
+            for u in uploaded_files:
+                u.read()
+                name = u.name.replace(" ", "_")
+                os.remove(name)
 
         gsu.display_info(struct, all_settings, minimiser_settings,
                                                     pawley_program)
