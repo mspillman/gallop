@@ -384,7 +384,7 @@ def get_files():
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "sdi", "hcv", "tic", "dsl",
-                                        "json"],
+                                        "dbf", "json"],
                                     key=upload_key)
         elif pawley_program == "GSAS-II":
             uploaded_files = st.file_uploader("Upload GSAS-II project file and\
@@ -422,6 +422,7 @@ def get_files():
     sdi = None
     gpx  = None
     out = None
+    dbf = None
     json_settings = None
     zms = []
     if file_source == "Upload files":
@@ -462,6 +463,8 @@ def get_files():
                     out = name
                 if ".json" in name:
                     json_settings = name
+                if ".dbf" in name:
+                    dbf = name
 
     else:
         if example == "Verapamil hydrochloride":
@@ -481,8 +484,8 @@ def get_files():
             if s not in selection:
                 json_settings.pop(s, None)
 
-    return uploaded_files, sdi, gpx, out, json_settings, zms, load_settings, \
-            pawley_program,clear_files
+    return uploaded_files, sdi, gpx, out, json_settings, zms, dbf, \
+            load_settings, pawley_program,clear_files
 
 
 

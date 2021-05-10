@@ -44,7 +44,7 @@ elif function == "GALLOP":
     all_settings = gsu.sidebar()
 
     # Now we upload the files needed for GALLOP - DASH fit files and Z-matrices
-    uploaded_files, sdi, gpx, out, json_settings, zms, load_settings, \
+    uploaded_files, sdi, gpx, out, json_settings, zms, dbf, load_settings, \
                                 pawley_program, clear_files = gsu.get_files()
 
 
@@ -154,7 +154,7 @@ elif function == "GALLOP":
                     limit_velocity = all_settings["limit_velocity"],
                     vmax = all_settings["vmax"])
 
-        external, internal = swarm.get_initial_positions()
+        external, internal = swarm.get_initial_positions(MDB=dbf)
         external = np.array(external)
         internal = np.array(internal)
         failed = False

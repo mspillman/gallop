@@ -14,6 +14,7 @@ import pyDOE
 import numpy as np
 import matplotlib.pyplot as plt
 import torch_optimizer as t_optim
+from scipy.stats import gaussian_kde
 
 from gallop import chi2
 from gallop import tensor_prep
@@ -657,7 +658,7 @@ def plot_torsion_difference(Structure, result, n_swarms=1,
 class Swarm(object):
     def __init__(self, Structure, n_particles=10000, n_swarms=10,
         particle_best_position = None, best_chi_2 = None, velocity = None,
-        position = None, best_subswarm_chi2 = [], inertia="ranked", c1=1.5,
+        position = None, best_subswarm_chi2 = None, inertia="ranked", c1=1.5,
         c2=1.5, inertia_bounds=(0.4,0.9), use_matrix=True, limit_velocity=True,
         global_update=False, global_update_freq=10, vmax=1):
         """
@@ -714,7 +715,10 @@ class Swarm(object):
         self.velocity = velocity
         self.position = position
         self.n_swarms = n_swarms
-        self.best_subswarm_chi2 = best_subswarm_chi2
+        if best_subswarm_chi2 is not None:
+            self.best_subswarm_chi2 = best_subswarm_chi2
+        else:
+            self.best_subswarm_chi2 = []
         self.inertia = inertia
         self.c1 = c1
         self.c2 = c2
@@ -729,7 +733,8 @@ class Swarm(object):
         self.global_update_freq = global_update_freq
         self.vmax = vmax
 
-    def get_initial_positions(self, method="latin", latin_criterion=None):
+    def get_initial_positions(self, method="latin", latin_criterion=None,
+                                MDB=None):
         """
         Generate the initial starting points for a GALLOP attempt. The
         recommended method uses latin hypercube sampling which provides a
@@ -743,6 +748,10 @@ class Swarm(object):
                 latin hypercube method. See pyDOE documentation here:
                 https://pythonhosted.org/pyDOE/randomized.html#latin-hypercube
                 Defaults to None.
+            MDB (str, optional): Supply a DASH .dbf containing the Mogul
+                Distribution Bias information for the Z-matrices used. They
+                must have been entered into DASH in the same order used for
+                GALLOP. Defaults to None.
 
         Returns:
             tuple: Tuple of numpy arrays containing the initial external and
@@ -788,6 +797,38 @@ class Swarm(object):
 
         init_external = np.vstack(init_external)
         init_internal = np.vstack(init_internal)
+
+        if MDB is not None:
+            distributions = []
+            with open(MDB) as dbf:
+                for line in dbf:
+                    line = line.strip().split(" ")
+                    if line[1] == "MDB":
+                        distributions.append([int(x) for x in line[-19:]])
+                    elif line[1] == "LBUB" and line[2] == "-180.00000":
+                        distributions.append([10]*19)
+            dbf.close()
+            distributions = np.array(distributions)
+            bins = np.linspace(0, np.pi, distributions.shape[1])
+            kdes = []
+            for torsion in distributions:
+                samples = []
+                for i, t in enumerate(torsion):
+                    if t > 0:
+                        random_sample = np.random.uniform(bins[i]-(np.pi/36),
+                                            bins[i]+(np.pi/36), size=(t*100))
+                        samples.append(np.hstack([random_sample,
+                                                            -1*random_sample]))
+                kde = gaussian_kde(np.hstack(samples), bw_method=0.3)
+                kdes.append(kde)
+            if init_internal.shape[1] != len(kdes):
+                print("Not enough MDBs for the number of torsions.")
+            else:
+                new_internal = []
+                for k in kdes:
+                    new_internal.append(k.resample(init_internal.shape[0]))
+                new_internal = np.vstack(new_internal).T
+                init_internal = new_internal
         return init_external, init_internal
 
 
