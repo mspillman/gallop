@@ -815,11 +815,10 @@ class Swarm(object):
                 samples = []
                 for i, t in enumerate(torsion):
                     if t > 0:
-                        random_sample = np.random.uniform(bins[i]-(np.pi/36),
-                                            bins[i]+(np.pi/36), size=(t*100))
-                        samples.append(np.hstack([random_sample,
-                                                            -1*random_sample]))
-                kde = gaussian_kde(np.hstack(samples), bw_method=0.3)
+                        observed = np.linspace(bins[i]-(np.pi/36),
+                                                bins[i]+np.pi/36, t)
+                        samples.append(np.hstack([observed, -1*observed]))
+                kde = gaussian_kde(np.hstack(samples), bw_method=None)
                 kdes.append(kde)
             if init_internal.shape[1] != len(kdes):
                 print("Not enough MDBs for the number of torsions.")
