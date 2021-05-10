@@ -186,8 +186,8 @@ def sidebar():
                     mult = 1.0
             else:
                 lr = st.number_input("Learning rate",
-                                    min_value=None, max_value=None, value=0.05,
-                                    step=0.01, format=None, key=None)
+                                    min_value=0.000, max_value=None, value=0.050,
+                                    step=0.001, format=None, key=None)
                 find_lr_auto_mult = False
                 mult = 1.0
             learning_rate_schedule = st.selectbox("Learning rate schedule",
