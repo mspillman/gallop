@@ -303,9 +303,20 @@ elif function == "GALLOP":
 
                     st.altair_chart(chart)
 
+                if all_settings["randomise_worst"]:
+                    if (i+1) % all_settings["randomise_freq"] == 0:
+                        pcnt = all_settings["randomise_percentage"] / 100.
+                        to_randomise = swarm.best_chi_2 >= np.percentile(
+                                                    swarm.best_chi_2, 1.0-pcnt)
+                        swarm.position[to_randomise] = np.random.uniform(-1, 1,
+                                        size=swarm.position[to_randomise].shape)
+                        swarm.velocity[to_randomise] = np.random.uniform(-0.1,
+                                    0.1,size=swarm.velocity[to_randomise].shape)
+                        swarm.best_chi_2[to_randomise] = swarm.best_chi_2.max()
+
                 external, internal = swarm.update_position(result=result,
                                                             verbose=False)
-                if ((i+1)==all_settings["shadow_iters"] and 
+                if ((i+1)==all_settings["shadow_iters"] and
                                             all_settings["torsion_shadowing"]):
                     minimiser_settings["torsion_shadowing"] = False
                     # Add a little random noise to the internal DoF as they will

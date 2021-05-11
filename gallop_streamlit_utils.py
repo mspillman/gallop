@@ -282,6 +282,21 @@ def sidebar():
                         value=10, step=1, format=None, key=None)
         else:
             all_settings["global_update_freq"]=all_settings["n_GALLOP_iters"]+1
+        all_settings["randomise_worst"] = st.checkbox(
+                        "Periodically randomise the worst performing particles",
+                                        value=False, key=None)
+        if all_settings["randomise_worst"]:
+            all_settings["randomise_percentage"] = st.number_input(
+                        "Percentage of worst performing particles to randomise",
+                        min_value=0.0, max_value=100.0,
+                        value=10.0, step=10.0, format=None, key=None)
+            all_settings["randomise_freq"] = st.number_input(
+                        "Randomisation frequency",
+                        min_value=1, max_value=all_settings["n_GALLOP_iters"],
+                        value=10, step=1, format=None, key=None)
+        else:
+            all_settings["randomise_percentage"] = 0
+            all_settings["randomise_freq"] = all_settings["n_GALLOP_iters"]+1
         st.markdown("***Advanced***")
         show_advanced_pso = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_pso")
