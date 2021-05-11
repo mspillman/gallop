@@ -86,9 +86,12 @@ def load_save_settings(all_settings):
                         "particle_division","find_lr", "find_lr_auto_mult",
                         "mult", "learning_rate_schedule", "n_cooldown", "loss",
                         "reflection_percentage", "include_dw_factors",
-                        "memory_opt", "n_swarms", "swarm_size", "global_update",
-                        "global_update_freq", "c1", "c2", "inertia",
-                        "inertia_bounds", "limit_velocity", "vmax", "lr"]
+                        "memory_opt", "percentage_cutoff", "torsion_shadowing",
+                        "Z_prime", "shadow_iters", "n_swarms", "swarm_size",
+                        "global_update","global_update_freq", "randomise_worst",
+                        "randomise_percentage", "randomise_freq", "c1", "c2",
+                        "inertia","inertia_bounds", "limit_velocity", "vmax",
+                        "lr"]
                     with st.sidebar.beta_expander(label="Settings to load",
                                                             expanded=False):
                         selection = st.multiselect("Choose settings to load",
@@ -202,7 +205,7 @@ def sidebar():
                                 min_value=1, max_value=None, value=2, step=1,
                                 format=None, key=None)
                 shadow_iters = st.number_input("Number of shadowing iterations",
-                                min_value=1, 
+                                min_value=1,
                                 max_value=all_settings["n_GALLOP_iters"],
                                 value=10, step=1, format=None, key=None)
             else:
@@ -425,13 +428,15 @@ def get_files():
     if load_settings:
         with st.beta_expander(label="Choose settings to load", expanded=False):
             settings = ["structure_name", "n_GALLOP_iters", "seed", "optim",
-                        "n_LO_iters", "ignore_H_atoms", "device",
-                        "particle_division","find_lr", "find_lr_auto_mult",
-                        "mult", "learning_rate_schedule", "n_cooldown", "loss",
-                        "reflection_percentage", "include_dw_factors",
-                        "memory_opt", "n_swarms", "swarm_size", "global_update",
-                        "global_update_freq", "c1", "c2", "inertia",
-                        "inertia_bounds", "limit_velocity", "vmax", "lr"]
+                    "n_LO_iters", "ignore_H_atoms", "device",
+                    "particle_division","find_lr", "find_lr_auto_mult",
+                    "mult", "learning_rate_schedule", "n_cooldown", "loss",
+                    "reflection_percentage", "include_dw_factors",
+                    "memory_opt", "percentage_cutoff", "torsion_shadowing",
+                    "Z_prime", "shadow_iters", "n_swarms", "swarm_size",
+                    "global_update","global_update_freq", "randomise_worst",
+                    "randomise_percentage", "randomise_freq", "c1", "c2",
+                    "inertia","inertia_bounds", "limit_velocity", "vmax", "lr"]
             selection=st.multiselect("",settings,default=settings,key="upload")
 
     sdi = None
