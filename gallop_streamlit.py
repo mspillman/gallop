@@ -216,6 +216,10 @@ elif function == "GALLOP":
                 if ((i+1)==all_settings["shadow_iters"] and
                                             all_settings["torsion_shadowing"]):
                     itertext += " Removing torsion shadowing after this iter"
+                if all_settings["randomise_worst"]:
+                    if (i+1) % all_settings["randomise_freq"] == 0:
+                        pcnt = all_settings["randomise_percentage"]
+                        itertext += f" Randomising worst {pcnt} % of particles"
 
                 iter_placeholder.text(itertext)
                 with progress_bar_placeholder:
@@ -313,7 +317,6 @@ elif function == "GALLOP":
                         swarm.velocity[to_randomise] = np.random.uniform(-0.1,
                                     0.1,size=swarm.velocity[to_randomise].shape)
                         swarm.best_chi_2[to_randomise] = swarm.best_chi_2.max()
-                        itertext += f" Randomising worst {100*pcnt} % particles"
 
                 external, internal = swarm.update_position(result=result,
                                                             verbose=False)
