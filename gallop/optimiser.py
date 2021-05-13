@@ -393,6 +393,12 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # This assumes that all of the fragments have similar torsion angles.
         # This can significantly speed up solving Z'>1 structures where this
         # assumption is valid.
+        # To use this, the ZMs supplied must be in blocks that correspond to the
+        # unique fragments in Z', for example, a structure with two flexible
+        # fragments and two ions would need to be entered into the structure as
+        # ion1 fragment1 ion2 fragment2
+        # This is different to the way DASH converts ZMs by default, where ions
+        # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
         n_torsion_fragments = len(tensors["torsion"])
         first_frag = int(n_torsion_fragments / Z_prime)
         tensors["torsion"] = tensors["torsion"][:first_frag]*Z_prime
