@@ -46,8 +46,10 @@ def calc_chisqd(calculated_intensities, inverse_covariance_matrix,
     scale = (sum_1_2 / sum_2_2).reshape(-1,1)
 
     # Difference between observed and scaled calculated intensities
-    diff = observed_intensities.repeat(calculated_intensities.shape[0],1)\
-            - (calculated_intensities*scale)
+    #diff = observed_intensities.repeat(calculated_intensities.shape[0],1)\
+    #        - (calculated_intensities*scale)
+    diff = (observed_intensities.view(1, observed_intensities.shape[0])
+            - (scale*calculated_intensities))
 
     # Finally calculate chisqd - d.A.d
     chi_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,diff) # A.d
@@ -126,11 +128,12 @@ def get_chi_2(zm, int_tensors, chisqd_tensors):
     """
     asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(**zm)
 
-    int_tensors["asymmetric_frac_coords"] = asymmetric_frac_coords
-    calculated_intensities = intensities.calculate_intensities(**int_tensors)
+    #int_tensors["asymmetric_frac_coords"] = asymmetric_frac_coords
+    calculated_intensities = intensities.calculate_intensities(
+                            asymmetric_frac_coords, **int_tensors)
 
-    chisqd_tensors["calculated_intensities"] = calculated_intensities
-    chisqd = calc_chisqd(**chisqd_tensors)
+    #chisqd_tensors["calculated_intensities"] = calculated_intensities
+    chisqd = calc_chisqd(calculated_intensities, **chisqd_tensors)
 
     return chisqd
 

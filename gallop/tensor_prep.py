@@ -424,6 +424,8 @@ def get_all_required_tensors(Structure, external=None, internal=None,
                                                         "lattice_inv_matrix")
         intensity_tensors["nsamples_ones"] = zm_tensors.pop("nsamples_ones")
         tensors["zm"] = zm_tensors
+    else:
+        del intensity_tensors["lattice_inv_matrix"]
 
     tensors["int_tensors"] = intensity_tensors
     tensors["chisqd_tensors"] = chi2_tensors
