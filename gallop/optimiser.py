@@ -399,9 +399,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # ion1 fragment1 ion2 fragment2
         # This is different to the way DASH converts ZMs by default, where ions
         # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
-        n_torsion_fragments = len(tensors["torsion"])
+        n_torsion_fragments = len(tensors["zm"]["torsion"])
         first_frag = int(n_torsion_fragments / Z_prime)
-        tensors["torsion"] = tensors["torsion"][:first_frag]*Z_prime
+        tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
@@ -409,16 +409,16 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         else:
             init_lr = learning_rate
         if optimizer.lower() == "adam":
-            optimizer = torch.optim.Adam([tensors["external"],
-                                        tensors["internal"]],
+            optimizer = torch.optim.Adam([tensors["zm"]["external"],
+                                        tensors["zm"]["internal"]],
                                         lr=init_lr, betas=betas, eps=eps)
         elif optimizer.lower() == "yogi":
-            optimizer = t_optim.Yogi([tensors["external"],
-                                        tensors["internal"]],
+            optimizer = t_optim.Yogi([tensors["zm"]["external"],
+                                        tensors["zm"]["internal"]],
                                         lr=init_lr, betas=betas, eps=eps)
         elif optimizer.lower() == "diffgrad":
-            optimizer = t_optim.DiffGrad([tensors["external"],
-                                        tensors["internal"]],
+            optimizer = t_optim.DiffGrad([tensors["zm"]["external"],
+                                        tensors["zm"]["internal"]],
                                         lr=init_lr, betas=betas, eps=eps)
         else:
             print("Only supported optimizers are \"Adam\", \"DiffGrad\" or",
@@ -431,8 +431,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             print("Optimizer not compatible")
             exit()
         else:
-            optimizer.param_groups[0]["params"] = [tensors["external"],
-                                                    tensors["internal"]]
+            optimizer.param_groups[0]["params"] = [tensors["zm"]["external"],
+                                                    tensors["zm"]["internal"]]
             for param_group in optimizer.param_groups:
                 if learning_rate_schedule.lower() == "array":
                     param_group['lr'] = learning_rate[0]
@@ -492,7 +492,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         chi_2 = chi2.get_chi_2(**tensors)
         if ignore_reflections_for_chi2_calc:
             # Counteract the division normally used in chi2 calculation
-            chi_2 *= (tensors["hkl"].shape[1] - 2)
+            chi_2 *= (tensors["intensity"]["hkl"].shape[1] - 2)
 
         # PyTorch expects a single value for backwards pass.
         # Need a function to convert all of the chi_2 values into a scalar
@@ -563,20 +563,22 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                     "GALLOP iter {:04d} LO iter {:04d} min chi2 {:.1f}".format(
                         run+1, i, chi_2.min().item()))
         if save_trajectories:
-            trajectories.append([tensors["external"].detach().cpu().numpy(),
-                                tensors["internal"].detach().cpu().numpy(),
-                                chi_2.detach().cpu().numpy(),
-                                L.detach().cpu().numpy()])
+            trajectories.append(
+                    [tensors["zm"]["external"].detach().cpu().numpy(),
+                    tensors["zm"]["internal"].detach().cpu().numpy(),
+                    chi_2.detach().cpu().numpy(),
+                    L.detach().cpu().numpy()])
         if save_grad:
-            gradients.append([tensors["external"].grad.detach().cpu().numpy(),
-                            tensors["internal"].grad.detach().cpu().numpy()])
+            gradients.append(
+                [tensors["zm"]["external"].grad.detach().cpu().numpy(),
+                tensors["zm"]["internal"].grad.detach().cpu().numpy()])
         if i != n_iterations:
             optimizer.step()
         if streamlit:
             prog_bar.progress(i/n_iterations)
     result = {
-            "external"     : tensors["external"].detach().cpu().numpy(),
-            "internal"     : tensors["internal"].detach().cpu().numpy(),
+            "external"     : tensors["zm"]["external"].detach().cpu().numpy(),
+            "internal"     : tensors["zm"]["internal"].detach().cpu().numpy(),
             "chi_2"        : chi_2.detach().cpu().numpy(),
             "GALLOP Iter"  : run
             }

@@ -262,25 +262,27 @@ def get_data_related_tensors(Structure, n_reflections, dtype, device,
         print("Using",n_reflections,"of",total_ref,"available reflections.")
         print("Resolution with",n_reflections,"reflections:",res)
 
-    tensors = {}
-    tensors["affine_matrices"] = torch.from_numpy(
+    intensity_tensors = {}
+    chi2_tensors = {}
+    intensity_tensors["affine_matrices"] = torch.from_numpy(
                         Structure.affine_matrices).type(dtype).to(device)
-    tensors["hkl"] = torch.from_numpy(
+    intensity_tensors["hkl"] = torch.from_numpy(
                         Structure.hkl[:n_reflections].T).type(dtype).to(device)
-    tensors["lattice_inv_matrix"] = torch.from_numpy(
+    intensity_tensors["lattice_inv_matrix"] = torch.from_numpy(
                 np.copy(Structure.lattice.inv_matrix)).type(dtype).to(device)
 
 
     inverse_covariance_matrix = Structure.inverse_covariance_matrix
     inverse_covariance_matrix = inverse_covariance_matrix[:n_reflections,
                                                             :n_reflections]
-    tensors["inverse_covariance_matrix"] = torch.from_numpy(
+    chi2_tensors["inverse_covariance_matrix"] = torch.from_numpy(
                             inverse_covariance_matrix).type(dtype).to(device)
-    tensors["observed_intensities"] = torch.from_numpy(
+    chi2_tensors["observed_intensities"] = torch.from_numpy(
                 Structure.intensities[:n_reflections]).type(dtype).to(device)
-    tensors["chisqd_scale_sum_1_1"] = torch.mv(
-        tensors["inverse_covariance_matrix"], tensors["observed_intensities"])
-    return tensors
+    chi2_tensors["chisqd_scale_sum_1_1"] = torch.mv(
+                                chi2_tensors["inverse_covariance_matrix"],
+                                chi2_tensors["observed_intensities"])
+    return intensity_tensors, chi2_tensors
 
 def get_all_required_tensors(Structure, external=None, internal=None,
     n_samples=10000, device=None, dtype=None, n_reflections=None, verbose=True,
@@ -378,11 +380,9 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     else:
         dw_factors = {}
 
-    tensors =  {"external" : external,
-                "internal" : internal,
-                **get_data_related_tensors(Structure, n_reflections,
-                                    dtype, device, verbose=verbose)
-                }
+    intensity_tensors, chi2_tensors = get_data_related_tensors(Structure,
+                                n_reflections, dtype, device, verbose=verbose)
+
     if from_CIF:
         if Structure.ignore_H_atoms:
             n_atoms_asymmetric = Structure.cif_frac_coords_no_H.shape[0]
@@ -397,14 +397,11 @@ def get_all_required_tensors(Structure, external=None, internal=None,
         nsamples_ones = torch.ones(n_samples,
                                 n_atoms_asymmetric,
                                 1).type(dtype).to(device)
-        tensors = {
-            **tensors,
-            "asymmetric_frac_coords" : asymmetric_frac_coords,
-            "nsamples_ones" : nsamples_ones,
-        }
+        intensity_tensors["asymmetric_frac_coords"] = asymmetric_frac_coords
+        intensity_tensors["nsamples_ones"] = nsamples_ones
     else:
-        tensors = {**tensors, **get_zm_related_tensors(Structure,
-                                                    n_samples, dtype, device)}
+        zm_tensors = {"external" : external, "internal" : internal,
+                **get_zm_related_tensors(Structure, n_samples, dtype, device)}
     # Calculate terms that are used in the intensity calculations, which include
     # the atomic scattering factors etc.
     full_prefix = Structure.generate_intensity_calculation_prefix(
@@ -414,10 +411,20 @@ def get_all_required_tensors(Structure, external=None, internal=None,
                         debye_waller_factors=dw_factors, just_asymmetric=True,
                         from_cif=from_CIF)[:n_reflections]
 
-    tensors["intensity_calc_prefix_fs"] = torch.from_numpy(
+    intensity_tensors["intensity_calc_prefix_fs"] = torch.from_numpy(
                                             full_prefix).type(dtype).to(device)
-    tensors["intensity_calc_prefix_fs_asymmetric"] = torch.from_numpy(
+    intensity_tensors["intensity_calc_prefix_fs_asymmetric"] = torch.from_numpy(
                                             asymm_prefix).type(dtype).to(device)
-    tensors["centrosymmetric"] = Structure.centrosymmetric
-    tensors["space_group_number"] = Structure.sg_number
+    intensity_tensors["centrosymmetric"] = Structure.centrosymmetric
+    intensity_tensors["space_group_number"] = Structure.sg_number
+
+    tensors = {}
+    if not from_CIF:
+        zm_tensors["lattice_inv_matrix"] = intensity_tensors.pop(
+                                                        "lattice_inv_matrix")
+        intensity_tensors["nsamples_ones"] = zm_tensors.pop("nsamples_ones")
+        tensors["zm"] = zm_tensors
+
+    tensors["int_tensors"] = intensity_tensors
+    tensors["chisqd_tensors"] = chi2_tensors
     return tensors

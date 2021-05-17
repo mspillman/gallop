@@ -275,27 +275,7 @@ def get_asymmetric_coords_from_numpy(Structure, external, internal,
                     n_samples=n_samples, device=device, dtype=dtype,
                     verbose=verbose)
 
-    external = tensors["external"]
-    internal = tensors["internal"]
-    position = tensors["position"]
-    rotation = tensors["rotation"]
-    torsion = tensors["torsion"]
-    initial_D2 = tensors["initial_D2"]
-    zmatrices_degrees_of_freedom = tensors["zmatrices_degrees_of_freedom"]
-    bond_connection = tensors["bond_connection"]
-    angle_connection = tensors["angle_connection"]
-    torsion_connection = tensors["torsion_connection"]
-    torsion_refineable_indices = tensors["torsion_refineable_indices"]
-    lattice_inv_matrix = tensors["lattice_inv_matrix"]
-    init_cart_coords = tensors["init_cart_coords"]
-
-
-    asymmetric_frac_coords = get_asymmetric_coords(
-                                external, internal, position, rotation, torsion,
-                                initial_D2, zmatrices_degrees_of_freedom,
-                                bond_connection, angle_connection,
-                                torsion_connection, torsion_refineable_indices,
-                                lattice_inv_matrix, init_cart_coords)
+    asymmetric_frac_coords = get_asymmetric_coords(**tensors["zm"])
 
 
     return asymmetric_frac_coords.detach().cpu().numpy()
