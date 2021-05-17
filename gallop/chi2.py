@@ -128,11 +128,9 @@ def get_chi_2(zm, int_tensors, chisqd_tensors):
     """
     asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(**zm)
 
-    #int_tensors["asymmetric_frac_coords"] = asymmetric_frac_coords
     calculated_intensities = intensities.calculate_intensities(
                             asymmetric_frac_coords, **int_tensors)
 
-    #chisqd_tensors["calculated_intensities"] = calculated_intensities
     chisqd = calc_chisqd(calculated_intensities, **chisqd_tensors)
 
     return chisqd
@@ -168,8 +166,8 @@ def get_chi2_from_CIF(Structure, n_reflections=None, include_dw_factors=True,
 
     calculated_intensities = intensities.calculate_intensities(
                                 **tensors["int_tensors"])
-    tensors["chisqd_tensors"]["calculated_intensities"] = calculated_intensities
-    chisqd = calc_chisqd(**tensors["chisqd_tensors"])
+
+    chisqd = calc_chisqd(calculated_intensities, **tensors["chisqd_tensors"])
 
     del tensors
 
