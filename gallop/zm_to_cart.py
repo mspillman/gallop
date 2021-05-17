@@ -158,10 +158,10 @@ def rotate_and_translate(cart_coords, R, translation, lattice_inv_matrix):
     # tensor([1, 1, 2, 2, 3, 3])
     # >>> x.repeat(2)
     # tensor([1, 2, 3, 1, 2, 3])
-    translations = torch.repeat_interleave(translation,
-            repeats=cart_coords.shape[1], dim=0).reshape(translation.shape[0],
-                                                    cart_coords.shape[1], 3)
-    fractional_coords = rot_cart + translations
+    #translations = torch.repeat_interleave(translation,
+    #        repeats=cart_coords.shape[1], dim=0).reshape(translation.shape[0],
+    #                                                cart_coords.shape[1], 3)
+    fractional_coords = rot_cart + translation.view(translation.shape[0], 1, 3)
     return fractional_coords
 
 
