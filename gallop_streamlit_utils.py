@@ -172,6 +172,7 @@ def sidebar():
                 st.error("Percentages do not sum to 100 %")
         else:
             all_settings["particle_division"] = None
+
         st.markdown("***Advanced***")
         show_advanced_lo = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_lo")
@@ -233,6 +234,43 @@ def sidebar():
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
                             value=False, key=None)
+            use_restraints = st.checkbox("Use distance restraints",
+                                            value=False)
+            if use_restraints:
+                n_restraints = st.number_input("Enter number of restraints to use",
+                                        min_value=1, max_value=None, value=1,
+                                        step=1, format=None, key=None)
+                restraints = []
+                for i in range(n_restraints):
+                    temp = []
+                    st.write(f"Restraint {i+1}:")
+                    zm1 = st.text_input("Enter the z-matrix index or \
+                        filename for z-matrix 1")
+                    try:
+                        temp.append(int(zm1))
+                    except ValueError:
+                        temp.append(zm1)
+                    temp.append(st.number_input(
+                        "Enter the atom index for atom 1", min_value=1,
+                        max_value=None, value=1, step=1))
+                    zm2 = st.text_input("Enter the z-matrix index or \
+                        filename for z-matrix 2")
+                    try:
+                        temp.append(int(zm2))
+                    except ValueError:
+                        temp.append(zm2)
+                    temp.append(st.number_input(
+                        "Enter the atom index for atom 2", min_value=1,
+                        max_value=None, value=1, step=1))
+                    temp.append(st.number_input(
+                        f"Enter the distance for restraint {i+1} in Angstroms",
+                        min_value=0.0, max_value=None, value=2., step=1.))
+                    temp.append(st.number_input(
+                        f"Enter the percentage weight for restraint {i+1}",
+                        min_value=0., max_value=None, value=50., step=10.))
+                    restraints.append(temp)
+            else:
+                restraints = None
         else:
             find_lr = True
             find_lr_auto_mult = True
@@ -247,6 +285,8 @@ def sidebar():
             torsion_shadowing = False
             Z_prime = 1
             shadow_iters = 0
+            use_restraints = False
+            restraints = None
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -263,6 +303,8 @@ def sidebar():
     all_settings["torsion_shadowing"] = torsion_shadowing
     all_settings["Z_prime"] = Z_prime
     all_settings["shadow_iters"] = shadow_iters
+    all_settings["use_restraints"] = use_restraints
+    all_settings["restraints"] = restraints
 
     # Particle Swarm settings
     with st.sidebar.beta_expander(label="Particle Swarm", expanded=False):

@@ -94,6 +94,8 @@ class Structure(object):
         self.total_position_degrees_of_freedom = None
         self.total_rotation_degrees_of_freedom = None
         self.zm_torsions = None
+        self.restraints = []
+        self.restraints_no_H = []
 
     def __repr__(self):
         return self.name
@@ -511,3 +513,106 @@ class Structure(object):
         else:
             self.zm_torsions = np.array([])
         self.total_dof_calculated = True
+
+    def add_restraint(self, zm1=None, atom1=None, zm2=None, atom2=None,
+                        distance=None, percentage=50., indexing=1):
+        """
+        Add a restraint to use during the local optimisation that adds a penalty
+        when atom1 and atom2 are further than "distance" angstroms apart.
+        These atoms can be from the same or from different z-matrices.
+        The associated ZMs must be supplied as arguments, and can either be
+        integers referencing the index of the zmatrix in the Structure.zmatrices
+        list, or can be the filenames of the zmatrices of interest.
+
+        e.g. atom4 in zmatrix_1.zmatrix and atom8 in zmatrix_3.zmatrix can be
+            added via
+                Structure.add_restraint(zm1="zmatrix_1.zmatrix", atom1=4,
+                                        zm2="zmatrix_2.zmatrix", atom2=8)
+            Or, assuming that the zmatrices were added sequentially starting
+            with zmatrix_1.zmatrix:
+                Structure.add_restraint(zm1=1, atom1=4, zm2=3, atom2=8)
+
+        Users can change between 0- and 1-indexing. Default is 1-index to match
+        the indexing given in the z-matrices.
+
+
+        Args:
+            zm1 (int or string): The index or filename of the zmatrix for atom 1
+            atom1 (int): The index of atom1 in the restraint in zmatrix 1.
+            zm2 (int or string): The index or filename of the zmatrix for atom 2
+            atom2 (int): The index of atom1 in the restraint in zmatrix 1.
+            distance (float): The distance to use for the restraint.
+            percentage (float): What percentage of the minimum chi2 value to
+                assign as the weight for this restraint. Defaults to 50.
+            indexing (int, optional): Use python 0-indexing (i.e. first atom in
+                zmatrix = 0) or normal 1-indexing (i.e. first atom in zmatrix
+                = 1). Defaults to 1.
+
+        """
+        assert indexing in [0,1], "indexing must be 0 or 1"
+        assert zm1 is not None and zm2 is not None, "you must specify the "\
+                                                    "Z-matrices"
+        assert atom1 is not None and atom2 is not None, "you must specify the "\
+                                                        "atoms"
+        assert distance is not None, "you must specify the distance"
+
+        if not isinstance(zm1, int):
+            assert isinstance(zm1, str), "zm1 must be integer or string"
+            for i, zmat in enumerate(self.zmatrices):
+                if zm1 in zmat.filename:
+                    zm1 = i + indexing
+                    break
+        if not isinstance(zm2, int):
+            assert isinstance(zm2, str), "zm1 must be integer or string"
+            for i, zmat in enumerate(self.zmatrices):
+                if zm2 in zmat.filename:
+                    zm2 = i + indexing
+                    break
+        if not isinstance(atom1, int) or not isinstance(atom2, int):
+            raise ValueError("Atoms must be given as the index of the atom "
+                            "in the Z-matrix in the form of an integer. "
+                            "Set indexing (0- or 1-indexing via the optional"
+                            " indexing argument. Default=1")
+
+
+        # Now correct to get python zero-indexes if using 1-indexing
+        if indexing == 1:
+            zm1 -= 1
+            zm2 -= 1
+            atom1 -= 1
+            atom2 -= 1
+
+        elements = {}
+        elements_no_H = {}
+        n_atoms = {}
+        all_elements = []
+        all_elements_no_H = []
+        for i, zmat in enumerate(self.zmatrices):
+            elements[i] = zmat.elements
+            elements_no_H[i] = zmat.elements_no_H
+            n_atoms[i] = len(zmat.elements)
+
+            all_elements += zmat.elements
+            all_elements_no_H += zmat.elements_no_H
+
+        restraint = []
+        restraint_no_H = []
+        for zmat, atom in zip([zm1, zm2],[atom1, atom2]):
+            prev_atoms = 0
+            prev_atoms_no_H = 0
+            for i in range(zmat):
+                prev_atoms += len(elements[i])
+                prev_atoms_no_H += len(elements_no_H[i])
+
+            atom_no_H = atom - elements[zmat][:atom].count("H")
+            atom += prev_atoms
+            atom_no_H += prev_atoms_no_H
+
+            restraint.append(atom)
+            restraint_no_H.append(atom_no_H)
+
+        restraint += [distance, percentage]
+        restraint_no_H += [distance, percentage]
+
+        self.restraints.append(restraint)
+        self.restraints_no_H.append(restraint_no_H)

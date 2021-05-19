@@ -19,6 +19,8 @@ from scipy.stats import gaussian_kde
 from gallop import chi2
 from gallop import tensor_prep
 from gallop import files
+from gallop import intensities
+from gallop import zm_to_cart
 
 
 def seed_everything(seed=1234, change_backend=False):
@@ -60,7 +62,7 @@ def get_minimiser_settings(Structure):
             n_cooldown, learning_rate, learning_rate_schedule, verbose,
             use_progress_bar, print_every, check_min, dtype, device,
             ignore_reflections_for_chi2_calc, optimizer, loss, eps, save_CIF,
-            streamlit
+            streamlit, torsion_shadowing, Z_prime, use_restraints
     """
     settings = {}
     settings["n_reflections"] = len(Structure.hkl)
@@ -84,6 +86,7 @@ def get_minimiser_settings(Structure):
     settings["streamlit"] = False
     settings["torsion_shadowing"] = False
     settings["Z_prime"] = 1
+    settings["use_restraints"] = False
     return settings
 
 
@@ -236,7 +239,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None,
     ignore_reflections_for_chi2_calc=False, use_progress_bar=True,
-    save_CIF=True, streamlit=False):
+    save_CIF=True, streamlit=False, use_restraints=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -363,6 +366,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             after optimising. Defaults to True.
         streamlit (bool, optional): If using the streamlit webapp interface,
             this is set to True to enable a progress bar etc. Defaults to False
+        use_restraints (bool, optional): Use distance-based restraints as an
+            additional penalty term in the loss function. Must be added to the
+            Structure object via Structure.add_restraint() before use. Defaults
+            to False.
 
     Returns:
         dictionary: A dictionary containing the optimised external and internal
@@ -371,6 +378,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             trajectories of the particles, the chi_2 values and loss values
             at each iteration.
     """
+    if device is None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if dtype is None:
+        dtype = torch.float32
     if b_bounds_1_cycle is None:
         b_bounds_1_cycle = {"upperb1":0.95, "lowb1":0.85, "upperb2":0.9,
                             "lowb2":0.9}
@@ -402,6 +413,22 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         n_torsion_fragments = len(tensors["zm"]["torsion"])
         first_frag = int(n_torsion_fragments / Z_prime)
         tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
+
+    if use_restraints:
+        if Structure.ignore_H_atoms:
+            restraints = np.array(Structure.restraints_no_H)
+        else:
+            restraints = np.array(Structure.restraints)
+        atoms = restraints[:,:2]
+        distances = restraints[:,2]
+        percentages = restraints[:,3] / 100.
+
+        atoms = torch.from_numpy(atoms).type(torch.long).to(device)
+        distances = torch.from_numpy(distances).type(dtype).to(device)
+        percentages = torch.from_numpy(percentages).type(dtype).to(device)
+        lattice_matrix = torch.from_numpy(
+                    np.copy(Structure.lattice.matrix)).type(dtype).to(device)
+
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
@@ -489,32 +516,53 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
-        chi_2 = chi2.get_chi_2(**tensors)
-        if ignore_reflections_for_chi2_calc:
-            # Counteract the division normally used in chi2 calculation
-            chi_2 *= (tensors["intensity"]["hkl"].shape[1] - 2)
+        if use_restraints:
+            asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                                                                **tensors["zm"])
 
+            calculated_intensities = intensities.calculate_intensities(
+                            asymmetric_frac_coords, **tensors["int_tensors"])
+
+            chi_2 = chi2.calc_chisqd(calculated_intensities,
+                                        **tensors["chisqd_tensors"])
+        else:
+            chi_2 = chi2.get_chi_2(**tensors)
+            if ignore_reflections_for_chi2_calc:
+                # Counteract the division normally used in chi2 calculation
+                chi_2 *= (tensors["intensity"]["hkl"].shape[1] - 2)
+
+        if use_restraints:
+            with torch.no_grad():
+                min_chi_2 = chi_2.min()
+            cart = torch.einsum("jk,bilj->bilk",
+                            lattice_matrix,asymmetric_frac_coords[:,atoms,:])
+            atomic_distances = torch.sqrt(
+                            ((cart[:,:,0,:] - cart[:,:,1,:])**2).sum(dim=-1))
+            distance_penalty = (min_chi_2*percentages*(
+                                            distances-atomic_distances)**2).sum()
+        else:
+            distance_penalty = 0
         # PyTorch expects a single value for backwards pass.
         # Need a function to convert all of the chi_2 values into a scalar
         if isinstance(loss, str):
             if loss.lower() == "sse":
-                L = (chi_2**2).sum()
+                L = (chi_2**2).sum() + distance_penalty
             elif loss.lower() == "sum":
-                L = chi_2.sum()
+                L = chi_2.sum() + distance_penalty
             elif loss.lower() == "xlogx":
-                L = torch.sum(chi_2*torch.log(chi_2))
+                L = torch.sum(chi_2*torch.log(chi_2)) + distance_penalty
         else:
             if loss is None:
                 # Default to the sum operation if loss is None
-                L = chi_2.sum()
+                L = chi_2.sum() + distance_penalty
             else:
                 try:
-                    L = loss(chi_2)
-                except RuntimeError:
-                    print("Unknown / incompatible loss function",loss)
-                    print("Allowable arguments = sse (sum of squared errors),",
-                        "sum, xlogx or a suitable function that returns a",
-                        "single scalar value")
+                    L = loss(chi_2, distance_penalty)
+                except TypeError:
+                    try:
+                        L = loss(chi_2)
+                    except RuntimeError:
+                        print("Unknown / incompatible loss function",loss)
 
         # Backward pass to calculate gradients
         L.backward()

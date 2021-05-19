@@ -131,6 +131,13 @@ elif function == "GALLOP":
         minimiser_settings["torsion_shadowing"] = all_settings["torsion_shadowing"]
         minimiser_settings["Z_prime"] = all_settings["Z_prime"]
 
+        if all_settings["use_restraints"]:
+            if all_settings["restraints"] is not None:
+                for r in all_settings["restraints"]:
+                    struct.add_restraint(zm1=r[0], atom1=r[1], zm2=r[2],
+                        atom2=r[3], distance=r[4], percentage=r[5])
+            minimiser_settings["use_restraints"] = True
+
         if all_settings["memory_opt"]:
             gsu.improve_GPU_memory_use(struct, minimiser_settings)
             st.write("Attempting to reduce GPU memory use at the expense of "
