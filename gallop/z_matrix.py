@@ -4,8 +4,8 @@
 """
 Z-matrix class, used to read in DASH Z-matrices.
 """
-import numpy as np
 import json
+import numpy as np
 
 #
 # Things to add - extract occupancies from the ZM
