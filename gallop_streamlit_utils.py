@@ -245,29 +245,31 @@ def sidebar():
                     temp = []
                     st.write(f"Restraint {i+1}:")
                     zm1 = st.text_input("Enter the z-matrix index or \
-                        filename for z-matrix 1")
+                        filename for z-matrix 1", key=f"zm1_{i+1}")
                     try:
                         temp.append(int(zm1))
                     except ValueError:
                         temp.append(zm1)
                     temp.append(st.number_input(
                         "Enter the atom index for atom 1", min_value=1,
-                        max_value=None, value=1, step=1))
+                        max_value=None, value=1, step=1, key=f"atom1_{i+1}"))
                     zm2 = st.text_input("Enter the z-matrix index or \
-                        filename for z-matrix 2")
+                        filename for z-matrix 2", key=f"zm2_{i+1}")
                     try:
                         temp.append(int(zm2))
                     except ValueError:
                         temp.append(zm2)
                     temp.append(st.number_input(
                         "Enter the atom index for atom 2", min_value=1,
-                        max_value=None, value=1, step=1))
+                        max_value=None, value=1, step=1, key=f"atom2_{i+1}"))
                     temp.append(st.number_input(
                         f"Enter the distance for restraint {i+1} in Angstroms",
-                        min_value=0.0, max_value=None, value=2., step=1.))
+                        min_value=0.0, max_value=None, value=2., step=1.,
+                        key=f"distance_{i+1}"))
                     temp.append(st.number_input(
                         f"Enter the percentage weight for restraint {i+1}",
-                        min_value=0., max_value=None, value=50., step=10.))
+                        min_value=0., max_value=None, value=50., step=10.,
+                        key=f"percentage_{i+1}"))
                     restraints.append(temp)
             else:
                 restraints = None
