@@ -179,8 +179,9 @@ def find_learning_rate(Structure, external=None, internal=None,
 
     Returns:
         tuple: Tuple containing the trial learning rate values, the losses
-                obtained and the learning rate associated with the minimum
-                loss value
+                obtained, the multiplication_factor and the learning rate
+                associated with the minimum loss value multiplied by the 
+                multiplication_factor
     """
 
     if minimiser_settings is not None:
@@ -224,7 +225,7 @@ def find_learning_rate(Structure, external=None, internal=None,
                 multiplication_factor = 0.5
 
         minimum_point = trial_values[losses == losses.min()][0]
-        return trial_values, losses, multiplication_factor * minimum_point
+        return trial_values, losses, multiplication_factor, multiplication_factor * minimum_point
     else:
         print("ERROR! Minimiser Settings are needed!")
         return None
