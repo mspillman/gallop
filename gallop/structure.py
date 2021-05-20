@@ -520,17 +520,26 @@ class Structure(object):
         Add a restraint to use during the local optimisation that adds a penalty
         when atom1 and atom2 are further than "distance" angstroms apart.
         These atoms can be from the same or from different z-matrices.
-        The associated ZMs must be supplied as arguments, and can either be
+        The associated ZMs can be supplied as arguments, and can either be
         integers referencing the index of the zmatrix in the Structure.zmatrices
         list, or can be the filenames of the zmatrices of interest.
+        Alternatively, if all of the atoms in the structure have unique atom
+        labels, then the zmatrix labels are not needed.
 
-        e.g. atom4 in zmatrix_1.zmatrix and atom8 in zmatrix_3.zmatrix can be
-            added via
+        e.g. atom4 in zmatrix_1.zmatrix and atom8 in zmatrix_3.zmatrix, with a
+            distance of 3.0 A and percentage of 50 % can be added via:
                 Structure.add_restraint(zm1="zmatrix_1.zmatrix", atom1=4,
-                                        zm2="zmatrix_2.zmatrix", atom2=8)
+                                        zm2="zmatrix_2.zmatrix", atom2=8,
+                                        distance=3.0, percentage=50)
             Or, assuming that the zmatrices were added sequentially starting
             with zmatrix_1.zmatrix:
-                Structure.add_restraint(zm1=1, atom1=4, zm2=3, atom2=8)
+                Structure.add_restraint(zm1=1, atom1=4, zm2=3, atom2=8,
+                                        distance=3.0, percentage=50)
+
+            If all of the atoms have unique labels, and assuming atom1 = N1 and
+            atom2 = Cl1, then the following is sufficient:
+                Structure.add_restraint(atom1="N1", atom2="Cl1", distance=3.0,
+                                        percentage=50)
 
         Users can change between 0- and 1-indexing. Default is 1-index to match
         the indexing given in the z-matrices.
