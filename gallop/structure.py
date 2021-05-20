@@ -514,7 +514,7 @@ class Structure(object):
             self.zm_torsions = np.array([])
         self.total_dof_calculated = True
 
-    def add_restraint(self, zm1=None, atom1=None, zm2=None, atom2=None,
+    def add_restraint(self, zm1="", atom1=None, zm2="", atom2=None,
                         distance=None, percentage=50., indexing=1):
         """
         Add a restraint to use during the local optimisation that adds a penalty
@@ -550,67 +550,94 @@ class Structure(object):
 
         """
         assert indexing in [0,1], "indexing must be 0 or 1"
-        assert zm1 is not None and zm2 is not None, "you must specify the "\
-                                                    "Z-matrices"
         assert atom1 is not None and atom2 is not None, "you must specify the "\
                                                         "atoms"
         assert distance is not None, "you must specify the distance"
-
+        check_all_zm1 = False
+        check_all_zm2 = False
         if not isinstance(zm1, int):
             assert isinstance(zm1, str), "zm1 must be integer or string"
-            for i, zmat in enumerate(self.zmatrices):
-                if zm1 in zmat.filename:
-                    zm1 = i + indexing
-                    break
+            if len(zm1) != 0:
+                for i, zmat in enumerate(self.zmatrices):
+                    if zm1 in zmat.filename:
+                        zm1 = i + indexing
+                        break
+            else:
+                check_all_zm1 = True
         if not isinstance(zm2, int):
             assert isinstance(zm2, str), "zm1 must be integer or string"
+            if len(zm2) != 0:
+                for i, zmat in enumerate(self.zmatrices):
+                    if zm2 in zmat.filename:
+                        zm2 = i + indexing
+                        break
+            else:
+                check_all_zm2 = True
+
+        assert check_all_zm1 == check_all_zm2, ("You must specify either a "
+                                                "Z-matrix for both atoms or "
+                                                "supply empty strings for both "
+                                                "Z-matrices")
+
+        if check_all_zm1 and check_all_zm2:
+            all_atom_names = []
+            all_atom_names_no_H = []
+            for zmat in self.zmatrices:
+                all_atom_names += zmat.atom_names
+                all_atom_names_no_H += zmat.atom_names_no_H
+            assert len(set(all_atom_names)) == len(all_atom_names), ("Not all "
+            "atoms have unique names! Rename atom labels in Z-matrices to use "
+            "atom-name-only indexing")
+            atom1 = all_atom_names.index(atom1)
+            atom2 = all_atom_names.index(atom2)
+            atom1_no_H = all_atom_names_no_H.index(atom1)
+            atom2_no_H = all_atom_names_no_H.index(atom2)
+            restraint = [atom1, atom2]
+            restraint_no_H = [atom1_no_H, atom2_no_H]
+        else:
+            # Now correct to get python zero-indexes if using 1-indexing
+            zm1 -= indexing
+            zm2 -= indexing
+
+            if not isinstance(atom1, int):
+                assert isinstance(atom1, str), "atom1 must be integer or string"
+                atom1 = self.zmatrices[zm1].atom_names.index(atom1) + indexing
+
+            if not isinstance(atom2, int):
+                assert isinstance(atom2, str), "atom2 must be integer or string"
+                atom2 = self.zmatrices[zm2].atom_names.index(atom2) + indexing
+
+            atom1 -= indexing
+            atom2 -= indexing
+
+            elements = {}
+            elements_no_H = {}
+            n_atoms = {}
+            all_elements = []
+            all_elements_no_H = []
             for i, zmat in enumerate(self.zmatrices):
-                if zm2 in zmat.filename:
-                    zm2 = i + indexing
-                    break
-        # Now correct to get python zero-indexes if using 1-indexing
-        zm1 -= indexing
-        zm2 -= indexing
+                elements[i] = zmat.elements
+                elements_no_H[i] = zmat.elements_no_H
+                n_atoms[i] = len(zmat.elements)
 
-        if not isinstance(atom1, int):
-            assert isinstance(atom1, str), "atom1 must be integer or string"
-            atom1 = self.zmatrices[zm1].atom_names.index(atom1) + indexing
+                all_elements += zmat.elements
+                all_elements_no_H += zmat.elements_no_H
 
-        if not isinstance(atom2, int):
-            assert isinstance(atom2, str), "atom2 must be integer or string"
-            atom2 = self.zmatrices[zm2].atom_names.index(atom2) + indexing
+            restraint = []
+            restraint_no_H = []
+            for zmat, atom in zip([zm1, zm2],[atom1, atom2]):
+                prev_atoms = 0
+                prev_atoms_no_H = 0
+                for i in range(zmat):
+                    prev_atoms += len(elements[i])
+                    prev_atoms_no_H += len(elements_no_H[i])
 
-        atom1 -= indexing
-        atom2 -= indexing
+                atom_no_H = atom - elements[zmat][:atom].count("H")
+                atom += prev_atoms
+                atom_no_H += prev_atoms_no_H
 
-        elements = {}
-        elements_no_H = {}
-        n_atoms = {}
-        all_elements = []
-        all_elements_no_H = []
-        for i, zmat in enumerate(self.zmatrices):
-            elements[i] = zmat.elements
-            elements_no_H[i] = zmat.elements_no_H
-            n_atoms[i] = len(zmat.elements)
-
-            all_elements += zmat.elements
-            all_elements_no_H += zmat.elements_no_H
-
-        restraint = []
-        restraint_no_H = []
-        for zmat, atom in zip([zm1, zm2],[atom1, atom2]):
-            prev_atoms = 0
-            prev_atoms_no_H = 0
-            for i in range(zmat):
-                prev_atoms += len(elements[i])
-                prev_atoms_no_H += len(elements_no_H[i])
-
-            atom_no_H = atom - elements[zmat][:atom].count("H")
-            atom += prev_atoms
-            atom_no_H += prev_atoms_no_H
-
-            restraint.append(atom)
-            restraint_no_H.append(atom_no_H)
+                restraint.append(atom)
+                restraint_no_H.append(atom_no_H)
 
         restraint += [distance, percentage]
         restraint_no_H += [distance, percentage]

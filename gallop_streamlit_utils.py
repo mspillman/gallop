@@ -245,7 +245,7 @@ def sidebar():
                     temp = []
                     st.write(f"Restraint {i+1}:")
                     zm1 = st.text_input("Enter the z-matrix index or \
-                        filename for z-matrix 1", key=f"zm1_{i+1}")
+                        filename for z-matrix 1 (optional)", key=f"zm1_{i+1}")
                     try:
                         temp.append(int(zm1))
                     except ValueError:
@@ -258,7 +258,7 @@ def sidebar():
                     except ValueError:
                         temp.append(atom1)
                     zm2 = st.text_input("Enter the z-matrix index or \
-                        filename for z-matrix 2", key=f"zm2_{i+1}")
+                        filename for z-matrix 2 (optional)", key=f"zm2_{i+1}")
                     try:
                         temp.append(int(zm2))
                     except ValueError:
@@ -267,9 +267,9 @@ def sidebar():
                         "Enter the atom label or index for atom 2",
                         key=f"atom2_{i+1}")
                     try:
-                        temp.append(int(atom1))
+                        temp.append(int(atom2))
                     except ValueError:
-                        temp.append(atom1)
+                        temp.append(atom2)
                     temp.append(st.number_input(
                         f"Enter the distance for restraint {i+1} in Angstroms",
                         min_value=0.0, max_value=None, value=2., step=1.,
