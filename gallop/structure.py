@@ -588,12 +588,12 @@ class Structure(object):
             assert len(set(all_atom_names)) == len(all_atom_names), ("Not all "
             "atoms have unique names! Rename atom labels in Z-matrices to use "
             "atom-name-only indexing")
-            atom1 = all_atom_names.index(atom1)
-            atom2 = all_atom_names.index(atom2)
-            atom1_no_H = all_atom_names_no_H.index(atom1)
-            atom2_no_H = all_atom_names_no_H.index(atom2)
-            restraint = [atom1, atom2]
-            restraint_no_H = [atom1_no_H, atom2_no_H]
+            atom1_idx = all_atom_names.index(atom1)
+            atom2_idx = all_atom_names.index(atom2)
+            atom1_no_H_idx = all_atom_names_no_H.index(atom1)
+            atom2_no_H_idx = all_atom_names_no_H.index(atom2)
+            restraint = [atom1_idx, atom2_idx]
+            restraint_no_H = [atom1_no_H_idx, atom2_no_H_idx]
         else:
             # Now correct to get python zero-indexes if using 1-indexing
             zm1 -= indexing
