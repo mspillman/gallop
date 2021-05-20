@@ -568,19 +568,20 @@ class Structure(object):
                 if zm2 in zmat.filename:
                     zm2 = i + indexing
                     break
-        if not isinstance(atom1, int) or not isinstance(atom2, int):
-            raise ValueError("Atoms must be given as the index of the atom "
-                            "in the Z-matrix in the form of an integer. "
-                            "Set indexing (0- or 1-indexing via the optional"
-                            " indexing argument. Default=1")
-
-
         # Now correct to get python zero-indexes if using 1-indexing
-        if indexing == 1:
-            zm1 -= 1
-            zm2 -= 1
-            atom1 -= 1
-            atom2 -= 1
+        zm1 -= indexing
+        zm2 -= indexing
+
+        if not isinstance(atom1, int):
+            assert isinstance(atom1, str), "atom1 must be integer or string"
+            atom1 = self.zmatrices[zm1].atom_names.index(atom1) + indexing
+
+        if not isinstance(atom2, int):
+            assert isinstance(atom2, str), "atom2 must be integer or string"
+            atom2 = self.zmatrices[zm2].atom_names.index(atom2) + indexing
+
+        atom1 -= indexing
+        atom2 -= indexing
 
         elements = {}
         elements_no_H = {}
