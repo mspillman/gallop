@@ -633,7 +633,7 @@ class DASHCifWriter:
     the input data which allows for easier comparison etc.
     """
     def __init__(self, struct, symprec=None, significant_figures=8, sg_number=1,
-                comment=None):
+                comment=None, site_labels=None):
         """
         Args:
             struct (Structure): structure to write
@@ -726,7 +726,10 @@ class DASHCifWriter:
                 count += 1
 
         block["_atom_site_type_symbol"] = atom_site_type_symbol
-        block["_atom_site_label"] = atom_site_label
+        if site_labels is not None:
+            block["_atom_site_label"] = site_labels
+        else:
+            block["_atom_site_label"] = atom_site_label
         block["_atom_site_symmetry_multiplicity"] = \
                                                 atom_site_symmetry_multiplicity
         block["_atom_site_fract_x"] = atom_site_fract_x
@@ -813,6 +816,14 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     for zm in Structure.zmatrices:
         species += zm.elements
 
+    all_atom_names = []
+    for zmat in Structure.zmatrices:
+        all_atom_names += zmat.atom_names
+    if len(set(all_atom_names)) == len(all_atom_names):
+        site_labels = all_atom_names
+    else:
+        site_labels = None
+
     output_structure = pmg.Structure(lattice=Structure.lattice, species=species,
                                     coords=best_frac_coords[0][:len(species)])
     ext_comment = "# GALLOP External Coords = " + ",".join(list(
@@ -822,7 +833,7 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     comment = ext_comment + "\n" + int_comment
     writer = DASHCifWriter(output_structure, symprec=1e-12,
                             sg_number=Structure.original_sg_number,
-                            comment=comment)
+                            comment=comment, site_labels=site_labels)
 
     if filename_root is None:
         filename_root = Structure.name
