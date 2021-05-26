@@ -324,7 +324,7 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     """
     assert len(Structure.zmatrices) > 0, "No Z-matrices have been added!"
 
-    if not hasattr(Structure, "total_internal_degrees_of_freedom"):
+    if Structure.total_external_degrees_of_freedom is None:
         Structure.get_total_degrees_of_freedom()
 
     if device is None:
