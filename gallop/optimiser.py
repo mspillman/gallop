@@ -146,8 +146,12 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
         lr = low - (final_increment*(iteration-final))
         b1 = upperb1
         b2 = lowb2
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+    for i, param_group in enumerate(optimizer.param_groups):
+        if i == 0:
+            param_group['lr'] = lr
+        else:
+            # Slower updates for second parameter group, i.e. PO factor
+            param_group['lr'] = lr/10
         param_group['betas'] = [b1, b2]
         param_group["momentum"] = b1
     return lr
@@ -490,7 +494,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         sinP = torch.from_numpy(sinP).type(dtype).to(device)
         factor = torch.Tensor([1.0]).type(dtype).to(device)
         factor.requires_grad = True
-        optimizer.param_groups[0]["params"] += [factor]
+        #optimizer.param_groups[0]["params"] += [factor]
+        optimizer.add_param_group({"params" : [factor]})
 
     if start_time is None:
         t1 = time.time()
