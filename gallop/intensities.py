@@ -460,4 +460,4 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 @torch.jit.script
 def apply_MD_PO_correction(calculated_intensities, cosP, sinP, factor):
     A_all = (1.0/torch.sqrt((factor*cosP)**2+sinP**2/factor))**3
-    return calculate_intensities * A_all.view(1, calculated_intensities.shape[1])
+    return calculated_intensities * A_all.view(1, calculated_intensities.shape[1])
