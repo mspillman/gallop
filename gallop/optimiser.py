@@ -494,7 +494,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         sinP = torch.from_numpy(sinP).type(dtype).to(device)
         #factor = torch.Tensor([1.0]).type(dtype).to(device)
         n_samples = tensors["zm"]["external"].shape[0]
-        factor = torch.from_numpy(np.ones(n_samples)).type(dtype).to(device)
+        factor = torch.from_numpy(np.ones(n_samples).reshape(-1,1)
+                                    ).type(dtype).to(device)
         factor.requires_grad = True
         #optimizer.param_groups[0]["params"] += [factor]
         optimizer.add_param_group({"params" : [factor]})
