@@ -322,12 +322,10 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     Returns:
         dict: A dictionary of the required Tensors
     """
-    if len(Structure.zmatrices) == 0:
-        print("Error - no Z-matrices have been added to the Structure")
-        return None
-    else:
-        if not hasattr(Structure, "total_internal_degrees_of_freedom"):
-            Structure.get_total_degrees_of_freedom()
+    assert len(Structure.zmatrices) == 0, "No Z-matrices have been added!"
+
+    if not hasattr(Structure, "total_internal_degrees_of_freedom"):
+        Structure.get_total_degrees_of_freedom()
 
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
