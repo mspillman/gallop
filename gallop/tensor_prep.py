@@ -322,7 +322,7 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     Returns:
         dict: A dictionary of the required Tensors
     """
-    assert len(Structure.zmatrices) == 0, "No Z-matrices have been added!"
+    assert len(Structure.zmatrices) > 0, "No Z-matrices have been added!"
 
     if not hasattr(Structure, "total_internal_degrees_of_freedom"):
         Structure.get_total_degrees_of_freedom()
