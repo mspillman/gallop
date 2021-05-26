@@ -180,7 +180,7 @@ def find_learning_rate(Structure, external=None, internal=None,
     Returns:
         tuple: Tuple containing the trial learning rate values, the losses
                 obtained, the multiplication_factor and the learning rate
-                associated with the minimum loss value multiplied by the 
+                associated with the minimum loss value multiplied by the
                 multiplication_factor
     """
 
@@ -240,7 +240,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None,
     ignore_reflections_for_chi2_calc=False, use_progress_bar=True,
-    save_CIF=True, streamlit=False, use_restraints=False):
+    save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
+    PO_axis=(0, 0, 1)):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -371,6 +372,12 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             additional penalty term in the loss function. Must be added to the
             Structure object via Structure.add_restraint() before use. Defaults
             to False.
+        include_PO (bool, optional): Include a preferred orientation correction
+            to the intensities during optimization. This is a global parameter
+            applied to all independent local optimisation runs. Defaults to
+            False.
+        PO_axis (tuple, optional): The axis along which to apply the
+            March-Dollase PO correction. Defaults to (0, 0, 1).
 
     Returns:
         dictionary: A dictionary containing the optimised external and internal
@@ -430,6 +437,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         lattice_matrix = torch.from_numpy(
                     np.copy(Structure.lattice.matrix)).type(dtype).to(device)
 
+
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
@@ -466,6 +474,23 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                     param_group['lr'] = learning_rate[0]
                 else:
                     param_group['lr'] = learning_rate
+
+    if include_PO:
+        PO_axis = np.array(PO_axis)
+        u = Structure.hkl / np.sqrt(np.einsum("kj,kj->k",
+                Structure.hkl, np.einsum("ij,kj->ki",
+                    Structure.lattice.reciprocal_lattice.matrix,
+                    Structure.hkl))).reshape(-1,1)
+        cosP = np.einsum("ij,j->i", u, np.inner(
+                        Structure.lattice.reciprocal_lattice.matrix, PO_axis))
+        one_minus_cosPsqd = 1.0-cosP**2
+        one_minus_cosPsqd[one_minus_cosPsqd < 0.] *= 0.
+        sinP = np.sqrt(one_minus_cosPsqd)
+        cosP = torch.from_numpy(cosP).type(dtype).to(device)
+        sinP = torch.from_numpy(sinP).type(dtype).to(device)
+        factor = torch.Tensor([1.0]).type(dtype).to(device)
+        factor.requires_grad = True
+        optimizer.param_groups[0]["params"] += [factor]
 
     if start_time is None:
         t1 = time.time()
@@ -517,14 +542,20 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
-        if use_restraints:
+        if use_restraints or include_PO:
             asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                                                                 **tensors["zm"])
 
             calculated_intensities = intensities.calculate_intensities(
                             asymmetric_frac_coords, **tensors["int_tensors"])
-
-            chi_2 = chi2.calc_chisqd(calculated_intensities,
+            if include_PO:
+                corrected_intensities = intensities.apply_MD_PO_correction(
+                                            calculated_intensities,
+                                            cosP, sinP, factor)
+                chi_2 = chi2.calc_chisqd(corrected_intensities,
+                                        **tensors["chisqd_tensors"])
+            else:
+                chi_2 = chi2.calc_chisqd(calculated_intensities,
                                         **tensors["chisqd_tensors"])
         else:
             chi_2 = chi2.get_chi_2(**tensors)
