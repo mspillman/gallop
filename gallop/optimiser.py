@@ -62,7 +62,8 @@ def get_minimiser_settings(Structure):
             n_cooldown, learning_rate, learning_rate_schedule, verbose,
             use_progress_bar, print_every, check_min, dtype, device,
             ignore_reflections_for_chi2_calc, optimizer, loss, eps, save_CIF,
-            streamlit, torsion_shadowing, Z_prime, use_restraints
+            streamlit, torsion_shadowing, Z_prime, use_restraints, include_PO,
+            PO_axis
     """
     settings = {}
     settings["n_reflections"] = len(Structure.hkl)
@@ -87,6 +88,8 @@ def get_minimiser_settings(Structure):
     settings["torsion_shadowing"] = False
     settings["Z_prime"] = 1
     settings["use_restraints"] = False
+    settings["include_PO"] = False
+    settings["PO_axis"] = [0, 0, 1]
     return settings
 
 
@@ -377,9 +380,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             Structure object via Structure.add_restraint() before use. Defaults
             to False.
         include_PO (bool, optional): Include a preferred orientation correction
-            to the intensities during optimization. This is a global parameter
-            applied to all independent local optimisation runs. Defaults to
-            False.
+            to the intensities during optimization. Defaults to False.
         PO_axis (tuple, optional): The axis along which to apply the
             March-Dollase PO correction. Defaults to (0, 0, 1).
 

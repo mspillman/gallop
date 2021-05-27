@@ -130,6 +130,9 @@ elif function == "GALLOP":
         minimiser_settings["optimizer"] = all_settings["optim"].lower()
         minimiser_settings["torsion_shadowing"] = all_settings["torsion_shadowing"]
         minimiser_settings["Z_prime"] = all_settings["Z_prime"]
+        if all_settings["include_PO"]:
+            minimiser_settings["include_PO"] = True
+            minimiser_settings["PO_axis"] = all_settings["PO_axis"]
 
         if all_settings["use_restraints"]:
             if all_settings["restraints"] is not None:

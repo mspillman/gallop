@@ -172,7 +172,19 @@ def sidebar():
                 st.error("Percentages do not sum to 100 %")
         else:
             all_settings["particle_division"] = None
-
+        all_settings["include_PO"] = st.checkbox("Include PO correction",
+                                    value=False, key="include_PO")
+        if all_settings["include_PO"]:
+            PO_axis = st.text_input(
+                        "Miller Indices for PO axis (separated by commas)",
+                        value='0, 0, 1', max_chars=None, key=None,
+                        type='default')
+            try:
+                PO_axis = PO_axis.replace(" ","").split(",")
+                PO_axis = [int(x) for x in PO_axis]
+                all_settings["PO_axis"] = PO_axis
+            except ValueError:
+                st.write("Invalid PO axis!")
         st.markdown("***Advanced***")
         show_advanced_lo = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_lo")
