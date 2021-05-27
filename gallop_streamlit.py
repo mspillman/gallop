@@ -278,14 +278,27 @@ elif function == "GALLOP":
                                                                 "time / min"])
                 result_info_df.index = np.arange(1, len(result_info_df) + 1)
                 with structure_plot_placeholder:
+                    hide_H = True
                     with st.beta_expander(label="Show structure", expanded=False):
                         for fn in glob.iglob("*_chisqd_*"):
-                            cif = open(fn).read()
+                            lines = []
+                            with open(fn) as cif:
+                                for line in cif:
+                                    if hide_H:
+                                        splitline = list(filter(
+                                                None,line.strip().split(" ")))
+                                        if splitline[0] != "H":
+                                            lines.append(line)
+                                    else:
+                                        lines.append(line)
+                            cif.close()
                             break
+                        cif = "\n".join(lines)
                         view = py3Dmol.view()
-                        view.addModel(cif, "cif", {"doAssembly" : True,
-                                                    "normalizeAssembly":True,
-                                                    'duplicateAssemblyAtoms':True})
+                        view.addModel(cif, "cif",
+                                {"doAssembly" : True,
+                                "normalizeAssembly":True,
+                                'duplicateAssemblyAtoms':True})
                         view.setStyle({"stick":{}})
                         view.addUnitCell()
                         view.zoomTo()
@@ -299,7 +312,8 @@ elif function == "GALLOP":
 
                         st.components.v1.html(open('viz.html', 'r').read(),
                                                 width=600, height=400)
-
+                        if hide_H:
+                            st.write("H atoms hidden for clarity")
                 col1, col2 = result_placeholder.beta_columns([2,2])
                 with col2:
                     st.write("")
