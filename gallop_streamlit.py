@@ -315,27 +315,6 @@ elif function == "GALLOP":
                         if hide_H:
                             st.write("H atoms hidden for clarity")
                 col1, col2 = result_placeholder.beta_columns([2,2])
-                with col2:
-                    st.write("")
-                    st.write("")
-                    labels = np.ones_like(chi_2)
-                    for j in range(all_settings["n_swarms"]):
-                        begin = j*all_settings["swarm_size"]
-                        end = (j+1)*all_settings["swarm_size"]
-                        labels[begin:end] *= j
-                        labels[begin:end] += 1
-                    chi2_info = pd.DataFrame({
-                        "chi2" : chi_2,
-                        "swarm" : labels
-                    })
-                    alt.data_transformers.disable_max_rows()
-
-                    chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
-                        x='chi2:Q',
-                        y='swarm:O'
-                    )).interactive()
-
-                    st.altair_chart(chart)
                 with col1:
                     # Zip and then delete the cifs, then download the zip
                     if i == 0:
@@ -361,7 +340,27 @@ elif function == "GALLOP":
                     f.close()
 
                     st.table(result_info_df.iloc[::-1])
+                with col2:
+                    st.write("")
+                    st.write("")
+                    labels = np.ones_like(chi_2)
+                    for j in range(all_settings["n_swarms"]):
+                        begin = j*all_settings["swarm_size"]
+                        end = (j+1)*all_settings["swarm_size"]
+                        labels[begin:end] *= j
+                        labels[begin:end] += 1
+                    chi2_info = pd.DataFrame({
+                        "chi2" : chi_2,
+                        "swarm" : labels
+                    })
+                    alt.data_transformers.disable_max_rows()
 
+                    chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
+                        x='chi2:Q',
+                        y='swarm:O'
+                    )).interactive()
+
+                    st.altair_chart(chart)
                 external, internal = swarm.update_position(result=result,
                                                             verbose=False)
 
