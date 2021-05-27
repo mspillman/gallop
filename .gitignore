@@ -116,5 +116,5 @@ dmypy.json
 *.cif
 reset.bat
 GALLOP_results/
-GALLOP_user_settings/
 .vscode/
+GALLOP_user_settings/test.json

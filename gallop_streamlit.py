@@ -65,7 +65,8 @@ elif function == "GALLOP":
 
         # If the structure name hasn't been changed, use the Pawley files to
         # give it a meaningful name
-        if all_settings["structure_name"] == "Enter_structure_name":
+        name = all_settings["structure_name"]
+        if name == "Enter_structure_name" or len(name) == 0:
             if pawley_program == "DASH":
                 structure_name = os.path.split(sdi)[-1].split(".sdi")[0]
             elif pawley_program == "GSAS-II":
@@ -136,9 +137,11 @@ elif function == "GALLOP":
 
         if all_settings["use_restraints"]:
             if all_settings["restraints"] is not None:
-                for r in all_settings["restraints"]:
-                    struct.add_restraint(zm1=r[0], atom1=r[1], zm2=r[2],
-                        atom2=r[3], distance=r[4], percentage=r[5])
+                for r in all_settings["restraints"].keys():
+                    r = all_settings["restraints"][r]
+                    r = r.replace(" ","").split(",")
+                    struct.add_restraint(atom1=r[0], atom2=r[1],
+                        distance=float(r[2]), percentage=float(r[3]))
             minimiser_settings["use_restraints"] = True
 
         if all_settings["memory_opt"]:
@@ -146,6 +149,10 @@ elif function == "GALLOP":
             st.write("Attempting to reduce GPU memory use at the expense of "
                     "reduced Local Optimisation speed")
         n_particles = all_settings["swarm_size"]*all_settings["n_swarms"]
+        if all_settings["inertia_type"] == "constant":
+            inertia = all_settings["inertia"]
+        else:
+            inertia = all_settings["inertia_type"]
         swarm = optimiser.Swarm(
                     Structure = struct,
                     n_particles=n_particles,
@@ -153,7 +160,7 @@ elif function == "GALLOP":
                     global_update = all_settings["global_update"],
                     global_update_freq = all_settings["global_update_freq"],
                     inertia_bounds = all_settings["inertia_bounds"],
-                    inertia = all_settings["inertia"],
+                    inertia = inertia,
                     c1 = all_settings["c1"],
                     c2 = all_settings["c2"],
                     limit_velocity = all_settings["limit_velocity"],

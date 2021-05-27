@@ -17,11 +17,28 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 # GALLOP related
 from gallop import optimiser
 from gallop import tensor_prep
 from gallop import chi2
+
+settings = ["structure_name", "n_GALLOP_iters", "seed",
+            "optim", "n_LO_iters", "ignore_H_atoms", "device",
+            "particle_division","include_PO","PO_axis","find_lr",
+            "find_lr_auto_mult", "mult", "learning_rate_schedule",
+            "n_cooldown", "loss", "reflection_percentage", "include_dw_factors",
+            "memory_opt", "percentage_cutoff", "torsion_shadowing",
+            "Z_prime", "shadow_iters", "n_swarms", "swarm_size",
+            "global_update","global_update_freq", "randomise_worst",
+            "randomise_percentage", "randomise_freq", "c1", "c2",
+            "inertia","inertia_bounds", "limit_velocity", "vmax",
+            "lr"]
+
+def get_options(value, options):
+    options.remove(value)
+    return [value] + options
 
 def improve_GPU_memory_use(struct, minimiser_settings):
     """
@@ -48,6 +65,50 @@ def improve_GPU_memory_use(struct, minimiser_settings):
     del tensors, chi_2
 
 
+def load_settings():
+    with st.sidebar.beta_expander(label="Load settings", expanded=False):
+        if not os.path.exists("GALLOP_user_settings"):
+            st.error("No settings directory found")
+        else:
+            files = list(glob.iglob(
+                            os.path.join("GALLOP_user_settings","*.json")))
+            files = [x.replace(
+                        "GALLOP_user_settings","").strip("\\").strip("/")
+                        for x in files]
+            files = get_options("Default.json", files)
+            if len(files) > 0:
+                file = st.selectbox(
+                    "Choose settings file to load", files, key="load_settings")
+            else:
+                st.error("No saved settings files found")
+            filepath = os.path.join("GALLOP_user_settings", file)
+            with open(filepath, "r") as f:
+                json_settings = json.load(f)
+            f.close()
+            all_settings = {}
+            all_settings.update(json_settings)
+            st.success(f"Loaded settings from {file}")
+    return all_settings, file
+
+def save_settings(all_settings, filename):
+    with st.sidebar.beta_expander(label="Save settings", expanded=False):
+        settings_name = st.text_input("Enter name to save",
+                                            value=filename, max_chars=None,
+                                            key=None, type='default')
+        if settings_name != "":
+            if st.button("Save"):
+                if not os.path.exists("GALLOP_user_settings"):
+                    os.mkdir("GALLOP_user_settings")
+                if ".json" not in settings_name:
+                    settings_name = settings_name + ".json"
+                settings_name = os.path.join("GALLOP_user_settings",
+                                                    settings_name)
+                if os.path.exists(settings_name):
+                    os.remove(settings_name)
+                with open(settings_name, "w") as f:
+                    json.dump(all_settings, f, indent=4)
+                f.close()
+                st.success("Saved")
 
 
 def load_save_settings(all_settings):
@@ -81,17 +142,6 @@ def load_save_settings(all_settings):
                             for x in files]
                 files = ["Continue with GUI settings"] + files
                 if len(files) > 1:
-                    settings = ["structure_name", "n_GALLOP_iters", "seed",
-                        "optim", "n_LO_iters", "ignore_H_atoms", "device",
-                        "particle_division","find_lr", "find_lr_auto_mult",
-                        "mult", "learning_rate_schedule", "n_cooldown", "loss",
-                        "reflection_percentage", "include_dw_factors",
-                        "memory_opt", "percentage_cutoff", "torsion_shadowing",
-                        "Z_prime", "shadow_iters", "n_swarms", "swarm_size",
-                        "global_update","global_update_freq", "randomise_worst",
-                        "randomise_percentage", "randomise_freq", "c1", "c2",
-                        "inertia","inertia_bounds", "limit_velocity", "vmax",
-                        "lr"]
                     with st.sidebar.beta_expander(label="Settings to load",
                                                             expanded=False):
                         selection = st.multiselect("Choose settings to load",
@@ -115,27 +165,25 @@ def load_save_settings(all_settings):
     return all_settings
 
 
-
-
-
-def sidebar():
+def get_all_settings(loaded_values):
     # Get GALLOP settings. Menu appears on the sidebar, with expandable sections
     # for general, local optimiser and particle swarm optimiser respectively.
     all_settings = {}
     with st.sidebar.beta_expander(label="General", expanded=False):
         structure_name = st.text_input("Structure name (optional)",
-                        value='Enter structure name', max_chars=None,
+                        value=loaded_values["structure_name"], max_chars=None,
                         key=None, type='default')
         all_settings["structure_name"] = structure_name.replace(" ", "_")
         all_settings["n_GALLOP_iters"] = st.number_input(
                                         "Total number of GALLOP iterations",
-                                        min_value=1, max_value=None, value=100,
+                                        min_value=1, max_value=None,
+                                        value=loaded_values["n_GALLOP_iters"],
                                         step=1, format=None, key=None)
 
         all_settings["seed"] = st.number_input(
                     "Set random seed (integer >= 0), or use -1 to randomise",
-                    min_value=-1, max_value=None, value=-1, step=1,
-                    format=None, key=None)
+                    min_value=-1, max_value=None, value=loaded_values["seed"],
+                    step=1, format=None, key=None)
         if all_settings["seed"] != -1:
             st.write("Note that setting the seed does not guarantee "
                     "reproducibility due to some CUDA algorithms being "
@@ -146,20 +194,24 @@ def sidebar():
 
     # Local optimiser settings
     with st.sidebar.beta_expander(label="Local Optimiser", expanded=False):
-        all_settings["optim"] = st.selectbox("Algorithm", ["Adam", "diffGrad"])
+        options = get_options(loaded_values["optim"], ["Adam", "diffGrad"])
+        all_settings["optim"] = st.selectbox("Algorithm", options)
         all_settings["n_LO_iters"] = st.number_input(
                                 "Number of LO steps per GALLOP iteration",
-                                min_value=1, max_value=None, value=500,
+                                min_value=1, max_value=None,
+                                value=loaded_values["n_LO_iters"],
                                 step=1, format=None, key=None)
         all_settings["ignore_H_atoms"]=st.checkbox("Remove H atoms for speed",
-                                        value=True, key=None)
+                                        value=loaded_values["ignore_H_atoms"],
+                                        key=None)
         GPUs = []
         for i in range(torch.cuda.device_count()):
             GPUs.append(str(i)+" = "+torch.cuda.get_device_name(i))
         if len(GPUs) > 1:
             GPUs.append("Multiple GPUs")
+        options = get_options(loaded_values["device"], ["Auto","CPU"]+GPUs)
         all_settings["device"] = st.selectbox("Device to perform LO",
-                                ["Auto","CPU"]+GPUs)
+                                options)
         if all_settings["device"] == "Multiple GPUs":
             GPUs = st.multiselect("Select GPUs to use",GPUs[:-1],
                                                 default=GPUs[:-1])
@@ -167,17 +219,23 @@ def sidebar():
             for i in GPUs:
                 all_settings["particle_division"].append([i.split(" = ")[0],
                     st.number_input("Enter % of particles to run on "+i,
-                        min_value=0., max_value=100., value=100./(len(GPUs)))])
+                        min_value=0., max_value=100.,
+                        value=loaded_values["particle_division"][i][1])])
             if sum(x[1] for x in all_settings["particle_division"]) != 100.:
                 st.error("Percentages do not sum to 100 %")
         else:
             all_settings["particle_division"] = None
         all_settings["include_PO"] = st.checkbox("Include PO correction",
-                                    value=False, key="include_PO")
+                                    value=loaded_values["include_PO"],
+                                    key="include_PO")
         if all_settings["include_PO"]:
+            if "PO_axis" not in loaded_values.keys():
+                PO_axis = "0, 0, 1"
+            else:
+                PO_axis = ",".join(loaded_values["PO_axis"])
             PO_axis = st.text_input(
                         "Miller Indices for PO axis (separated by commas)",
-                        value='0, 0, 1', max_chars=None, key=None,
+                        value=PO_axis, max_chars=None, key=None,
                         type='default')
             try:
                 PO_axis = PO_axis.replace(" ","").split(",")
@@ -189,118 +247,103 @@ def sidebar():
         show_advanced_lo = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_lo")
         if show_advanced_lo:
-            find_lr = st.checkbox("Find learning rate", value=True, key=None)
+            find_lr = st.checkbox("Find learning rate",
+                        value=loaded_values["find_lr"], key=None)
             if find_lr:
                 find_lr_auto_mult = st.checkbox(
                                     "Automatically set multiplication factor",
-                                    value=True, key=None)
+                                    value=loaded_values["find_lr_auto_mult"],
+                                    key=None)
                 if not find_lr_auto_mult:
                     mult = st.number_input("Multiplication factor",
-                                    min_value=0.01, max_value=None, value=0.5,
+                                    min_value=0.01, max_value=None,
+                                    value=loaded_values["mult"],
                                     step=0.01, format=None, key=None)
                 else:
-                    mult = 1.0
+                    mult = 0.75
+                lr = 0.05
             else:
                 lr = st.number_input("Learning rate",
-                                    min_value=0.000, max_value=None, value=0.050,
+                                    min_value=0.000, max_value=None,
+                                    value=loaded_values["lr"],
                                     step=0.001, format=None, key=None)
                 find_lr_auto_mult = False
                 mult = 1.0
+            options = get_options(loaded_values["learning_rate_schedule"],
+                                    ["1cycle", "sqrt", "constant"])
             learning_rate_schedule = st.selectbox("Learning rate schedule",
-                                        ["1cycle", "sqrt", "constant"])
+                                        options)
             if learning_rate_schedule == "1cycle":
                 n_cooldown = st.number_input("Cooldown iters", min_value=1,
                                     max_value=all_settings["n_LO_iters"],
-                                    value=100, step=1, format=None, key=None)
-            torsion_shadowing = st.checkbox("Use torsion shadowing",value=False)
+                                    value=loaded_values["n_cooldown"],
+                                    step=1, format=None, key=None)
+            else:
+                n_cooldown = loaded_values["n_cooldown"]
+            torsion_shadowing = st.checkbox("Use torsion shadowing",
+                                    value=loaded_values["torsion_shadowing"])
             if torsion_shadowing:
                 Z_prime = st.number_input("Enter Z' of structure",
-                                min_value=1, max_value=None, value=2, step=1,
+                                min_value=1, max_value=None,
+                                value=loaded_values["Z_prime"], step=1,
                                 format=None, key=None)
                 shadow_iters = st.number_input("Number of shadowing iterations",
-                                min_value=1,
+                                min_value=0,
                                 max_value=all_settings["n_GALLOP_iters"],
-                                value=10, step=1, format=None, key=None)
+                                value=loaded_values["shadow_iters"],
+                                step=1, format=None, key=None)
             else:
                 Z_prime = False
                 shadow_iters = 0
+            options = get_options(loaded_values["loss"],
+                                ["sum", "xlogx", "sse"])
             loss = st.selectbox("Loss function to minimise",
-                                ["chisqd", "chisqd * log(chisqd)", "chisqd^2"])
-            if loss == "chisqd * log(chisqd)":
-                loss = "xlogx"
-            elif loss == "chisqd":
-                loss = "sum"
-            else:
-                loss = "sse"
+                                options)
             reflection_percentage = st.number_input(
-                                    "% of reflections to include",
-                                    min_value=0.1, max_value=100., value=100.,
-                                    step=10., format=None, key=None)
+                                "% of reflections to include",
+                                min_value=0.1, max_value=100.,
+                                value=loaded_values["reflection_percentage"],
+                                step=10., format=None, key=None)
 
             percentage_cutoff = st.number_input(
                                     "% correlation to ignore",
-                                    min_value=0.0, max_value=100., value=20.,
+                                    min_value=0.0, max_value=100., 
+                                    value=loaded_values["percentage_cutoff"],
                                     step=20., format=None, key=None)
             include_dw_factors = st.checkbox("Include DW factors in chi2 calcs",
-                                        value=True, key=None)
+                                    value=loaded_values["include_dw_factors"], 
+                                    key=None)
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
-                            value=False, key=None)
+                            value=loaded_values["memory_opt"], key=None)
             use_restraints = st.checkbox("Use distance restraints",
-                                            value=False)
+                                        value=loaded_values["use_restraints"])
             if use_restraints:
                 n_restraints = st.number_input("Enter number of restraints to use",
-                                        min_value=1, max_value=None, value=1,
+                                        min_value=0, max_value=None,
+                                        value=loaded_values["n_restraints"],
                                         step=1, format=None, key=None)
-                restraints = []
+                restraints = loaded_values["restraints"]
+                if restraints is None:
+                    restraints = defaultdict(str)
                 for i in range(n_restraints):
-                    temp = []
                     st.write(f"Restraint {i+1}:")
-                    zm1 = st.text_input("Enter the z-matrix index or \
-                        filename for z-matrix 1 (optional)", key=f"zm1_{i+1}")
-                    try:
-                        temp.append(int(zm1))
-                    except ValueError:
-                        temp.append(zm1)
-                    atom1 = st.text_input(
-                        "Enter the atom label or index for atom 1",
-                        key=f"atom1_{i+1}")
-                    try:
-                        temp.append(int(atom1))
-                    except ValueError:
-                        temp.append(atom1)
-                    zm2 = st.text_input("Enter the z-matrix index or \
-                        filename for z-matrix 2 (optional)", key=f"zm2_{i+1}")
-                    try:
-                        temp.append(int(zm2))
-                    except ValueError:
-                        temp.append(zm2)
-                    atom2 = st.number_input(
-                        "Enter the atom label or index for atom 2",
-                        key=f"atom2_{i+1}")
-                    try:
-                        temp.append(int(atom2))
-                    except ValueError:
-                        temp.append(atom2)
-                    temp.append(st.number_input(
-                        f"Enter the distance for restraint {i+1} in Angstroms",
-                        min_value=0.0, max_value=None, value=2., step=1.,
-                        key=f"distance_{i+1}"))
-                    temp.append(st.number_input(
-                        f"Enter the percentage weight for restraint {i+1}",
-                        min_value=0., max_value=None, value=50., step=10.,
-                        key=f"percentage_{i+1}"))
-                    restraints.append(temp)
+                    r = st.text_input("Enter the atom labels, distance and \
+                        % weight (separated by commas, e.g. C1,C2,1.54,50)",
+                        key=f"r_{i+1}", value=restraints[str(i)])
+                    restraints[i] = r
             else:
                 restraints = None
+                n_restraints = 0
         else:
             find_lr = True
             find_lr_auto_mult = True
+            lr = 0.05
             mult = 1.0
             learning_rate_schedule = "1cycle"
             n_cooldown = 100
             loss = "xlogx"
-            reflection_percentage = 100
+            reflection_percentage = 100.
             include_dw_factors = True
             memory_opt = False
             percentage_cutoff = 20.
@@ -308,13 +351,13 @@ def sidebar():
             Z_prime = 1
             shadow_iters = 0
             use_restraints = False
+            n_restraints = 0
             restraints = None
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
     all_settings["mult"] = mult
-    if not find_lr:
-        all_settings["lr"] = lr
+    all_settings["lr"] = lr
     all_settings["learning_rate_schedule"] = learning_rate_schedule
     all_settings["n_cooldown"] = n_cooldown
     all_settings["loss"] = loss
@@ -326,41 +369,48 @@ def sidebar():
     all_settings["Z_prime"] = Z_prime
     all_settings["shadow_iters"] = shadow_iters
     all_settings["use_restraints"] = use_restraints
+    all_settings["n_restraints"] = n_restraints
     all_settings["restraints"] = restraints
 
     # Particle Swarm settings
     with st.sidebar.beta_expander(label="Particle Swarm", expanded=False):
         all_settings["n_swarms"] = st.number_input("Number of swarms",
-                                min_value=1, max_value=None,value=10, step=1,
+                                min_value=1, max_value=None,
+                                value=loaded_values["n_swarms"], step=1,
                                 format=None, key=None)
         all_settings["swarm_size"] = st.number_input(
                                     "Number of particles per swarm",
-                                    min_value=1,max_value=None, value=1000,
+                                    min_value=1,max_value=None, 
+                                    value=loaded_values["swarm_size"],
                                     step=100, format=None, key=None)
         st.write("Total particles =",
                             all_settings["n_swarms"]*all_settings["swarm_size"])
         all_settings["global_update"] = st.checkbox(
                                         "Periodic all-swarm global update",
-                                        value=False, key=None)
+                                        value=loaded_values["global_update"],
+                                        key=None)
         if all_settings["global_update"]:
             all_settings["global_update_freq"] = st.number_input(
                         "All-swarm global update frequency",
                         min_value=1, max_value=all_settings["n_GALLOP_iters"],
-                        value=10, step=1, format=None, key=None)
+                        value=loaded_values["global_update_freq"],
+                        step=1, format=None, key=None)
         else:
-            all_settings["global_update_freq"]=all_settings["n_GALLOP_iters"]+1
+            all_settings["global_update_freq"]=all_settings["n_GALLOP_iters"]
         all_settings["randomise_worst"] = st.checkbox(
                         "Periodically randomise the worst performing particles",
-                                        value=False, key=None)
+                        value=loaded_values["randomise_worst"], key=None)
         if all_settings["randomise_worst"]:
             all_settings["randomise_percentage"] = st.number_input(
                         "Percentage of worst performing particles to randomise",
                         min_value=0.0, max_value=100.0,
-                        value=10.0, step=10.0, format=None, key=None)
+                        value=loaded_values["randomise_percentage"],
+                        step=10.0, format=None, key=None)
             all_settings["randomise_freq"] = st.number_input(
                         "Randomisation frequency",
                         min_value=1, max_value=all_settings["n_GALLOP_iters"],
-                        value=10, step=1, format=None, key=None)
+                        value=loaded_values["randomise_freq"],
+                        step=1, format=None, key=None)
         else:
             all_settings["randomise_percentage"] = 0
             all_settings["randomise_freq"] = all_settings["n_GALLOP_iters"]+1
@@ -369,44 +419,67 @@ def sidebar():
                                         key="show_advanced_pso")
         if show_advanced_pso:
             c1 = st.number_input("c1 (social component)", min_value=0.0,
-                                    max_value=None, value=1.5, step=0.1)
+                                    max_value=None, value=loaded_values["c1"],
+                                    step=0.1)
             c2 = st.number_input("c2 (cognitive component)", min_value=0.0,
-                                    max_value=None, value=1.5, step=0.1)
-            inertia = st.selectbox("Inertia type", ["ranked", "random",
-                                                    "constant"])
-            if inertia == "constant":
-                inertia = st.number_input("Inertia", min_value=0,
-                                    max_value=None, value=0.72, step=0.01,
+                                    max_value=None, value=loaded_values["c2"],
+                                    step=0.1)
+            options = get_options(loaded_values["inertia_type"],
+                            ["ranked", "random", "constant"])
+            inertia_type = st.selectbox("Inertia type", options)
+            if inertia_type == "constant":
+                inertia = st.number_input("Inertia", min_value=0.0,
+                                    max_value=None,
+                                    value=loaded_values["inertia"], step=0.01,
                                     format=None, key=None)
                 inertia_bounds = (0.4,0.9)
             else:
                 lower = st.number_input("Lower inertia bound", min_value=0.,
-                                    max_value=None, value=0.4, step=0.05)
+                                    max_value=None,
+                                    value=loaded_values["inertia_bounds"][0],
+                                    step=0.05)
                 upper = st.number_input("Upper inertia bound", min_value=lower,
-                                    max_value=None, value=0.9, step=0.05)
+                                    max_value=None,
+                                    value=loaded_values["inertia_bounds"][1],
+                                    step=0.05)
                 inertia_bounds = (lower, upper)
-            limit_velocity = st.checkbox("Limit velocity", value=True, key=None)
+                inertia = 0.7
+            limit_velocity = st.checkbox("Limit velocity", 
+                                value=loaded_values["limit_velocity"], key=None)
             if limit_velocity:
                 vmax = st.number_input("Maximum absolute velocity",
-                                    min_value=0.,max_value=None, value=1.0,
+                                    min_value=0.,max_value=None, 
+                                    value=loaded_values["vmax"],
                                     step=0.05)
             else:
-                vmax = None
+                vmax = 1.0
         else:
             c1 = 1.5
             c2 = 1.5
-            inertia = "ranked"
+            inertia_type = "ranked"
+            inertia = 0.7
             inertia_bounds = (0.4, 0.9)
             limit_velocity = True
             vmax = 1.0
     all_settings["c1"] = c1
     all_settings["c2"] = c2
+    all_settings["inertia_type"] = inertia_type
     all_settings["inertia"] = inertia
     all_settings["inertia_bounds"] = inertia_bounds
     all_settings["limit_velocity"] = limit_velocity
     all_settings["vmax"] = vmax
 
-    all_settings = load_save_settings(all_settings)
+    return all_settings
+
+
+def sidebar():
+    all_settings, filename = load_settings()
+
+    all_settings = get_all_settings(all_settings)
+
+    #all_settings = load_save_settings(all_settings)
+
+    save_settings(all_settings, filename)
 
     st.sidebar.write("")
     reset = st.sidebar.button("Reset GALLOP")
@@ -455,7 +528,7 @@ def get_files():
                     ["Verapamil hydrochloride", "Famotidine form B"])
         uploaded_files = []
         clear_files = False
-        load_settings = False
+        load_settings_from_file = False
     else:
         with col2:
             pawley_program = st.radio("Choose Pawley refinement program",
@@ -486,21 +559,11 @@ def get_files():
                                 "Remove uploaded files once no longer needed",
                                                         value=True, key=None)
         with col2:
-            load_settings = st.checkbox("Load GALLOP settings from json",
-                                                        value=False,key=None)
+            load_settings_from_file = st.checkbox(
+                        "Load GALLOP settings from json", value=False, key=None)
         example = None
-    if load_settings:
+    if load_settings_from_file:
         with st.beta_expander(label="Choose settings to load", expanded=False):
-            settings = ["structure_name", "n_GALLOP_iters", "seed", "optim",
-                    "n_LO_iters", "ignore_H_atoms", "device",
-                    "particle_division","find_lr", "find_lr_auto_mult",
-                    "mult", "learning_rate_schedule", "n_cooldown", "loss",
-                    "reflection_percentage", "include_dw_factors",
-                    "memory_opt", "percentage_cutoff", "torsion_shadowing",
-                    "Z_prime", "shadow_iters", "n_swarms", "swarm_size",
-                    "global_update","global_update_freq", "randomise_worst",
-                    "randomise_percentage", "randomise_freq", "c1", "c2",
-                    "inertia","inertia_bounds", "limit_velocity", "vmax", "lr"]
             selection=st.multiselect("",settings,default=settings,key="upload")
 
     sdi = None
@@ -559,7 +622,7 @@ def get_files():
             sdi = os.path.join("data","Famotidine.sdi")
             zms = [os.path.join("data","FOGVIG03_1.zmatrix")]
 
-    if load_settings and json_settings is not None:
+    if load_settings_from_file and json_settings is not None:
         with open(json_settings, "r") as f:
             json_settings = json.load(f)
         f.close()
