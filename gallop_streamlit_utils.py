@@ -225,7 +225,7 @@ def sidebar():
                 Z_prime = False
                 shadow_iters = 0
             loss = st.selectbox("Loss function to minimise",
-                                ["chisqd * log(chisqd)", "chisqd", "chisqd^2"])
+                                ["chisqd", "chisqd * log(chisqd)", "chisqd^2"])
             if loss == "chisqd * log(chisqd)":
                 loss = "xlogx"
             elif loss == "chisqd":
