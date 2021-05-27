@@ -331,7 +331,7 @@ def get_all_settings(loaded_values):
                     r = st.text_input("Enter the atom labels, distance and \
                         % weight (separated by commas, e.g. C1,C2,1.54,50)",
                         key=f"r_{i+1}", value=restraints[str(i)])
-                    restraints[i] = r
+                    restraints[str(i)] = r
             else:
                 restraints = None
                 n_restraints = 0
