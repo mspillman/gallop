@@ -480,24 +480,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                     param_group['lr'] = learning_rate
 
     if include_PO:
-        PO_axis = np.array(PO_axis)
-        u = Structure.hkl / np.sqrt(np.einsum("kj,kj->k",
-                Structure.hkl, np.einsum("ij,kj->ki",
-                    Structure.lattice.reciprocal_lattice.matrix,
-                    Structure.hkl))).reshape(-1,1)
-        cosP = np.einsum("ij,j->i", u, np.inner(
-                        Structure.lattice.reciprocal_lattice.matrix, PO_axis))
-        one_minus_cosPsqd = 1.0-cosP**2
-        one_minus_cosPsqd[one_minus_cosPsqd < 0.] *= 0.
-        sinP = np.sqrt(one_minus_cosPsqd)
-        cosP = torch.from_numpy(cosP).type(dtype).to(device)
-        sinP = torch.from_numpy(sinP).type(dtype).to(device)
-        #factor = torch.Tensor([1.0]).type(dtype).to(device)
-        n_samples = tensors["zm"]["external"].shape[0]
-        factor = torch.from_numpy(np.ones(n_samples).reshape(-1,1)
-                                    ).type(dtype).to(device)
-        factor.requires_grad = True
-        #optimizer.param_groups[0]["params"] += [factor]
+        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
+                            n_reflections, tensors["zm"]["external"].shape[0],
+                            device, dtype)
         optimizer.add_param_group({"params" : [factor]})
 
     if start_time is None:

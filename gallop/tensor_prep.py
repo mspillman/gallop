@@ -428,3 +428,27 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     tensors["int_tensors"] = intensity_tensors
     tensors["chisqd_tensors"] = chi2_tensors
     return tensors
+
+def get_PO_tensors(Structure, PO_axis, n_reflections, n_samples, device, dtype):
+    if n_reflections is not None:
+        assert n_reflections > 0, "Cannot optimise with <= 0 reflections"
+        if n_reflections >  len(Structure.hkl):
+            n_reflections = len(Structure.hkl)
+    else:
+        n_reflections = len(Structure.hkl)
+    PO_axis = np.array(PO_axis)
+    hkl = Structure.hkl[:n_reflections]
+    u = hkl / np.sqrt(np.einsum("kj,kj->k", hkl, np.einsum("ij,kj->ki",
+                Structure.lattice.reciprocal_lattice.matrix,hkl))).reshape(-1,1)
+    cosP = np.einsum("ij,j->i", u, np.inner(
+                    Structure.lattice.reciprocal_lattice.matrix, PO_axis))
+    one_minus_cosPsqd = 1.0-cosP**2
+    one_minus_cosPsqd[one_minus_cosPsqd < 0.] *= 0.
+    sinP = np.sqrt(one_minus_cosPsqd)
+    cosP = torch.from_numpy(cosP).type(dtype).to(device)
+    sinP = torch.from_numpy(sinP).type(dtype).to(device)
+    factor = torch.from_numpy(np.ones(n_samples).reshape(-1,1)
+                                ).type(dtype).to(device)
+    factor.requires_grad = True
+
+    return cosP, sinP, factor
