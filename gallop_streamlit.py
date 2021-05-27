@@ -17,6 +17,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import altair as alt
+import py3Dmol
 import gallop_streamlit_utils as gsu
 import gallop.z_matrix as z_matrix
 import gallop.optimiser as optimiser
@@ -207,6 +208,7 @@ elif function == "GALLOP":
             start_time = time.time()
             iter_placeholder = st.empty()
             progress_bar_placeholder = st.empty()
+            structure_plot_placeholder = st.empty()
             result_placeholder = st.empty()
 
             now = datetime.datetime.now()
@@ -275,8 +277,51 @@ elif function == "GALLOP":
                 result_info_df = pd.DataFrame(result_info, columns=["best chi2",
                                                                 "time / min"])
                 result_info_df.index = np.arange(1, len(result_info_df) + 1)
+                with structure_plot_placeholder:
+                    with st.beta_expander(label="Show structure", expanded=False):
+                        for fn in glob.iglob("*_chisqd_*"):
+                            cif = open(fn).read()
+                            break
+                        view = py3Dmol.view()
+                        view.addModel(cif, "cif", {"doAssembly" : True,
+                                                    "normalizeAssembly":True,
+                                                    'duplicateAssemblyAtoms':True})
+                        view.setStyle({"stick":{}})
+                        view.addUnitCell()
+                        view.zoomTo()
+                        view.render()
+
+                        t = view.js()
+                        f = open('viz.html', 'w')
+                        f.write(t.startjs)
+                        f.write(t.endjs)
+                        f.close()
+
+                        st.components.v1.html(open('viz.html', 'r').read(),
+                                                width=600, height=400)
 
                 col1, col2 = result_placeholder.beta_columns([2,2])
+                with col2:
+                    st.write("")
+                    st.write("")
+                    labels = np.ones_like(chi_2)
+                    for j in range(all_settings["n_swarms"]):
+                        begin = j*all_settings["swarm_size"]
+                        end = (j+1)*all_settings["swarm_size"]
+                        labels[begin:end] *= j
+                        labels[begin:end] += 1
+                    chi2_info = pd.DataFrame({
+                        "chi2" : chi_2,
+                        "swarm" : labels
+                    })
+                    alt.data_transformers.disable_max_rows()
+
+                    chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
+                        x='chi2:Q',
+                        y='swarm:O'
+                    )).interactive()
+
+                    st.altair_chart(chart)
                 with col1:
                     # Zip and then delete the cifs, then download the zip
                     if i == 0:
@@ -302,27 +347,6 @@ elif function == "GALLOP":
                     f.close()
 
                     st.table(result_info_df.iloc[::-1])
-                with col2:
-                    st.write("")
-                    st.write("")
-                    labels = np.ones_like(chi_2)
-                    for j in range(all_settings["n_swarms"]):
-                        begin = j*all_settings["swarm_size"]
-                        end = (j+1)*all_settings["swarm_size"]
-                        labels[begin:end] *= j
-                        labels[begin:end] += 1
-                    chi2_info = pd.DataFrame({
-                        "chi2" : chi_2,
-                        "swarm" : labels
-                    })
-                    alt.data_transformers.disable_max_rows()
-
-                    chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
-                        x='chi2:Q',
-                        y='swarm:O'
-                    )).interactive()
-
-                    st.altair_chart(chart)
 
                 external, internal = swarm.update_position(result=result,
                                                             verbose=False)
