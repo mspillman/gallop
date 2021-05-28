@@ -872,18 +872,14 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
 
         # Finally plot best structure for display in web app
         # First plot full cell animation
-        view.addModelsAsFrames(cifs[-1], 'cif',
-                        {"doAssembly" : True,
-                        "normalizeAssembly":True,
-                        'duplicateAssemblyAtoms':True})
-        view.animate({'loop': 'forward', 'interval': interval})
-        view.setStyle({'model':0},{'sphere':{"scale":0.15},
-                                    'stick':{"radius":0.25}})
-
+        view.addModel(cifs[-1], "cif",
+            {"doAssembly" : True,
+            "normalizeAssembly":True,
+            'duplicateAssemblyAtoms':True})
+        view.setStyle({"stick":{}})
         view.addUnitCell()
         view.zoomTo()
         view.render()
-
         t = view.js()
         f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
         f.write(t.startjs)
