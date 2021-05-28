@@ -285,7 +285,7 @@ elif function == "GALLOP":
                         st.components.v1.html(open(
                             f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
                                                 width=600, height=400)
-                            os.remove(f'viz_{result["GALLOP Iter"]+1}.html')
+                        os.remove(f'viz_{result["GALLOP Iter"]+1}.html')
                         if hide_H:
                             st.write(f"Iteration {i+1}. H hidden for clarity")
                         else:
