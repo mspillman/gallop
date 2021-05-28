@@ -299,9 +299,9 @@ elif function == "GALLOP":
                     else:
                         zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
                     if all_settings["animate_structure"]:
-                            html = f'viz_{result["GALLOP Iter"]+1}.html'
-                            zipObj.write(html)
-                            os.remove(html)
+                        html = f'viz_{result["GALLOP Iter"]+1}.html'
+                        zipObj.write(html)
+                        os.remove(html)
                     for fn in glob.iglob("*_chisqd_*"):
                         zipObj.write(fn)
                         os.remove(fn)
