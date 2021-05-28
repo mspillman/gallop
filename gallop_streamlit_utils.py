@@ -827,8 +827,8 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         t = view.js()
         return t.startjs + "\n" + t.endjs + "\n"
     else:
-        cifs = files.get_multiple_CIFs_from_trajectory(Structure, result, 
-                                                        round=2)
+        cifs = files.get_multiple_CIFs_from_trajectory(Structure, result,
+                                                        round=3)
         # First plot best structure for display in web app
         view = py3Dmol.view()
         view.addModel(cifs[-1], "cif",

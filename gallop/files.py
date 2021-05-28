@@ -856,7 +856,7 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     # Restore the Structure ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting
 
-def get_multiple_CIFs_from_trajectory(Structure, result, round=2):
+def get_multiple_CIFs_from_trajectory(Structure, result, round=3):
     trajectory = result["trajectories"]
     best_particle = np.argmin(trajectory[-1][2])
 
@@ -873,7 +873,7 @@ def get_multiple_CIFs_from_trajectory(Structure, result, round=2):
     chi_2 = np.asarray(chi_2)
     frac = zm_to_cart.get_asymmetric_coords_from_numpy(Structure, external,
                                                         internal)
-    frac = np.around(frac, 2)
+    frac = np.around(frac, round)
     save_CIF_of_best_result(Structure, {"external" : external[0].reshape(1,-1),
                                     "internal" : internal[0].reshape(1,-1),
                                     "chi_2" : chi_2[0].reshape(1),
