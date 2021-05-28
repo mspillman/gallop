@@ -825,7 +825,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         view.zoomTo()
         #view.render()
         t = view.js()
-        return t.startjs + "\n" + t.endjs
+        return t.startjs + "\n" + t.endjs + "\n"
     else:
         cifs = files.get_multiple_CIFs_from_trajectory(Structure, result)
         # First plot best structure for display in web app
@@ -841,7 +841,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         #view.render()
         t = view.js()
 
-        html = t.startjs + "\n" + t.endjs
+        html = t.startjs + "\n" + t.endjs + "\n"
 
         # Now save full cell animation
         view = py3Dmol.view()
