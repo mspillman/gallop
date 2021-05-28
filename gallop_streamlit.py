@@ -17,7 +17,6 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import altair as alt
-import py3Dmol
 import gallop_streamlit_utils as gsu
 import gallop.z_matrix as z_matrix
 import gallop.optimiser as optimiser
@@ -144,7 +143,8 @@ elif function == "GALLOP":
                     struct.add_restraint(atom1=r[0], atom2=r[1],
                         distance=float(r[2]), percentage=float(r[3]))
             minimiser_settings["use_restraints"] = True
-
+        if all_settings["animate_structure"]:
+            minimiser_settings["save_trajectories"] = True
         if all_settings["memory_opt"]:
             gsu.improve_GPU_memory_use(struct, minimiser_settings)
             st.write("Attempting to reduce GPU memory use at the expense of "
@@ -280,37 +280,10 @@ elif function == "GALLOP":
                 with structure_plot_placeholder:
                     hide_H = True
                     with st.beta_expander(label="Show structure", expanded=False):
-                        for fn in glob.iglob("*_chisqd_*"):
-                            lines = []
-                            with open(fn) as cif:
-                                for line in cif:
-                                    if hide_H:
-                                        splitline = list(filter(
-                                                None,line.strip().split(" ")))
-                                        if splitline[0] != "H":
-                                            lines.append(line)
-                                    else:
-                                        lines.append(line)
-                            cif.close()
-                            break
-                        cif = "\n".join(lines)
-                        view = py3Dmol.view()
-                        view.addModel(cif, "cif",
-                                {"doAssembly" : True,
-                                "normalizeAssembly":True,
-                                'duplicateAssemblyAtoms':True})
-                        view.setStyle({"stick":{}})
-                        view.addUnitCell()
-                        view.zoomTo()
-                        view.render()
-
-                        t = view.js()
-                        f = open('viz.html', 'w')
-                        f.write(t.startjs)
-                        f.write(t.endjs)
-                        f.close()
-
-                        st.components.v1.html(open('viz.html', 'r').read(),
+                        gsu.show_structure(result, struct, all_settings,
+                                                            hide_H=hide_H)
+                        st.components.v1.html(open(
+                            f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
                                                 width=600, height=400)
                         if hide_H:
                             st.write("H atoms hidden for clarity")
@@ -325,6 +298,10 @@ elif function == "GALLOP":
 
                     else:
                         zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
+                    if all_settings["animate_structure"]:
+                            html = f'viz_{result["GALLOP Iter"]+1}.html'
+                            zipObj.write(html)
+                            os.remove(html)
                     for fn in glob.iglob("*_chisqd_*"):
                         zipObj.write(fn)
                         os.remove(fn)

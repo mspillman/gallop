@@ -16,6 +16,7 @@ from monty.io import zopen
 import time
 import os
 import pickle
+import glob
 
 import gallop.zm_to_cart as zm_to_cart
 
@@ -854,3 +855,56 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     writer.write_file(filename)
     # Restore the Structure ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting
+
+def get_multiple_CIFs_from_trajectory(Structure, result):
+    trajectory = result["trajectories"]
+    best_particle = np.argmin(trajectory[-1][2])
+
+    external = []
+    internal = []
+    chi_2 = []
+    for t in trajectory:
+        external.append(t[0][best_particle])
+        internal.append(t[1][best_particle])
+        chi_2.append(t[2][best_particle])
+
+    external = np.vstack(external)
+    internal = np.vstack(internal)
+    chi_2 = np.asarray(chi_2)
+    frac = zm_to_cart.get_asymmetric_coords_from_numpy(Structure, external,
+                                                        internal)
+    save_CIF_of_best_result(Structure, {"external" : external[0].reshape(1,-1),
+                                    "internal" : internal[0].reshape(1,-1),
+                                    "chi_2" : chi_2[0].reshape(1),
+                                    "GALLOP Iter": 0}, filename_root="plot")
+
+    lines = []
+    atom_labels = []
+    atom_index = 1e6
+    with open(glob.glob("plot*.cif")[0], "r") as init_cif:
+        for i, line in enumerate(init_cif):
+            splitline = list(filter(None,line.strip().split(" ")))
+            if splitline[0] != "H":
+                lines.append(line)
+                if i >= atom_index:
+                    atom_labels.append([splitline[0:3]]+[[splitline[-1]]])
+            elif not Structure.ignore_H_atoms:
+                lines.append(line)
+                if i >= atom_index:
+                    atom_labels.append([splitline[0:3]]+[[splitline[-1]]])
+            if "_atom_site_occupancy" in line:
+                atom_index = i+1
+        init_cif.close()
+    os.remove(glob.glob("plot*.cif")[0])
+    header = lines[:atom_index]
+
+    cifs = []
+    for f in frac.astype(str).tolist():
+        atoms = []
+        for i, atom in enumerate(f):
+            atoms.append(" ".join(atom_labels[i][0]
+                        + atom + atom_labels[i][1])+"\n")
+
+        cifs.append(" ".join(header) + " ".join(atoms))
+
+    return cifs

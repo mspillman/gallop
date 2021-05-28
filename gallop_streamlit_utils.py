@@ -13,6 +13,7 @@ import datetime
 import os
 from io import StringIO
 import torch
+import py3Dmol
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -23,6 +24,7 @@ from collections import defaultdict
 from gallop import optimiser
 from gallop import tensor_prep
 from gallop import chi2
+from gallop import files
 
 settings = ["structure_name", "n_GALLOP_iters", "seed",
             "optim", "n_LO_iters", "ignore_H_atoms", "device",
@@ -70,15 +72,15 @@ def load_settings():
         if not os.path.exists("GALLOP_user_settings"):
             st.error("No settings directory found")
         else:
-            files = list(glob.iglob(
+            settings_files = list(glob.iglob(
                             os.path.join("GALLOP_user_settings","*.json")))
-            files = [x.replace(
+            settings_files = [x.replace(
                         "GALLOP_user_settings","").strip("\\").strip("/")
-                        for x in files]
-            files = get_options("Default.json", files)
-            if len(files) > 0:
+                        for x in settings_files]
+            settings_files = get_options("Default.json", settings_files)
+            if len(settings_files) > 0:
                 file = st.selectbox(
-                    "Choose settings file to load", files, key="load_settings")
+                    "Choose settings file to load", settings_files, key="load_settings")
             else:
                 st.error("No saved settings files found")
             filepath = os.path.join("GALLOP_user_settings", file)
@@ -110,61 +112,6 @@ def save_settings(all_settings, filename):
                 f.close()
                 st.success("Saved")
 
-
-def load_save_settings(all_settings):
-    # Allows settings to be saved to disk and reloaded.
-    with st.sidebar.beta_expander(label="Load/Save settings", expanded=False):
-        save_load = st.radio("Save current settings or load previous settings",
-                            ["Save", "Load"])
-        if save_load == "Save":
-            settings_name = st.text_input("Enter name to save",
-                                        value='', max_chars=None,
-                                        key=None, type='default')
-            if settings_name != "":
-                if st.button("Save"):
-                    if not os.path.exists("GALLOP_user_settings"):
-                        os.mkdir("GALLOP_user_settings")
-                    settings_name = os.path.join("GALLOP_user_settings",
-                                                settings_name+".json")
-                    with open(settings_name, "w") as f:
-                        json.dump(all_settings, f, indent=4)
-                    f.close()
-                    st.success("Saved")
-
-        else:
-            if not os.path.exists("GALLOP_user_settings"):
-                st.error("No previous settings directory found")
-            else:
-                files = list(glob.iglob(
-                                os.path.join("GALLOP_user_settings","*.json")))
-                files = [x.replace(
-                            "GALLOP_user_settings","").strip("\\").strip("/")
-                            for x in files]
-                files = ["Continue with GUI settings"] + files
-                if len(files) > 1:
-                    with st.sidebar.beta_expander(label="Settings to load",
-                                                            expanded=False):
-                        selection = st.multiselect("Choose settings to load",
-                                                settings, default=settings)
-                    file = st.selectbox(
-                        "Choose settings file to load or continue with \
-                        current GUI settings", files, key="load_settings")
-                else:
-                    st.error("No saved settings files found")
-                if file != "Continue with GUI settings":
-                    file = os.path.join("GALLOP_user_settings", file)
-                    with open(file, "r") as f:
-                        json_settings = json.load(f)
-                    f.close()
-                    for s in selection:
-                        if s not in settings:
-                            json_settings.pop(s, None)
-                    all_settings.update(json_settings)
-                    st.success("Loaded settings - note GUI elements will not \
-                                be updated")
-    return all_settings
-
-
 def get_all_settings(loaded_values):
     # Get GALLOP settings. Menu appears on the sidebar, with expandable sections
     # for general, local optimiser and particle swarm optimiser respectively.
@@ -191,6 +138,11 @@ def get_all_settings(loaded_values):
                     "https://pytorch.org/docs/stable/notes/randomness.html")
             optimiser.seed_everything(seed=all_settings["seed"],
                                                         change_backend=False)
+        all_settings["animate_structure"] = st.checkbox("Animate structure plot"
+                                " to show trajectory of best particle in LO",
+                                value=loaded_values["animate_structure"])
+        if all_settings["animate_structure"]:
+            st.write("Note: animation will slow down the local optimisation.")
 
     # Local optimiser settings
     with st.sidebar.beta_expander(label="Local Optimiser", expanded=False):
@@ -336,23 +288,23 @@ def get_all_settings(loaded_values):
                 restraints = None
                 n_restraints = 0
         else:
-            find_lr = True
-            find_lr_auto_mult = True
-            lr = 0.05
-            mult = 1.0
-            learning_rate_schedule = "1cycle"
-            n_cooldown = 100
-            loss = "xlogx"
-            reflection_percentage = 100.
-            include_dw_factors = True
-            memory_opt = False
-            percentage_cutoff = 20.
-            torsion_shadowing = False
-            Z_prime = 1
-            shadow_iters = 0
-            use_restraints = False
-            n_restraints = 0
-            restraints = None
+            find_lr = loaded_values["find_lr"]
+            find_lr_auto_mult = loaded_values["find_lr_auto_mult"]
+            lr = loaded_values["lr"]
+            mult = loaded_values["mult"]
+            learning_rate_schedule = loaded_values["learning_rate_schedule"]
+            n_cooldown = loaded_values["n_cooldown"]
+            loss = loaded_values["loss"]
+            reflection_percentage = loaded_values["reflection_percentage"]
+            include_dw_factors = loaded_values["include_dw_factors"]
+            memory_opt = loaded_values["memory_opt"]
+            percentage_cutoff = loaded_values["percentage_cutoff"]
+            torsion_shadowing = loaded_values["torsion_shadowing"]
+            Z_prime = loaded_values["Z_prime"]
+            shadow_iters = loaded_values["shadow_iters"]
+            use_restraints = loaded_values["use_restraints"]
+            n_restraints = loaded_values["n_restraints"]
+            restraints = loaded_values["restraints"]
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -454,13 +406,13 @@ def get_all_settings(loaded_values):
             else:
                 vmax = 1.0
         else:
-            c1 = 1.5
-            c2 = 1.5
-            inertia_type = "ranked"
-            inertia = 0.7
-            inertia_bounds = (0.4, 0.9)
-            limit_velocity = True
-            vmax = 1.0
+            c1 = loaded_values["c1"]
+            c2 = loaded_values["c2"]
+            inertia_type = loaded_values["inertia_type"]
+            inertia = loaded_values["inertia"]
+            inertia_bounds = loaded_values["inertia_bounds"]
+            limit_velocity = loaded_values["limit_velocity"]
+            vmax = loaded_values["vmax"]
     all_settings["c1"] = c1
     all_settings["c2"] = c2
     all_settings["inertia_type"] = inertia_type
@@ -842,3 +794,50 @@ def browse_solved_zips():
 
 
 
+def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
+    animation = all_settings["animate_structure"]
+    if not animation:
+        files.save_CIF_of_best_result(Structure, result, filename_root="plot")
+        fn = glob.glob("plot*.cif")[0]
+        cifs = []
+        with open(fn, "r") as cif:
+            lines = []
+            for line in cif:
+                if hide_H:
+                    splitline = list(filter(
+                            None,line.strip().split(" ")))
+                    if splitline[0] != "H":
+                        lines.append(line)
+                else:
+                    lines.append(line)
+        cif.close()
+        os.remove(fn)
+        cif = "\n".join(lines)
+        cifs.append(cif)
+    else:
+        cifs = files.get_multiple_CIFs_from_trajectory(Structure, result)
+    view = py3Dmol.view()
+    if not animation:
+        view.addModel(cif, "cif",
+            {"doAssembly" : True,
+            "normalizeAssembly":True,
+            'duplicateAssemblyAtoms':True})
+        view.setStyle({"stick":{}})
+    else:
+        view.addModelsAsFrames("\n".join(cifs), 'cif',
+                        {"doAssembly" : True,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True})
+        view.animate({'loop': 'forward', 'interval': interval})
+        view.setStyle({'model':0},{'sphere':{"scale":0.15},
+                                    'stick':{"radius":0.25}})
+
+    view.addUnitCell()
+    view.zoomTo()
+    view.render()
+
+    t = view.js()
+    f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
+    f.write(t.startjs)
+    f.write(t.endjs)
+    f.close()
