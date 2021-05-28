@@ -258,7 +258,14 @@ def get_data_related_tensors(Structure, n_reflections, dtype, device,
         n_reflections = len(Structure.hkl)
     if verbose:
         total_ref = len(Structure.hkl)
-        res = Structure.get_resolution(Structure.twotheta[n_reflections-1], )
+        try:
+            res = Structure.get_resolution(Structure.twotheta[n_reflections-1],)
+        except IndexError:
+            try:
+                res = Structure.dspacing[n_reflections-1]
+            except IndexError:
+                print("List index out of range!")
+
         print("Using",n_reflections,"of",total_ref,"available reflections.")
         print("Resolution with",n_reflections,"reflections:",res)
 
