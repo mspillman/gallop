@@ -823,7 +823,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
                                 'stick':{"radius":0.25}}})
         view.addUnitCell()
         view.zoomTo()
-        #view.render()
+        view.render()
         t = view.js()
         return t.startjs + "\n" + t.endjs + "\n"
     else:
@@ -838,7 +838,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
                         'stick':{"radius":0.25}})
         view.addUnitCell()
         view.zoomTo()
-        #view.render()
+        view.render()
         t = view.js()
 
         html = t.startjs + "\n" + t.endjs + "\n"
