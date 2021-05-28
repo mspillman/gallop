@@ -285,8 +285,11 @@ elif function == "GALLOP":
                         st.components.v1.html(open(
                             f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
                                                 width=600, height=400)
+                            os.remove(f'viz_{result["GALLOP Iter"]+1}.html')
                         if hide_H:
-                            st.write("H atoms hidden for clarity")
+                            st.write(f"Iteration {i+1}. H hidden for clarity")
+                        else:
+                            st.write(f"Iteration {i+1}")
                 col1, col2 = result_placeholder.beta_columns([2,2])
                 with col1:
                     # Zip and then delete the cifs, then download the zip
@@ -299,10 +302,10 @@ elif function == "GALLOP":
                     else:
                         zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
                     if all_settings["animate_structure"]:
-                        html = f'viz_{result["GALLOP Iter"]+1}.html'
+                        html = f'viz_{result["GALLOP Iter"]+1}_anim.html'
                         zipObj.write(html)
                         os.remove(html)
-                        html = f'viz_{result["GALLOP Iter"]+1}_asym.html'
+                        html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
                         zipObj.write(html)
                         os.remove(html)
                     for fn in glob.iglob("*_chisqd_*"):

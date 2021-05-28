@@ -138,8 +138,8 @@ def get_all_settings(loaded_values):
                     "https://pytorch.org/docs/stable/notes/randomness.html")
             optimiser.seed_everything(seed=all_settings["seed"],
                                                         change_backend=False)
-        all_settings["animate_structure"] = st.checkbox("Animate structure plot"
-                                " to show trajectory of best particle in LO",
+        all_settings["animate_structure"] = st.checkbox("Save animation of "
+                                "trajectory of best particle during LO",
                                 value=loaded_values["animate_structure"])
         if all_settings["animate_structure"]:
             st.write("Note: animation will slow down the local optimisation.")
@@ -823,7 +823,16 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
             "normalizeAssembly":True,
             'duplicateAssemblyAtoms':True})
         view.setStyle({"stick":{}})
+        view.addUnitCell()
+        view.zoomTo()
+        view.render()
+        t = view.js()
+        f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
     else:
+        # First plot full cell animation
         view.addModelsAsFrames("\n".join(cifs), 'cif',
                         {"doAssembly" : True,
                         "normalizeAssembly":True,
@@ -832,24 +841,18 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         view.setStyle({'model':0},{'sphere':{"scale":0.15},
                                     'stick':{"radius":0.25}})
 
-    view.addUnitCell()
-    view.zoomTo()
-    view.render()
+        view.addUnitCell()
+        view.zoomTo()
+        view.render()
 
-    t = view.js()
-    f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
-    f.write(t.startjs)
-    f.write(t.endjs)
-    f.close()
+        t = view.js()
+        f = open(f'viz_{result["GALLOP Iter"]+1}_anim.html', 'w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
 
-    view = py3Dmol.view()
-    if not animation:
-        view.addModel(cif, "cif",
-            {"doAssembly" : False,
-            "normalizeAssembly":True,
-            'duplicateAssemblyAtoms':True})
-        view.setStyle({"stick":{}})
-    else:
+        # Now plot asymmetric unit animation
+        view = py3Dmol.view()
         view.addModelsAsFrames("\n".join(cifs), 'cif',
                         {"doAssembly" : False,
                         "normalizeAssembly":True,
@@ -858,12 +861,31 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         view.setStyle({'model':0},{'sphere':{"scale":0.15},
                                     'stick':{"radius":0.25}})
 
-    #view.addUnitCell()
-    view.zoomTo()
-    view.render()
+        view.zoomTo()
+        view.render()
 
-    t = view.js()
-    f = open(f'viz_{result["GALLOP Iter"]+1}_asym.html', 'w')
-    f.write(t.startjs)
-    f.write(t.endjs)
-    f.close()
+        t = view.js()
+        f = open(f'viz_{result["GALLOP Iter"]+1}_asym_anim.html', 'w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
+
+        # Finally plot best structure for display in web app
+        # First plot full cell animation
+        view.addModelsAsFrames(cifs[-1], 'cif',
+                        {"doAssembly" : True,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True})
+        view.animate({'loop': 'forward', 'interval': interval})
+        view.setStyle({'model':0},{'sphere':{"scale":0.15},
+                                    'stick':{"radius":0.25}})
+
+        view.addUnitCell()
+        view.zoomTo()
+        view.render()
+
+        t = view.js()
+        f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
