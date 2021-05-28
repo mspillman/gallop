@@ -816,8 +816,8 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         cifs.append(cif)
     else:
         cifs = files.get_multiple_CIFs_from_trajectory(Structure, result)
-    view = py3Dmol.view()
     if not animation:
+        view = py3Dmol.view()
         view.addModel(cif, "cif",
             {"doAssembly" : True,
             "normalizeAssembly":True,
@@ -834,6 +834,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         return t.startjs + "\n" + t.endjs
     else:
         # First plot full cell animation
+        view = py3Dmol.view()
         view.addModelsAsFrames("\n".join(cifs), 'cif',
                         {"doAssembly" : True,
                         "normalizeAssembly":True,
@@ -872,7 +873,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         f.close()
 
         # Finally plot best structure for display in web app
-        # First plot full cell animation
+        view = py3Dmol.view()
         view.addModel(cifs[-1], "cif",
             {"doAssembly" : True,
             "normalizeAssembly":True,
