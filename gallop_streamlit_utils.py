@@ -841,3 +841,29 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
     f.write(t.startjs)
     f.write(t.endjs)
     f.close()
+
+    view = py3Dmol.view()
+    if not animation:
+        view.addModel(cif, "cif",
+            {"doAssembly" : False,
+            "normalizeAssembly":True,
+            'duplicateAssemblyAtoms':True})
+        view.setStyle({"stick":{}})
+    else:
+        view.addModelsAsFrames("\n".join(cifs), 'cif',
+                        {"doAssembly" : False,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True})
+        view.animate({'loop': 'forward', 'interval': interval})
+        view.setStyle({'model':0},{'sphere':{"scale":0.15},
+                                    'stick':{"radius":0.25}})
+
+    #view.addUnitCell()
+    view.zoomTo()
+    view.render()
+
+    t = view.js()
+    f = open(f'viz_{result["GALLOP Iter"]+1}_asym.html', 'w')
+    f.write(t.startjs)
+    f.write(t.endjs)
+    f.close()

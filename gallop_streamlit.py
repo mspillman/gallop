@@ -302,6 +302,9 @@ elif function == "GALLOP":
                         html = f'viz_{result["GALLOP Iter"]+1}.html'
                         zipObj.write(html)
                         os.remove(html)
+                        html = f'viz_{result["GALLOP Iter"]+1}_asym.html'
+                        zipObj.write(html)
+                        os.remove(html)
                     for fn in glob.iglob("*_chisqd_*"):
                         zipObj.write(fn)
                         os.remove(fn)
