@@ -827,10 +827,11 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         view.zoomTo()
         view.render()
         t = view.js()
-        f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
-        f.write(t.startjs)
-        f.write(t.endjs)
-        f.close()
+        #f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
+        #f.write(t.startjs)
+        #f.write(t.endjs)
+        #f.close()
+        return t.startjs + "\n" + t.endjs
     else:
         # First plot full cell animation
         view.addModelsAsFrames("\n".join(cifs), 'cif',
@@ -878,10 +879,11 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
             'duplicateAssemblyAtoms':True})
         view.setStyle({"stick":{}})
         view.addUnitCell()
-        view.zoomTo()
-        view.render()
+        #view.zoomTo()
+        #view.render()
         t = view.js()
-        f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
-        f.write(t.startjs)
-        f.write(t.endjs)
-        f.close()
+        #f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
+        #f.write(t.startjs)
+        #f.write(t.endjs)
+        #f.close()
+        return t.startjs + "\n" + t.endjs

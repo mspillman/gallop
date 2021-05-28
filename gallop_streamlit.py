@@ -280,12 +280,12 @@ elif function == "GALLOP":
                 with structure_plot_placeholder:
                     hide_H = True
                     with st.beta_expander(label="Show structure", expanded=False):
-                        gsu.show_structure(result, struct, all_settings,
+                        html = gsu.show_structure(result, struct, all_settings,
                                                             hide_H=hide_H)
-                        st.components.v1.html(open(
-                            f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
-                                                width=600, height=400)
-                        os.remove(f'viz_{result["GALLOP Iter"]+1}.html')
+                        #st.components.v1.html(open(
+                        ##    f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
+                        #                        width=600, height=400)
+                        st.components.v1.html(html, width=600, height=400)
                         if hide_H:
                             st.write(f"Iteration {i+1}. H hidden for clarity")
                         else:
