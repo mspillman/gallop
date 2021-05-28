@@ -814,9 +814,6 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         os.remove(fn)
         cif = "\n".join(lines)
         cifs.append(cif)
-    else:
-        cifs = files.get_multiple_CIFs_from_trajectory(Structure, result)
-    if not animation:
         view = py3Dmol.view()
         view.addModel(cif, "cif",
             {"doAssembly" : True,
@@ -827,13 +824,26 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         view.zoomTo()
         view.render()
         t = view.js()
-        #f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
-        #f.write(t.startjs)
-        #f.write(t.endjs)
-        #f.close()
         return t.startjs + "\n" + t.endjs
     else:
-        # First plot full cell animation
+        cifs = files.get_multiple_CIFs_from_trajectory(Structure, result)
+        # First plot best structure for display in web app
+        view = py3Dmol.view()
+        view.addModel(cifs[-1], "cif",
+            {"doAssembly" : True,
+            "normalizeAssembly":True,
+            'duplicateAssemblyAtoms':True})
+        view.setStyle({"stick":{}})
+        view.addUnitCell()
+        view.zoomTo()
+        view.render()
+        t = view.js()
+
+        html = t.startjs + "\n" + t.endjs
+
+        # Now save full cell animation
+        print(len(cifs))
+        print(cifs)
         view = py3Dmol.view()
         view.addModelsAsFrames("\n".join(cifs), 'cif',
                         {"doAssembly" : True,
@@ -845,7 +855,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
 
         view.addUnitCell()
         view.zoomTo()
-        view.render()
+        #view.render()
 
         t = view.js()
         f = open(f'viz_{result["GALLOP Iter"]+1}_anim.html', 'w')
@@ -864,7 +874,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
                                     'stick':{"radius":0.25}})
 
         view.zoomTo()
-        view.render()
+        #view.render()
 
         t = view.js()
         f = open(f'viz_{result["GALLOP Iter"]+1}_asym_anim.html', 'w')
@@ -872,19 +882,4 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         f.write(t.endjs)
         f.close()
 
-        # Finally plot best structure for display in web app
-        view = py3Dmol.view()
-        view.addModel(cifs[-1], "cif",
-            {"doAssembly" : True,
-            "normalizeAssembly":True,
-            'duplicateAssemblyAtoms':True})
-        view.setStyle({"stick":{}})
-        view.addUnitCell()
-        #view.zoomTo()
-        #view.render()
-        t = view.js()
-        #f = open(f'viz_{result["GALLOP Iter"]+1}.html', 'w')
-        #f.write(t.startjs)
-        #f.write(t.endjs)
-        #f.close()
-        return t.startjs + "\n" + t.endjs
+        return html
