@@ -828,8 +828,11 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         return t.startjs + "\n" + t.endjs + "\n"
     else:
         cifs = files.get_multiple_CIFs_from_trajectory(Structure, result,
-                                                        around=3)
-        # First plot best structure for display in web app
+                                                        decimals=3)
+        files.save_animation_from_trajectory(result, Structure, cifs=cifs,
+            full_cell=True, asymmetric_unit=True, filename_root="plot",
+            interval=interval)
+        # Now plot best structure for display in web app
         view = py3Dmol.view()
         view.addModel(cifs[-1], "cif",
             {"doAssembly" : True,
@@ -843,44 +846,5 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         t = view.js()
 
         html = t.startjs + "\n" + t.endjs + "\n"
-
-        # Now save full cell animation
-        view = py3Dmol.view()
-        view.addModelsAsFrames("\n".join(cifs), 'cif',
-                        {"doAssembly" : True,
-                        "normalizeAssembly":True,
-                        'duplicateAssemblyAtoms':True})
-        view.animate({'loop': 'forward', 'interval': interval})
-        view.setStyle({'model':0},{'sphere':{"scale":0.15},
-                                    'stick':{"radius":0.25}})
-
-        view.addUnitCell()
-        view.zoomTo()
-        #view.render()
-
-        t = view.js()
-        f = open(f'viz_{result["GALLOP Iter"]+1}_anim.html', 'w')
-        f.write(t.startjs)
-        f.write(t.endjs)
-        f.close()
-
-        # Now plot asymmetric unit animation
-        view = py3Dmol.view()
-        view.addModelsAsFrames("\n".join(cifs), 'cif',
-                        {"doAssembly" : False,
-                        "normalizeAssembly":True,
-                        'duplicateAssemblyAtoms':True})
-        view.animate({'loop': 'forward', 'interval': interval})
-        view.setStyle({'model':0},{'sphere':{"scale":0.15},
-                                    'stick':{"radius":0.25}})
-
-        view.zoomTo()
-        #view.render()
-
-        t = view.js()
-        f = open(f'viz_{result["GALLOP Iter"]+1}_asym_anim.html', 'w')
-        f.write(t.startjs)
-        f.write(t.endjs)
-        f.close()
 
         return html

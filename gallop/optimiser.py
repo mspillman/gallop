@@ -572,11 +572,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # Need a function to convert all of the chi_2 values into a scalar
         if isinstance(loss, str):
             if loss.lower() == "sse":
-                L = (chi_2**2).sum() + distance_penalty
+                L = ((chi_2 + distance_penalty)**2).sum()
             elif loss.lower() == "sum":
                 L = chi_2.sum() + distance_penalty
             elif loss.lower() == "xlogx":
-                L = torch.sum(chi_2*torch.log(chi_2)) + distance_penalty
+                L = torch.sum(torch.log(chi_2)*(chi_2 + distance_penalty))
         else:
             if loss is None:
                 # Default to the sum operation if loss is None

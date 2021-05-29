@@ -17,6 +17,7 @@ import time
 import os
 import pickle
 import glob
+import py3Dmol
 
 import gallop.zm_to_cart as zm_to_cart
 
@@ -856,7 +857,8 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     # Restore the Structure ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting
 
-def get_multiple_CIFs_from_trajectory(Structure, result, around=3):
+def get_multiple_CIFs_from_trajectory(Structure, result, decimals=3,
+        filename_root="plot"):
     trajectory = result["trajectories"]
     best_particle = np.argmin(trajectory[-1][2])
 
@@ -873,11 +875,12 @@ def get_multiple_CIFs_from_trajectory(Structure, result, around=3):
     chi_2 = np.asarray(chi_2)
     frac = zm_to_cart.get_asymmetric_coords_from_numpy(Structure, external,
                                                         internal)
-    frac = np.around(frac, around)
+    frac = np.around(frac, decimals)
     save_CIF_of_best_result(Structure, {"external" : external[0].reshape(1,-1),
                                     "internal" : internal[0].reshape(1,-1),
                                     "chi_2" : chi_2[0].reshape(1),
-                                    "GALLOP Iter": 0}, filename_root="plot")
+                                    "GALLOP Iter": 0},
+                                    filename_root=filename_root)
 
     lines = []
     atom_labels = []
@@ -909,3 +912,68 @@ def get_multiple_CIFs_from_trajectory(Structure, result, around=3):
         cifs.append(" ".join(header) + " ".join(atoms))
 
     return cifs
+
+def save_animation_from_trajectory(result, Structure, cifs=None,
+    just_full_cell=False, just_asymmetric_unit=False, filename_root="animation",
+    interval=30, return_view=False, height=420, width=680):
+    if cifs is None:
+        cifs = get_multiple_CIFs_from_trajectory(Structure, result)
+    if just_full_cell:
+        view = py3Dmol.view(height=height, width=width)
+        view.addModelsAsFrames("\n".join(cifs), 'cif',
+                        {"doAssembly" : True,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True})
+        view.animate({'loop': 'forward', 'interval': interval})
+        view.setStyle({'model':0},{'sphere':{"scale":0.15},
+                                    'stick':{"radius":0.25}})
+        view.addUnitCell()
+        view.zoomTo()
+        t = view.js()
+        f = open(filename_root
+                + f'_iter_{result["GALLOP Iter"]+1}_cell_anim.html','w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
+    elif just_asymmetric_unit:
+        view = py3Dmol.view(height=height, width=width)
+        view.addModelsAsFrames("\n".join(cifs), 'cif',
+                        {"doAssembly" : False,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True})
+        view.animate({'loop': 'forward', 'interval': interval})
+        view.setStyle({'model':0},{'sphere':{"scale":0.15},
+                                    'stick':{"radius":0.25}})
+        view.zoomTo()
+        t = view.js()
+        f = open(filename_root
+                + f'_iter_{result["GALLOP Iter"]+1}_asym_anim.html', 'w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
+    else:
+        view = py3Dmol.view(linked=False, viewergrid=(1,2),height=height,
+                            width=width)
+        view.addModelsAsFrames("\n".join(cifs), 'cif',
+                        {"doAssembly" : True,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True},
+                        viewer=(0,0))
+        view.addModelsAsFrames("\n".join(cifs), 'cif',
+                        {"doAssembly" : False,
+                        "normalizeAssembly":True,
+                        'duplicateAssemblyAtoms':True},
+                        viewer=(0,1))
+        view.animate({'loop': 'forward', 'interval': interval})
+        view.setStyle({'model':0},{'sphere':{"scale":0.15},
+                                    'stick':{"radius":0.25}})
+        view.addUnitCell(viewer=(0,0))
+        view.zoomTo()
+        t = view.js()
+        f = open(filename_root
+                + f'_iter_{result["GALLOP Iter"]+1}_both_anim.html', 'w')
+        f.write(t.startjs)
+        f.write(t.endjs)
+        f.close()
+    if return_view:
+        return view.zoomTo()
