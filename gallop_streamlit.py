@@ -73,7 +73,7 @@ elif function == "GALLOP":
                 structure_name = os.path.split(gpx)[-1].split(".gpx")[0]
             else:
                 structure_name = os.path.split(out)[-1].split(".out")[0]
-            all_settings["structure_name"] = structure_name
+            all_settings["structure_name"] = structure_name.strip("_")
         struct = structure.Structure(
                                 name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
