@@ -437,6 +437,30 @@ def get_all_required_tensors(Structure, external=None, internal=None,
     return tensors
 
 def get_PO_tensors(Structure, PO_axis, n_reflections, n_samples, device, dtype):
+    """
+    Pre-calculate terms needed for preferred orientation correction. Adapted
+    from the GSAS-II source code.
+
+    Original code can be found in:
+    GSASIIstrMath.py > GetPrefOri
+
+    For original source code, see here:
+        https://subversion.xray.aps.anl.gov/pyGSAS/trunk/GSASIIstrMath.py
+
+    Args:
+        Structure (GALLOP Structure): GALLOP Structure object
+        PO_axis (list): List of Miller indices for the axis to apply PO
+            correction to.
+        n_reflections (int): Number of reflections to consider for chi2 calcs
+        n_samples (int): Number of independent samples to optimise
+        device (torch.device): Device to run calculations on
+        dtype (torch.dtype): Data type to use for calculations
+
+    Returns:
+        Tuple of tensors: cosP, sinP (same meaning as used in GSAS code, but
+            Tensors so applied for all reflections). Factor = refineable
+            parameter, initialized to 1.0.
+    """
     if n_reflections is not None:
         assert n_reflections > 0, "Cannot optimise with <= 0 reflections"
         if n_reflections >  len(Structure.hkl):

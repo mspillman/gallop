@@ -459,5 +459,24 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
 @torch.jit.script
 def apply_MD_PO_correction(calculated_intensities, cosP, sinP, factor):
+    """
+    An implementation of March-Dollase preferred orientation correction, adapted
+    from the GSAS-II source code.
+
+    Original code can be found in:
+    GSASIIstrMath.py > GetPrefOri
+
+    For original source code, see here:
+        https://subversion.xray.aps.anl.gov/pyGSAS/trunk/GSASIIstrMath.py
+
+    Args:
+        calculated_intensities (Tensor): Calculated intensities
+        cosP (Tensor): cosP, calculated in advance - see tensor_prep.py
+        sinP (Tensor): sinP, calculated in advance - see tensor_prep.py
+        factor (Tensor): The March-Dollase factor
+
+    Returns:
+        Tensor: Modified intensities, with PO correction applied
+    """
     A_all = (1.0/torch.sqrt(((factor**2)*cosP)**2+sinP**2/(factor**2)))**3
-    return calculated_intensities * A_all#.view(1, calculated_intensities.shape[1])
+    return calculated_intensities * A_all
