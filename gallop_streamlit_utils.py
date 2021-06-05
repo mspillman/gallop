@@ -830,8 +830,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         cifs = files.get_multiple_CIFs_from_trajectory(Structure, result,
                                                         decimals=3)
         files.save_animation_from_trajectory(result, Structure, cifs=cifs,
-            full_cell=True, asymmetric_unit=True, filename_root="plot",
-            interval=interval)
+            filename_root="plot", interval=interval)
         # Now plot best structure for display in web app
         view = py3Dmol.view()
         view.addModel(cifs[-1], "cif",
