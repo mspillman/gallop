@@ -73,7 +73,7 @@ elif function == "GALLOP":
                 structure_name = os.path.split(gpx)[-1].split(".gpx")[0]
             else:
                 structure_name = os.path.split(out)[-1].split(".out")[0]
-            all_settings["structure_name"] = structure_name.strip("_")
+            all_settings["structure_name"] = structure_name
         struct = structure.Structure(
                                 name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
@@ -220,7 +220,7 @@ elif function == "GALLOP":
             zipname = f'{struct.name}_{current_time}_{all_settings["n_swarms"]}\
                         _swarms_{all_settings["swarm_size"]}\
                         _particles_{all_settings["optim"]}.zip'
-            zipname = zipname.replace(" ","").strip("_")
+            zipname = zipname.replace(" ","")
             if not os.path.exists("GALLOP_results"):
                 os.mkdir("GALLOP_results")
 
@@ -314,7 +314,7 @@ elif function == "GALLOP":
                         zipObj.write(fn)
                         os.remove(fn)
                     zipObj.close()
-                    filename = zipname.split(date)[1].strip("\\")
+                    filename = zipname.split(date)[1].strip("\\").strip("_")
                     with open(os.path.join(os.getcwd(), zipname), "rb") as f:
                         file_bytes = f.read()
                         b64 = base64.b64encode(file_bytes).decode()
