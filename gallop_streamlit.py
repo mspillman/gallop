@@ -220,7 +220,7 @@ elif function == "GALLOP":
             zipname = f'{struct.name}_{current_time}_{all_settings["n_swarms"]}\
                         _swarms_{all_settings["swarm_size"]}\
                         _particles_{all_settings["optim"]}.zip'
-            zipname = zipname.replace(" ","")
+            zipname = zipname.replace(" ","").strip("_")
             if not os.path.exists("GALLOP_results"):
                 os.mkdir("GALLOP_results")
 
