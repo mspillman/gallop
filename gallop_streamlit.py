@@ -133,7 +133,9 @@ elif function == "GALLOP":
         minimiser_settings["Z_prime"] = all_settings["Z_prime"]
         if all_settings["include_PO"]:
             minimiser_settings["include_PO"] = True
-            minimiser_settings["PO_axis"] = all_settings["PO_axis"]
+            PO_axis_split = all_settings["PO_axis"].replace(" ","").split(",")
+            PO_axis_split = [int(x) for x in PO_axis_split]
+            minimiser_settings["PO_axis"] = PO_axis_split
 
         if all_settings["use_restraints"]:
             if all_settings["restraints"] is not None:

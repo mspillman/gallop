@@ -190,8 +190,8 @@ def get_all_settings(loaded_values):
                         value=PO_axis, max_chars=None, key=None,
                         type='default')
             try:
-                PO_axis = PO_axis.replace(" ","").split(",")
-                PO_axis = [int(x) for x in PO_axis]
+                PO_axis_split = PO_axis.replace(" ","").split(",")
+                PO_axis_split = [int(x) for x in PO_axis_split]
                 all_settings["PO_axis"] = PO_axis
             except ValueError:
                 st.write("Invalid PO axis!")
