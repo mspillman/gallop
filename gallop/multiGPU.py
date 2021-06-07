@@ -12,7 +12,7 @@ import multiprocessing as mp
 import numpy as np
 import time
 from gallop import structure
-from gallop import optimiser
+from gallop import optim
 from gallop import files
 
 def multiGPU(GPU, start, end, external, internal, structure_files,
@@ -47,7 +47,7 @@ def multiGPU(GPU, start, end, external, internal, structure_files,
     internal = internal[start:end]
     temp_struct = structure.Structure()
     temp_struct.from_json(structure_files, is_json=False)
-    result = optimiser.minimise(temp_struct, external=external, internal=internal,
+    result = optim.local.minimise(temp_struct, external=external, internal=internal,
                                 **minimiser_settings)
     result = {GPU : result}
     return result
@@ -80,7 +80,7 @@ def minimise(iteration, struct, swarm, external, internal, GPU_split,
 
     Returns:
         dict: Standard gallop results dictionary as would normally be obtained
-        using the optimiser.minimise function
+        using the optim.local.minimise function
     """
     structure_files = struct.to_json(return_json=False)
     minimiser_settings["streamlit"] = False

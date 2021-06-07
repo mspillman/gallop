@@ -208,7 +208,7 @@ class Structure(object):
         """
         self.data_file = filename
         if source.lower() == "dash":
-            data = files.get_data_from_DASH_sdi(filename,
+            data = files.dash.get_data_from_DASH_sdi(filename,
                         percentage_cutoff_inv_cov=percentage_cutoff)
             for k, v in data.items():
                 setattr(self, k, v)
@@ -216,14 +216,14 @@ class Structure(object):
             self.data_resolution = self.get_resolution(self.twotheta[-1])
             self.source = "dash"
         elif "gsas" in source.lower():
-            data = files.get_data_from_GSAS_gpx(filename,
+            data = files.gsas.get_data_from_GSAS_gpx(filename,
                             percentage_cutoff_inv_cov=percentage_cutoff)
             for k, v in data.items():
                 setattr(self, k, v)
             self.data_resolution = self.dspacing[-1]
             self.source = "gsas"
         elif "topas" == source.lower():
-            data = files.get_data_from_TOPAS_output(filename,
+            data = files.topas.get_data_from_TOPAS_output(filename,
                             percentage_cutoff_inv_cov=percentage_cutoff)
             for k, v in data.items():
                 setattr(self, k, v)

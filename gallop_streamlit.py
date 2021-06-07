@@ -19,7 +19,7 @@ import pandas as pd
 import altair as alt
 import gallop_streamlit_utils as gsu
 import gallop.z_matrix as z_matrix
-import gallop.optimiser as optimiser
+import gallop.optim as optim
 import gallop.structure as structure
 import gallop.multiGPU as multiGPU
 
@@ -101,7 +101,7 @@ elif function == "GALLOP":
             else:
                 struct.add_zmatrix(z)
 
-        minimiser_settings = optimiser.get_minimiser_settings(struct)
+        minimiser_settings = optim.local.get_minimiser_settings(struct)
         minimiser_settings["streamlit"] = True
         minimiser_settings["include_dw_factors"] = \
                                             all_settings["include_dw_factors"]
@@ -156,7 +156,7 @@ elif function == "GALLOP":
             inertia = all_settings["inertia"]
         else:
             inertia = all_settings["inertia_type"]
-        swarm = optimiser.Swarm(
+        swarm = optim.swarm.Swarm(
                     Structure = struct,
                     n_particles=n_particles,
                     n_swarms = all_settings["n_swarms"],
@@ -253,7 +253,7 @@ elif function == "GALLOP":
                                     minimiser_settings, start_time=start_time)
 
                         else:
-                            result = optimiser.minimise(struct,
+                            result = optim.local.minimise(struct,
                                                 external=external,
                                                 internal=internal,
                                                 run=i, start_time=start_time,

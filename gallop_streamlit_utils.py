@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 # GALLOP related
-from gallop import optimiser
+from gallop import optim
 from gallop import tensor_prep
 from gallop import chi2
 from gallop import files
@@ -52,7 +52,7 @@ def improve_GPU_memory_use(struct, minimiser_settings):
     benefits so not really recommended unless you really need an extra few
     particles.
     """
-    swarm = optimiser.Swarm(Structure=struct, n_particles=1, n_swarms=1,
+    swarm = optim.swarm.Swarm(Structure=struct, n_particles=1, n_swarms=1,
                             global_update_freq=20)
     external, internal = swarm.get_initial_positions()
     tensors = tensor_prep.get_all_required_tensors(
@@ -136,7 +136,7 @@ def get_all_settings(loaded_values):
                     "reproducibility due to some CUDA algorithms being "
                     "non-deterministic. See link for more information: "
                     "https://pytorch.org/docs/stable/notes/randomness.html")
-            optimiser.seed_everything(seed=all_settings["seed"],
+            optim.seed_everything(seed=all_settings["seed"],
                                                         change_backend=False)
         all_settings["animate_structure"] = st.checkbox("Save animation of "
                                 "trajectory of best particle during LO",
@@ -677,7 +677,7 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
             end = int(np.ceil(len(external)*percentage))
         else:
             end = len(external)
-        lr = optimiser.find_learning_rate(struct, external=external[0:end],
+        lr = optim.local.find_learning_rate(struct, external=external[0:end],
                                 internal=internal[0:end],
                                 multiplication_factor=all_settings["mult"],
                                 min_lr=-4, max_lr=np.log10(0.15),

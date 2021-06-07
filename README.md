@@ -139,26 +139,26 @@ A simple example is given below:
 ```python
 import time
 from gallop.structure import Structure
-from gallop import optimiser
+from gallop import optim
 
 # Create a Structure object, then add data and Z-matrices
 mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
-mystructure.add_data("Famotidine.sdi", source="DASH")
-mystructure.add_zmatrix("FOGVIG03_1.zmatrix")
+mystructure.add_data("./data/Famotidine.sdi", source="DASH")
+mystructure.add_zmatrix("./data/FOGVIG03_1.zmatrix")
 
 # Create swarm object and get the initial particle positions.
 # This will make a swarm with 10k particles in total, split into
 # 10 independent subswarms.
-swarm = optimiser.Swarm(Structure=mystructure, n_particles=10000, n_swarms=10)
+swarm = optim.swarm.Swarm(Structure=mystructure, n_particles=10000, n_swarms=10)
 external, internal = swarm.get_initial_positions()
 
 # Get the minimiser settings and optionally modify them
-minimiser_settings = optimiser.get_minimiser_settings(mystructure)
+minimiser_settings = optim.local.get_minimiser_settings(mystructure)
 minimiser_settings["n_iterations"] = 500
 minimiser_settings["save_CIF"] = True
 
 # Automatically set the learning rate (aka step size) for the local optimiser
-lr = optimiser.find_learning_rate(mystructure, external=external,
+lr = optim.local.find_learning_rate(mystructure, external=external,
         internal=internal, minimiser_settings=minimiser_settings)
 minimiser_settings["learning_rate"] = lr[-1]
 
@@ -169,7 +169,7 @@ n_gallop_iters = 10
 start_time = time.time()
 for i in range(n_gallop_iters):
     # Local optimisation of particle positions
-    result = optimiser.minimise(mystructure, external=external, internal=internal,
+    result = optim.local.minimise(mystructure, external=external, internal=internal,
                 run=i, start_time=start_time, **minimiser_settings)
     # Particle swarm update generates new positions to be optimised
     external, internal = swarm.update_position(result=result)
