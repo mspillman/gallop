@@ -75,7 +75,7 @@ def get_minimiser_settings(Structure):
     settings["learning_rate_schedule"] = "1cycle"
     settings["verbose"] = False
     settings["use_progress_bar"] = True
-    settings["print_every"] = 100
+    settings["print_every"] = 10
     settings["check_min"] = 100
     settings["dtype"] = torch.float32
     settings["device"] = None
@@ -497,7 +497,13 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     else:
         iters = range(n_iterations)
         if streamlit:
-            prog_bar = st.progress(0.0)
+            col1, col2, col3 = st.beta_columns([10,1,1])
+            with col1:
+                prog_bar = st.progress(0.0)
+            with col2:
+                st.write("$\chi^{2}_{min}$")
+            with col3:
+                chi2_result = st.empty()
 
     # Now perform the optimisation iterations
     for i in iters:
@@ -649,7 +655,13 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         if i != n_iterations:
             optimizer.step()
         if streamlit:
+            #prog_bar.progress(i/n_iterations)
+            #with col1:
             prog_bar.progress(i/n_iterations)
+            #with col2:
+            if i % print_every == 0 or i == 1:
+                with chi2_result:
+                    st.write(str(np.around(chi_2.min().item(), 3)))
     result = {
             "external"     : tensors["zm"]["external"].detach().cpu().numpy(),
             "internal"     : tensors["zm"]["internal"].detach().cpu().numpy(),
