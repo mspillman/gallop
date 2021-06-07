@@ -2,7 +2,7 @@
 # Copyright (c) Mark Spillman.
 # Distributed under the terms of the GPL v3 License.
 """
-Provides functions for working with files.
+Provides functions for working with TOPAS files.
 """
 
 import numpy as np
