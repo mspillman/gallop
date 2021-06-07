@@ -501,7 +501,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             with col1:
                 prog_bar = st.progress(0.0)
             with col2:
-                st.write("$\chi^{2}_{min}$")
+                st.write(r"$\chi^{2}_{min}$")
             with col3:
                 chi2_result = st.empty()
 
