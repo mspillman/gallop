@@ -799,7 +799,6 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
     if not animation:
         files.save_CIF_of_best_result(Structure, result, filename_root="plot")
         fn = glob.glob("plot*.cif")[0]
-        cifs = []
         with open(fn, "r") as cif:
             lines = []
             for line in cif:
@@ -813,13 +812,12 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         cif.close()
         os.remove(fn)
         cif = "\n".join(lines)
-        cifs.append(cif)
         view = py3Dmol.view()
         view.addModel(cif, "cif",
             {"doAssembly" : True,
             "normalizeAssembly":True,
             'duplicateAssemblyAtoms':True})
-        view.setStyle({"stick":{'sphere':{"scale":0.25},
+        view.setStyle({"stick":{'sphere':{"scale":0.15},
                                 'stick':{"radius":0.25}}})
         view.addUnitCell()
         view.zoomTo()

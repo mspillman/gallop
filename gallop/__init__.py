@@ -7,3 +7,6 @@ from . import z_matrix
 from . import zm_to_cart
 from . import structure
 from . import files
+
+__version__ = "0.1.0"
+__author__ = 'Mark Spillman'
