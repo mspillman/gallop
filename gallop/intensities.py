@@ -473,7 +473,8 @@ def apply_MD_PO_correction(calculated_intensities, cosP, sinP, factor):
         calculated_intensities (Tensor): Calculated intensities
         cosP (Tensor): cosP, calculated in advance - see tensor_prep.py
         sinP (Tensor): sinP, calculated in advance - see tensor_prep.py
-        factor (Tensor): The March-Dollase factor
+        factor (Tensor): The (sqrt of the) March-Dollase factor. Sqrt used to
+            avoid negative numbers.
 
     Returns:
         Tensor: Modified intensities, with PO correction applied
