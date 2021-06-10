@@ -284,11 +284,12 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
                                 internal[chi_2 == chi_2.min()][0].astype(str)))
     comment = ext_comment + "\n" + int_comment
 
-    if "MD_factor" in result.keys():
-        PO_axis = "# " + ",".join([str(x) for x in result["PO_axis"]])
+    if "PO_axis" in result.keys():
+        PO_axis = "# PO Axis = " + ",".join([str(x) for x in result["PO_axis"]])
         MD_comment = "# March-Dollase factor = " + str(
                                 result["MD_factor"][chi_2 == chi_2.min()][0])
         comment = comment + "\n" + PO_axis + "\n" + MD_comment
+
     writer = DASHCifWriter(output_structure, symprec=1e-12,
                             sg_number=Structure.original_sg_number,
                             comment=comment, site_labels=site_labels)
