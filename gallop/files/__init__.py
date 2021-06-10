@@ -285,7 +285,7 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     comment = ext_comment + "\n" + int_comment
 
     if "MD_factor" in result.keys():
-        PO_axis = "# " + ",".join(result["PO_axis"])
+        PO_axis = "# " + ",".join([str(x) for x in result["PO_axis"]])
         MD_comment = "# March-Dollase factor = " + str(
                                 result["MD_factor"][chi_2 == chi_2.min()][0])
         comment = comment + "\n" + PO_axis + "\n" + MD_comment
