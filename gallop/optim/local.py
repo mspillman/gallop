@@ -657,6 +657,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["gradients"] = gradients
     if include_PO:
         result["MD_factor"] = factor.detach().cpu().numpy()**2
+        result["PO_axis"] = PO_axis
         del factor
     del tensors
 
