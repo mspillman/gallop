@@ -193,18 +193,18 @@ class Structure(object):
     def add_data(self, filename, source="DASH",
                 percentage_cutoff=20):
         """
-        Add PXRD data to a Z-matrix
+        Add PXRD data to the Structure object
 
         Args:
             filename (str): filename of file from which to read the data
             source (str, optional): data source. Currently only "DASH", "GSAS"
                 or "TOPAS" are accepted as an argument.
                 More programs may be added in the future. Defaults to "DASH".
-            percentage_cutoff_hcv (int, optional): the minimum percentage
-            correlation to be included in the inverse covariance
-            matrix. Defaults to 20 to be comparable with DASH,
-            however, this doesn't affect the speed of GALLOP so can
-            be set as desired without impacting performance.
+            percentage_cutoff (int, optional): the minimum percentage
+                correlation to be included in the inverse covariance
+                matrix. Defaults to 20 to be comparable with DASH,
+                however, this doesn't affect the speed of GALLOP so can
+                be set as desired without impacting performance.
         """
         self.data_file = filename
         if source.lower() == "dash":

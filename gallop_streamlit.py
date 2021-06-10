@@ -18,10 +18,10 @@ import numpy as np
 import pandas as pd
 import altair as alt
 import gallop_streamlit_utils as gsu
-import gallop.z_matrix as z_matrix
-import gallop.optim as optim
-import gallop.structure as structure
-import gallop.multiGPU as multiGPU
+from gallop import z_matrix
+from gallop import optim
+from gallop import structure
+from gallop import multiGPU
 
 st.set_page_config(page_title='GALLOP Web App', page_icon = None,
                     layout = 'centered', initial_sidebar_state = 'auto')
