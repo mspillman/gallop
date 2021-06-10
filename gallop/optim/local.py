@@ -631,6 +631,49 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             "chi_2"        : chi_2.detach().cpu().numpy(),
             "GALLOP Iter"  : run
             }
+
+
+    ignore_H_setting = Structure.ignore_H_atoms
+    Structure.ignore_H_atoms = False
+    best = result["chi_2"] == result["chi_2"].min()
+    best_tensors = tensor_prep.get_all_required_tensors(Structure,
+        external=result["external"][best][0].reshape(1,-1),
+        internal=result["internal"][best][0].reshape(1,-1),
+        requires_grad=False)
+    with torch.no_grad():
+        best_asym = asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                                                    **best_tensors["zm"])
+
+        best_intensities = intensities.calculate_intensities(
+                    best_asym, **best_tensors["int_tensors"])
+        if include_PO:
+            best_intensities = intensities.apply_MD_PO_correction(
+                best_intensities, cosP, sinP, factor[best][0].reshape(1,1))
+
+        chi_2_H = chi2.calc_chisqd(best_intensities,**best_tensors["chisqd_tensors"])
+
+    result["best_chi_2_with_H"] = chi_2_H.detach().cpu().numpy()[0]
+
+    if Structure.source.lower() == "dash":
+        calc_profile = (best_intensities.cpu().numpy().reshape(
+                        max(best_intensities.shape),1)
+                    * Structure.baseline_peaks[:max(best.shape)]).sum(axis=0)
+        sum1 = calc_profile[Structure.n_contributing_peaks != 0].sum()
+        sum2 = Structure.profile[:,1][Structure.n_contributing_peaks != 0].sum()
+        rescale = sum2/sum1
+        subset = Structure.n_contributing_peaks != 0
+        profchi2 = (((Structure.profile[:,2]**(-2))
+            *(rescale*calc_profile - Structure.profile[:,1])**2)[subset].sum()
+            / (subset.sum() - 2))
+        if streamlit:
+            with chi2_result:
+                st.write(str(np.around(chi_2.min().item(), 3))
+                        + " prof: " + str(np.around(profchi2, 3)))
+        result["prof_chi_2"] = profchi2
+        result["calc_profile"] = rescale*calc_profile
+
+        Structure.ignore_H_atoms = ignore_H_setting
+
     if torsion_shadowing:
         torsions = result["internal"]
         torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
@@ -646,26 +689,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
         del factor
-        prof_intensities = corrected_intensities.detach().cpu().numpy()
-    else:
-        prof_intensities = calculated_intensities.detach().cpu().numpy()
-    if Structure.source.lower() == "dash":
-        best = prof_intensities[result["chi_2"] == result["chi_2"].min()][0]
-        calc_profile = (best.reshape(max(best.shape), 1)
-                    * Structure.baseline_peaks[:max(best.shape)]).sum(axis=0)
-        sum1 = calc_profile[Structure.n_contributing_peaks != 0].sum()
-        sum2 = Structure.profile[:,1][Structure.n_contributing_peaks != 0].sum()
-        rescale = sum2/sum1
-        subset = Structure.n_contributing_peaks != 0
-        profchi2 = (((Structure.profile[:,2]**(-2))
-            *(rescale*calc_profile - Structure.profile[:,1])**2)[subset].sum()
-            / (subset.sum() - 2))
-        if streamlit:
-            with chi2_result:
-                st.write(str(np.around(chi_2.min().item(), 3))
-                        + " prof: " + str(np.around(profchi2, 3)))
-        result["prof_chi_2"] = profchi2
-        result["calc_profile"] = rescale*calc_profile
+
 
     del tensors
     if save_CIF:

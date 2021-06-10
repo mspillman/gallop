@@ -299,14 +299,14 @@ elif function == "GALLOP":
                 if struct.source.lower() == "dash":
                     with profile_plot_placeholder:
                         with st.beta_expander(label="Show profile", expanded=False):
-                            comment = "Profile $\\chi^{2}$ = "+str(
-                                            np.around(result["prof_chi_2"], 3))
-                            comment += "          "
-                            comment += "$\\frac{\\chi^{2}_{G}}{\\chi^{2}_{P}}$"
+                            st.write("$\\chi^{2}_{int}$ = "+str(
+                                    np.around(result["best_chi_2_with_H"], 3)))
+                            st.write("$\\chi^{2}_{prof}$ = "+str(
+                                            np.around(result["prof_chi_2"], 3)))
                             ratio = np.around(
                                 result["prof_chi_2"] / struct.PawleyChiSq, 3)
-                            comment += " = " + str(ratio)
-                            st.write(comment)
+                            st.write("$\\frac{\\chi^{2}_{G}}{\\chi^{2}_{P}}$ ="
+                                + " " + str(ratio))
 
                             fig, ax = plt.subplots(2, 1, gridspec_kw={
                                                     'height_ratios': [4, 1]},

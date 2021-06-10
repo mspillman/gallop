@@ -16,7 +16,7 @@
     "mult": 0.75,
     "learning_rate_schedule": "1cycle",
     "n_cooldown": 100,
-    "loss": "sum",
+    "loss": "xlogx",
     "reflection_percentage": 100.0,
     "include_dw_factors": true,
     "memory_opt": false,
