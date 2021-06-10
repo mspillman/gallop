@@ -80,7 +80,8 @@ def load_settings():
             settings_files = get_options("Default.json", settings_files)
             if len(settings_files) > 0:
                 file = st.selectbox(
-                    "Choose settings file to load", settings_files, key="load_settings")
+                    "Choose settings file to load", settings_files,
+                    key="load_settings")
             else:
                 st.error("No saved settings files found")
             filepath = os.path.join("GALLOP_user_settings", file)
@@ -259,11 +260,11 @@ def get_all_settings(loaded_values):
 
             percentage_cutoff = st.number_input(
                                     "% correlation to ignore",
-                                    min_value=0.0, max_value=100., 
+                                    min_value=0.0, max_value=100.,
                                     value=loaded_values["percentage_cutoff"],
                                     step=20., format=None, key=None)
             include_dw_factors = st.checkbox("Include DW factors in chi2 calcs",
-                                    value=loaded_values["include_dw_factors"], 
+                                    value=loaded_values["include_dw_factors"],
                                     key=None)
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
@@ -332,7 +333,7 @@ def get_all_settings(loaded_values):
                                 format=None, key=None)
         all_settings["swarm_size"] = st.number_input(
                                     "Number of particles per swarm",
-                                    min_value=1,max_value=None, 
+                                    min_value=1,max_value=None,
                                     value=loaded_values["swarm_size"],
                                     step=100, format=None, key=None)
         st.write("Total particles =",
@@ -396,11 +397,11 @@ def get_all_settings(loaded_values):
                                     step=0.05)
                 inertia_bounds = (lower, upper)
                 inertia = 0.7
-            limit_velocity = st.checkbox("Limit velocity", 
+            limit_velocity = st.checkbox("Limit velocity",
                                 value=loaded_values["limit_velocity"], key=None)
             if limit_velocity:
                 vmax = st.number_input("Maximum absolute velocity",
-                                    min_value=0.,max_value=None, 
+                                    min_value=0.,max_value=None,
                                     value=loaded_values["vmax"],
                                     step=0.05)
             else:
@@ -491,7 +492,7 @@ def get_files():
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "sdi", "hcv", "tic", "dsl",
-                                        "dbf", "json"],
+                                        "pik", "dbf", "json"],
                                     key=upload_key)
         elif pawley_program == "GSAS-II":
             uploaded_files = st.file_uploader("Upload GSAS-II project file and\

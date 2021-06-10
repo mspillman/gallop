@@ -294,7 +294,9 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
         factor_comment = "# March-Dollase factor = " + str(
                                             factor[chi_2 == chi_2.min()][0])
         comment += "\n" + axis_comment + "\n" + factor_comment
-
+    if Structure.source.lower() == "dash":
+        comment += "\n# Profile chisqd = " + str(
+                                            np.around(result["prof_chi_2"], 3))
     writer = DASHCifWriter(output_structure, symprec=1e-12,
                             sg_number=Structure.original_sg_number,
                             comment=comment, site_labels=site_labels)

@@ -83,6 +83,10 @@ class Structure(object):
         self.dspacing = None
         self.data_resolution = None
         self.source = None
+        self.profile = []
+        self.baseline_peaks = []
+        self.n_contributing_peaks = []
+        self.PawleyChiSq = None
         self.centrosymmetric = None
         self.affine_matrices = None
         self.cif_dwfactors = None

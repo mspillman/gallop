@@ -15,6 +15,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import torch
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 import altair as alt
 import gallop_streamlit_utils as gsu
@@ -211,6 +212,8 @@ elif function == "GALLOP":
             iter_placeholder = st.empty()
             progress_bar_placeholder = st.empty()
             structure_plot_placeholder = st.empty()
+            if struct.source.lower() == "dash":
+                profile_plot_placeholder = st.empty()
             result_placeholder = st.empty()
 
             now = datetime.datetime.now()
@@ -292,6 +295,33 @@ elif function == "GALLOP":
                             st.write(f"Iteration {i+1}. H hidden for clarity")
                         else:
                             st.write(f"Iteration {i+1}")
+
+                if struct.source.lower() == "dash":
+                    with profile_plot_placeholder:
+                        with st.beta_expander(label="Show profile", expanded=False):
+                            comment = "Profile $\\chi^{2}$ = "+str(
+                                            np.around(result["prof_chi_2"], 3))
+                            comment += "          "
+                            comment += "$\\frac{\\chi^{2}_{G}}{\\chi^{2}_{P}}$"
+                            ratio = np.around(
+                                result["prof_chi_2"] / struct.PawleyChiSq, 3)
+                            comment += " = " + str(ratio)
+                            st.write(comment)
+
+                            fig, ax = plt.subplots(2, 1, gridspec_kw={
+                                                    'height_ratios': [4, 1]},
+                                                    figsize=(10,8))
+                            ax[0].plot(struct.profile[:,0], struct.profile[:,1])
+                            ax[0].plot(struct.profile[:,0], result["calc_profile"])
+                            ax[1].plot(struct.profile[:,0], struct.profile[:,1]
+                                                    - result["calc_profile"])
+                            #ax[0].set_xlabel('2$\\theta$')
+                            ax[0].set_ylabel('Intensity')
+                            ax[0].legend(["Obs", "Calc"])
+                            ax[1].set_xlabel('2$\\theta$')
+                            ax[1].set_ylabel('Difference')
+                            st.pyplot(fig)
+
                 col1, col2 = result_placeholder.beta_columns([2,2])
                 with col1:
                     # Zip and then delete the cifs, then download the zip

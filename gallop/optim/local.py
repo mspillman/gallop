@@ -34,9 +34,8 @@ def get_minimiser_settings(Structure):
             Keys = n_reflections, include_dw_factors, chi2_solved, n_iterations,
             n_cooldown, learning_rate, learning_rate_schedule, verbose,
             use_progress_bar, print_every, check_min, dtype, device,
-            ignore_reflections_for_chi2_calc, optimizer, loss, eps, save_CIF,
-            streamlit, torsion_shadowing, Z_prime, use_restraints, include_PO,
-            PO_axis
+            optimizer, loss, eps, save_CIF, streamlit, torsion_shadowing,
+            Z_prime, use_restraints, include_PO, PO_axis
     """
     settings = {}
     settings["n_reflections"] = len(Structure.hkl)
@@ -52,7 +51,6 @@ def get_minimiser_settings(Structure):
     settings["check_min"] = 100
     settings["dtype"] = torch.float32
     settings["device"] = None
-    settings["ignore_reflections_for_chi2_calc"] = False
     settings["optimizer"] = "adam"
     settings["loss"] = "xlogx"
     settings["eps"] = 1e-8
@@ -218,8 +216,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     print_every=10, learning_rate=3e-2, betas=None, eps=1e-8, loss="sum",
     start_time=None, run=1, torsion_shadowing=False, Z_prime=1,
     save_trajectories=False, save_grad=False, save_loss=False,
-    include_dw_factors=True, chi2_solved=None,
-    ignore_reflections_for_chi2_calc=False, use_progress_bar=True,
+    include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
     save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
     PO_axis=(0, 0, 1)):
     """
@@ -338,10 +335,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         chi2_solved (float, optional):  The value below which a structure is
             considered solved (if known). Used for some printed information.
             If None, then this is ignored. Defaults to None.
-        ignore_reflections_for_chi2_calc (bool, optional):  The normal chi2
-            calculation divides the output by (n_reflections - 2)
-            i.e. chi2 = d.A.d / (n_reflections - 2)
-            If set to True, this reverses this operation. Defaults to False.
         use_progress_bar (bool, optional): Use a progress bar to provide visual
             feedback on run progress. Defaults to True.
         save_CIF (bool, optional): Save a CIF of the best structure found
@@ -515,26 +508,23 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
-        if use_restraints or include_PO:
-            asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
-                                                                **tensors["zm"])
+        #if use_restraints or include_PO:
+        asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                                                            **tensors["zm"])
 
-            calculated_intensities = intensities.calculate_intensities(
-                            asymmetric_frac_coords, **tensors["int_tensors"])
-            if include_PO:
-                corrected_intensities = intensities.apply_MD_PO_correction(
+        calculated_intensities = intensities.calculate_intensities(
+                        asymmetric_frac_coords, **tensors["int_tensors"])
+        if include_PO:
+            corrected_intensities = intensities.apply_MD_PO_correction(
                                             calculated_intensities,
                                             cosP, sinP, factor)
-                chi_2 = chi2.calc_chisqd(corrected_intensities,
-                                        **tensors["chisqd_tensors"])
-            else:
-                chi_2 = chi2.calc_chisqd(calculated_intensities,
-                                        **tensors["chisqd_tensors"])
+            chi_2 = chi2.calc_chisqd(corrected_intensities,
+                                    **tensors["chisqd_tensors"])
         else:
-            chi_2 = chi2.get_chi_2(**tensors)
-            if ignore_reflections_for_chi2_calc:
-                # Counteract the division normally used in chi2 calculation
-                chi_2 *= (tensors["intensity"]["hkl"].shape[1] - 2)
+            chi_2 = chi2.calc_chisqd(calculated_intensities,
+                                    **tensors["chisqd_tensors"])
+        #else:
+        #    chi_2 = chi2.get_chi_2(**tensors)
 
         if use_restraints:
             with torch.no_grad():
@@ -656,6 +646,27 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
         del factor
+        prof_intensities = corrected_intensities.detach().cpu().numpy()
+    else:
+        prof_intensities = calculated_intensities.detach().cpu().numpy()
+    if Structure.source.lower() == "dash":
+        best = prof_intensities[result["chi_2"] == result["chi_2"].min()][0]
+        calc_profile = (best.reshape(max(best.shape), 1)
+                    * Structure.baseline_peaks[:max(best.shape)]).sum(axis=0)
+        sum1 = calc_profile[Structure.n_contributing_peaks != 0].sum()
+        sum2 = Structure.profile[:,1][Structure.n_contributing_peaks != 0].sum()
+        rescale = sum2/sum1
+        subset = Structure.n_contributing_peaks != 0
+        profchi2 = (((Structure.profile[:,2]**(-2))
+            *(rescale*calc_profile - Structure.profile[:,1])**2)[subset].sum()
+            / (subset.sum() - 2))
+        if streamlit:
+            with chi2_result:
+                st.write(str(np.around(chi_2.min().item(), 3))
+                        + " prof: " + str(np.around(profchi2, 3)))
+        result["prof_chi_2"] = profchi2
+        result["calc_profile"] = rescale*calc_profile
+
     del tensors
     if save_CIF:
         files.save_CIF_of_best_result(Structure, result, start_time,
