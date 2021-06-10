@@ -646,9 +646,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
         torsions = np.tile(torsions, (1,Z_prime))
         result["internal"] = torsions
-    if save_CIF:
-        files.save_CIF_of_best_result(Structure, result, start_time,
-                                        n_reflections)
     if save_trajectories:
         result["trajectories"] = trajectories
     if save_loss:
@@ -660,5 +657,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["PO_axis"] = PO_axis
         del factor
     del tensors
-
+    if save_CIF:
+        files.save_CIF_of_best_result(Structure, result, start_time,
+                                        n_reflections)
     return result

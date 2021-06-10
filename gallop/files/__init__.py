@@ -252,6 +252,12 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
         n_reflections = len(Structure.hkl)
     elif n_reflections > len(Structure.hkl):
         n_reflections = len(Structure.hkl)
+    if "PO_axis" in result.keys():
+        axis = result["PO_axis"]
+        factor = result["MD_factor"]
+        PO_comment = True
+    else:
+        PO_comment = False
     # For the purpose of outputting a CIF, include the H-atoms back in. However,
     # the GALLOP runs may not be finished, so save whatever the parameter is set
     # to, then restore this setting once the CIF has been written.
@@ -283,12 +289,11 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     int_comment = "# GALLOP Internal Coords = " + ",".join(list(
                                 internal[chi_2 == chi_2.min()][0].astype(str)))
     comment = ext_comment + "\n" + int_comment
-
-    if "PO_axis" in result.keys():
-        PO_axis = "# PO Axis = " + ",".join([str(x) for x in result["PO_axis"]])
-        MD_comment = "# March-Dollase factor = " + str(
-                                result["MD_factor"][chi_2 == chi_2.min()][0])
-        comment = comment + "\n" + PO_axis + "\n" + MD_comment
+    if PO_comment:
+        axis_comment = "# PO Axis = " + str(axis)
+        factor_comment = "# March-Dollase factor = " + str(
+                                            factor[chi_2 == chi_2.min()][0])
+        comment += "\n" + axis_comment + "\n" + factor_comment
 
     writer = DASHCifWriter(output_structure, symprec=1e-12,
                             sg_number=Structure.original_sg_number,
