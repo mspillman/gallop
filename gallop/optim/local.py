@@ -644,7 +644,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     best_tensors = tensor_prep.get_all_required_tensors(Structure,
         external=result["external"][best][0].reshape(1,-1),
         internal=result["internal"][best][0].reshape(1,-1),
-        requires_grad=False, device=torch.device("cpu"),)
+        requires_grad=False, device=torch.device("cpu"), verbose=False)
     # Restore the Structure.ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting
 
