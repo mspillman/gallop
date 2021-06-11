@@ -23,6 +23,7 @@ setup(
                         'pandas',
                         'altair',
                         'py3Dmol',
+                        'pyDOE',
                         ],
 
 )
