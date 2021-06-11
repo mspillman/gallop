@@ -471,8 +471,7 @@ def sidebar():
             with open(os.path.join(filedir,"reset.py"), "w") as reset_script:
                 reset_script.writelines(lines)
             reset_script.close()
-            os.system("python3 "+os.path.join(filedir,"reset.py")
-                    + " &> /dev/null&")
+            os.system("python3 "+os.path.join(filedir,"reset.py"))
 
     return all_settings
 
