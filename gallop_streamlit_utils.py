@@ -467,10 +467,11 @@ def sidebar():
                 "import time\n",
                 "os.system(\"pkill -f streamlit\")\n",
                 "time.sleep(1)\n",
-                f"os.system(\"streamlit run {script}\")",
-                ""]
+                f"os.system(\"streamlit run {script}\")\n",]
             with open(os.path.join(filedir,"reset.py"), "w") as reset_script:
-                reset_script.writelines(lines)
+                #reset_script.writelines(lines)
+                for line in lines:
+                    reset_script.write(line)
             reset_script.close()
             os.system("python3 "+os.path.join(filedir,"reset.py"))
 
