@@ -677,10 +677,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         profchi2 = (((Structure.profile[:,2]**(-2))
             *(rescale*calc_profile - Structure.profile[:,1])**2)[subset].sum()
             / (subset.sum() - 2))
-        if streamlit:
-            with chi2_result:
-                st.write(str(np.around(chi_2.min().item(), 3))
-                        + " prof: " + str(np.around(profchi2, 3)))
         result["prof_chi_2"] = profchi2
         result["calc_profile"] = rescale*calc_profile
 
