@@ -298,7 +298,10 @@ elif function == "GALLOP":
 
                 if struct.source.lower() == "dash":
                     with profile_plot_placeholder:
-                        with st.beta_expander(label="Show profile", expanded=False):
+                        with st.beta_expander(label="Show profile",
+                                                                expanded=False):
+                            if struct.ignore_H_atoms:
+                                st.write("Stats with H-atoms included:")
                             st.write("$\\chi^{2}_{int}$ = "+str(
                                     np.around(result["best_chi_2_with_H"], 3)))
                             st.write("$\\chi^{2}_{prof}$ = "+str(
