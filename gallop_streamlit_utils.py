@@ -11,6 +11,7 @@ import base64
 import json
 import datetime
 import os
+import sys
 from io import StringIO
 import torch
 import py3Dmol
@@ -445,26 +446,33 @@ def sidebar():
     # The code writes out a short script - batch on Windows, otherwise a .py
     # which is then called. This kills the running streamlit process, and then
     # starts a new one.
+    # Need parent directory of GALLOP folder to check if it's been run from a
+    # file, or if GALLOP is installed.
+    filedir = os.path.dirname(sys.argv[0])
+    print(filedir)
     if reset:
         # Windows
         if os.name == "nt":
             lines = ["taskkill /IM \"streamlit.exe\" /F\n",
-                    "streamlit run .\\gallop_streamlit.py"]
-            with open("reset.bat", "w") as reset_script:
+                    "streamlit run " + os.path.join(filedir,
+                                                    "gallop_streamlit.py")]
+            with open(os.path.join(filedir,"reset.bat"), "w") as reset_script:
                 reset_script.writelines(lines)
             reset_script.close()
-            os.system("START /B reset.bat")
+            os.system("START /B "+os.path.join(filedir,"reset.bat"))
         # Linux
         else:
             lines = ["import os\n",
                 "import time\n",
                 "os.system(\"pkill -f streamlit &> /dev/null&\")\n",
                 "time.sleep(1)\n",
-                "os.system(\"streamlit run gallop_streamlit.py &> /dev/null\")"]
+                "os.system(\"streamlit run "+os.path.join(filedir,
+                                    "gallop_streamlit.py") +" &> /dev/null\")"]
             with open("reset.py", "w") as reset_script:
                 reset_script.writelines(lines)
             reset_script.close()
-            os.system("python3 reset.py &> /dev/null&")
+            os.system("python3 "+os.path.join(filedir,"reset.py")
+                    + " &> /dev/null&")
 
     return all_settings
 
