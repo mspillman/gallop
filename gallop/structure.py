@@ -355,7 +355,8 @@ class Structure(object):
                     n_H_connected_expanded = all_atoms_n_H_connected
 
             with open(
-                os.path.join("gallop","atomic_scattering_params.json")) as f:
+                os.path.join(os.path.dirname(__file__),
+                                        "atomic_scattering_params.json")) as f:
                 ATOMIC_SCATTERING_PARAMS = json.load(f)
             f.close()
 
