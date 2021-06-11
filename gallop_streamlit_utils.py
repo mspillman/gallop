@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 # GALLOP related
+import gallop
 from gallop import optim
 from gallop import tensor_prep
 from gallop import chi2
@@ -69,13 +70,14 @@ def improve_GPU_memory_use(struct, minimiser_settings):
 
 def load_settings():
     with st.sidebar.beta_expander(label="Load settings", expanded=False):
-        if not os.path.exists("GALLOP_user_settings"):
+        filedir = os.path.dirname(gallop.__file__)
+        if not os.path.exists(os.path.join(filedir,"user_settings")):
             st.error("No settings directory found")
         else:
             settings_files = list(glob.iglob(
-                            os.path.join("GALLOP_user_settings","*.json")))
-            settings_files = [x.replace(
-                        "GALLOP_user_settings","").strip("\\").strip("/")
+                            os.path.join(filedir,"user_settings","*.json")))
+            settings_files = [x.split(
+                        "user_settings")[-1].strip("\\").strip("/")
                         for x in settings_files]
             settings_files = get_options("Default.json", settings_files)
             if len(settings_files) > 0:
@@ -84,7 +86,7 @@ def load_settings():
                     key="load_settings")
             else:
                 st.error("No saved settings files found")
-            filepath = os.path.join("GALLOP_user_settings", file)
+            filepath = os.path.join(filedir,"user_settings", file)
             with open(filepath, "r") as f:
                 json_settings = json.load(f)
             f.close()
@@ -94,17 +96,19 @@ def load_settings():
     return all_settings, file
 
 def save_settings(all_settings, filename):
+    filedir = os.path.dirname(gallop.__file__)
     with st.sidebar.beta_expander(label="Save settings", expanded=False):
         settings_name = st.text_input("Enter name to save",
                                             value=filename, max_chars=None,
                                             key=None, type='default')
         if settings_name != "":
             if st.button("Save"):
-                if not os.path.exists("GALLOP_user_settings"):
+                if not os.path.exists(os.path.join(filedir,
+                                                    "user_settings")):
                     os.mkdir("GALLOP_user_settings")
                 if ".json" not in settings_name:
                     settings_name = settings_name + ".json"
-                settings_name = os.path.join("GALLOP_user_settings",
+                settings_name = os.path.join(filedir,"user_settings",
                                                     settings_name)
                 if os.path.exists(settings_name):
                     os.remove(settings_name)
@@ -567,13 +571,14 @@ def get_files():
                     dbf = name
 
     else:
+        filedir = os.path.dirname(gallop.__file__)
         if example == "Verapamil hydrochloride":
-            sdi = os.path.join("data","Verap.sdi")
-            zms = [os.path.join("data","CURHOM_1.zmatrix"),
-                os.path.join("data","CURHOM_2_13_tors.zmatrix")]
+            sdi = os.path.join(filedir,"example_data","Verap.sdi")
+            zms = [os.path.join(filedir, "example_data","CURHOM_1.zmatrix"),
+            os.path.join(filedir, "example_data","CURHOM_2_13_tors.zmatrix")]
         elif example == "Famotidine form B":
-            sdi = os.path.join("data","Famotidine.sdi")
-            zms = [os.path.join("data","FOGVIG03_1.zmatrix")]
+            sdi = os.path.join(filedir, "example_data","Famotidine.sdi")
+            zms = [os.path.join(filedir,"example_data","FOGVIG03_1.zmatrix")]
 
     if load_settings_from_file and json_settings is not None:
         with open(json_settings, "r") as f:
