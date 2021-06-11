@@ -464,10 +464,10 @@ def sidebar():
         else:
             lines = ["import os\n",
                 "import time\n",
-                "os.system(\"pkill -f streamlit &> /dev/null&\")\n",
+                "os.system(\"pkill -f streamlit\")\n",
                 "time.sleep(1)\n",
                 "os.system(\"streamlit run "+os.path.join(filedir,
-                                    "gallop_streamlit.py") +" &> /dev/null\")"]
+                                    "gallop_streamlit.py")]
             with open("reset.py", "w") as reset_script:
                 reset_script.writelines(lines)
             reset_script.close()
