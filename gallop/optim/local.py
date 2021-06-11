@@ -632,28 +632,40 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             "GALLOP Iter"  : run
             }
 
-
+    # Now calculate the intensities with H-atoms included and use them to get a
+    # profile chi2 estimate. If Structure.ignore_H_atoms is True, also calculate
+    # the intensity chi2 with H-atoms included and add to the results dict.
+    # This will also use the full data range even if n_reflections is set to a
+    # subset of the available reflections.
     ignore_H_setting = Structure.ignore_H_atoms
     Structure.ignore_H_atoms = False
     best = result["chi_2"] == result["chi_2"].min()
+    # Create tensors on CPU as it will be faster for a single data point.
     best_tensors = tensor_prep.get_all_required_tensors(Structure,
         external=result["external"][best][0].reshape(1,-1),
         internal=result["internal"][best][0].reshape(1,-1),
-        requires_grad=False)
-    with torch.no_grad():
-        best_asym = asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
-                                                    **best_tensors["zm"])
+        requires_grad=False, device=torch.device("cpu"),)
+    # Restore the Structure.ignore_H_atoms setting
+    Structure.ignore_H_atoms = ignore_H_setting
 
-        best_intensities = intensities.calculate_intensities(
-                    best_asym, **best_tensors["int_tensors"])
+    with torch.no_grad():
+        best_asym = zm_to_cart.get_asymmetric_coords(**best_tensors["zm"])
+
+        best_intensities = intensities.calculate_intensities(best_asym,
+                                                **best_tensors["int_tensors"])
         if include_PO:
             best_intensities = intensities.apply_MD_PO_correction(
                 best_intensities, cosP, sinP, factor[best][0].reshape(1,1))
 
-        chi_2_H = chi2.calc_chisqd(best_intensities,**best_tensors["chisqd_tensors"])
+    if ignore_H_setting:
+        chi_2_H = chi2.calc_chisqd(best_intensities,
+                                            **best_tensors["chisqd_tensors"])
 
-    result["best_chi_2_with_H"] = chi_2_H.detach().cpu().numpy()[0]
+        result["best_chi_2_with_H"] = chi_2_H.detach().cpu().numpy()[0]
+    else:
+        result["best_chi_2_with_H"] = result["chi_2"].min()[0]
 
+    # Now get the profile chi2 if using DASH data
     if Structure.source.lower() == "dash":
         calc_profile = (best_intensities.cpu().numpy().reshape(
                         max(best_intensities.shape),1)
@@ -672,27 +684,28 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["prof_chi_2"] = profchi2
         result["calc_profile"] = rescale*calc_profile
 
-        Structure.ignore_H_atoms = ignore_H_setting
-
     if torsion_shadowing:
         torsions = result["internal"]
         torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
         torsions = np.tile(torsions, (1,Z_prime))
         result["internal"] = torsions
+
     if save_trajectories:
         result["trajectories"] = trajectories
+
     if save_loss:
         result["losses"] = np.array(losses)
+
     if save_grad:
         result["gradients"] = gradients
+
     if include_PO:
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
         del factor
 
-
-    del tensors
     if save_CIF:
         files.save_CIF_of_best_result(Structure, result, start_time,
                                         n_reflections)
+    del tensors
     return result
