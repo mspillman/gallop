@@ -508,23 +508,23 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
-        #if use_restraints or include_PO:
-        asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+        if use_restraints or include_PO:
+            asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                                                             **tensors["zm"])
 
-        calculated_intensities = intensities.calculate_intensities(
+            calculated_intensities = intensities.calculate_intensities(
                         asymmetric_frac_coords, **tensors["int_tensors"])
-        if include_PO:
-            corrected_intensities = intensities.apply_MD_PO_correction(
-                                            calculated_intensities,
-                                            cosP, sinP, factor)
-            chi_2 = chi2.calc_chisqd(corrected_intensities,
-                                    **tensors["chisqd_tensors"])
+            if include_PO:
+                corrected_intensities = intensities.apply_MD_PO_correction(
+                                                calculated_intensities,
+                                                cosP, sinP, factor)
+                chi_2 = chi2.calc_chisqd(corrected_intensities,
+                                        **tensors["chisqd_tensors"])
+            else:
+                chi_2 = chi2.calc_chisqd(calculated_intensities,
+                                        **tensors["chisqd_tensors"])
         else:
-            chi_2 = chi2.calc_chisqd(calculated_intensities,
-                                    **tensors["chisqd_tensors"])
-        #else:
-        #    chi_2 = chi2.get_chi_2(**tensors)
+            chi_2 = chi2.get_chi_2(**tensors)
 
         if use_restraints:
             with torch.no_grad():
