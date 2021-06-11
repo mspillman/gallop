@@ -462,16 +462,14 @@ def sidebar():
             os.system("START /B "+os.path.join(filedir,"reset.bat"))
         # Linux
         else:
-            script = os.path.join(filedir,"gallop_streamlit.py")
+            script = str(os.path.join(filedir,"gallop_streamlit.py"))
             lines = ["import os\n",
                 "import time\n",
                 "os.system(\"pkill -f streamlit\")\n",
                 "time.sleep(1)\n",
                 f"os.system(\"streamlit run {script}\")\n",]
             with open(os.path.join(filedir,"reset.py"), "w") as reset_script:
-                #reset_script.writelines(lines)
-                for line in lines:
-                    reset_script.write(line)
+                reset_script.writelines(lines)
             reset_script.close()
             os.system("python3 "+os.path.join(filedir,"reset.py"))
 
