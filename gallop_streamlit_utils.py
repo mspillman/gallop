@@ -468,7 +468,7 @@ def sidebar():
                 "time.sleep(1)\n",
                 "os.system(\"streamlit run "+os.path.join(filedir,
                                     "gallop_streamlit.py")]
-            with open("reset.py", "w") as reset_script:
+            with open(os.path.join(filedir,"reset.py"), "w") as reset_script:
                 reset_script.writelines(lines)
             reset_script.close()
             os.system("python3 "+os.path.join(filedir,"reset.py")
