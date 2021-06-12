@@ -85,7 +85,8 @@ class DASHCifWriter:
     the input data which allows for easier comparison etc.
     """
     def __init__(self, struct, symprec=None, significant_figures=8, sg_number=1,
-                comment=None, site_labels=None):
+                comment=None, site_labels=None, PO=None, wavelength=None,
+                Z_prime=None,temperature=None):
         """
         Args:
             struct (Structure): structure to write
@@ -110,13 +111,14 @@ class DASHCifWriter:
         latt = struct.lattice
         comp = struct.composition
         no_oxi_comp = comp.element_composition
-        block["_diffrn_radiation_wavelength"] = struct.wavelength
-        if struct.wavelength == 1.54056:
-            block["_diffrn_radiation_type"] = "Cu K\\a"
-        else:
-            block["_diffrn_radiation_type"] = "synchrotron"
-        if struct.temperature is not None:
-            block["_diffrn_ambient_temperature"] = struct.temperature
+        if wavelength is not None:
+            block["_diffrn_radiation_wavelength"] = str(wavelength)
+            if np.around(wavelength, 5) == 1.54056:
+                block["_diffrn_radiation_type"] = "Cu K\\a"
+            else:
+                block["_diffrn_radiation_type"] = "synchrotron"
+        if temperature is not None:
+            block["_diffrn_ambient_temperature"] = temperature
         block["_symmetry_space_group_name_H-M"] = spacegroup[0]
         for cell_attr in ['a', 'b', 'c']:
             block["_cell_length_" + cell_attr] = format_str.format(
@@ -128,10 +130,20 @@ class DASHCifWriter:
         block["_chemical_formula_structural"] = no_oxi_comp.reduced_formula
         block["_chemical_formula_sum"] = no_oxi_comp.formula
         block["_cell_volume"] = format_str.format(latt.volume)
-
-        _, fu = no_oxi_comp.get_reduced_composition_and_factor()
-        block["_cell_formula_units_Z"] = str(int(fu))
-
+        spacegroup = groups.SpaceGroup.from_int_number(sg_number)
+        if Z_prime is None:
+            _, fu = no_oxi_comp.get_reduced_composition_and_factor()
+        else:
+            fu = Z_prime
+        block["_cell_formula_units_Z"] = str(fu*len(spacegroup.symmetry_ops))
+        #str(int(fu))
+        if PO is not None:
+            head = "  March-Dollase:"
+            orientation = "   ".join([str(x) for x in PO["axis"]])
+            orientation = f"  Orientation = {orientation}"
+            magnitude = str(PO["magnitude"][0])
+            magnitude = f"  Magnitude = {magnitude}"
+            block["_pd_proc_ls_pref_orient_corr"] = head+orientation+magnitude
         if symprec is None:
             block["_symmetry_equiv_pos_site_id"] = ["1"]
             block["_symmetry_equiv_pos_as_xyz"] = ["x, y, z"]
@@ -280,7 +292,9 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     species = []
     for zm in Structure.zmatrices:
         species += zm.elements
-
+    element_counts = np.unique(np.array(species), return_counts=True)[1]
+    reduced_formula = np.gcd.reduce(element_counts)
+    Z_prime = min(reduced_formula, len(Structure.zmatrices))
     all_atom_names = []
     for zmat in Structure.zmatrices:
         all_atom_names += zmat.atom_names
@@ -297,16 +311,18 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
                                 internal[chi_2 == chi_2.min()][0].astype(str)))
     comment = ext_comment + "\n" + int_comment
     if PO_comment:
-        axis_comment = "# PO Axis = " + str(axis)
-        factor_comment = "# March-Dollase factor = " + str(
-                                            factor[chi_2 == chi_2.min()][0])
-        comment += "\n" + axis_comment + "\n" + factor_comment
+        PO = {"axis" : axis,
+            "magnitude" : factor[chi_2 == chi_2.min()][0]}
+    else:
+        PO = None
     if Structure.source.lower() == "dash":
         comment += "\n# Profile chisqd = " + str(
                                             np.around(result["prof_chi_2"], 3))
     writer = DASHCifWriter(output_structure, symprec=1e-12,
                             sg_number=Structure.original_sg_number,
-                            comment=comment, site_labels=site_labels)
+                            comment=comment, site_labels=site_labels, PO=PO,
+                            wavelength=Structure.wavelength, Z_prime=Z_prime,
+                            temperature=Structure.temperature)
 
     if filename_root is None:
         filename_root = Structure.name

@@ -655,7 +655,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                                                 **best_tensors["int_tensors"])
         if include_PO:
             best_intensities = intensities.apply_MD_PO_correction(
-                best_intensities, cosP, sinP, factor[best][0].reshape(1,1))
+                best_intensities, cosP.cpu(), sinP.cpu(),
+                factor[best][0].cpu().reshape(1,1))
 
     if ignore_H_setting:
         chi_2_H = chi2.calc_chisqd(best_intensities,
