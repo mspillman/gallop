@@ -461,7 +461,8 @@ def sidebar():
         print(filedir)
         # Windows
         if os.name == "nt":
-            lines = ["taskkill /IM \"streamlit.exe\" /F\n",
+            lines = ["taskkill /IM \"streamlit.exe\" /F /T\n",
+                    "taskkill /IM \"Python.exe\" /F\n",
                     "streamlit run " + os.path.join(filedir,
                                                     "gallop_streamlit.py")]
             with open(os.path.join(filedir,"reset.bat"), "w") as reset_script:
