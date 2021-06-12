@@ -148,7 +148,15 @@ def get_all_settings(loaded_values):
                                 "trajectory of best particle during LO",
                                 value=loaded_values["animate_structure"])
         if all_settings["animate_structure"]:
-            st.write("Note: animation will slow down the local optimisation.")
+            st.write("Note: animation will slow down the local optimisation"
+                " and web app significantly.")
+        all_settings["temperature"] = st.number_input(
+                                        "Data collection temperature / K \
+                                        (Optional. If > 0.0, will be added to \
+                                        CIF)",
+                                        min_value=0.0, max_value=None,
+                                        value=loaded_values["temperature"],
+                                        step=100.0, format=None, key=None)
 
     # Local optimiser settings
     with st.sidebar.beta_expander(label="Local Optimiser", expanded=False):

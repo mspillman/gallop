@@ -101,7 +101,8 @@ elif function == "GALLOP":
                 struct.add_zmatrix(z)
             else:
                 struct.add_zmatrix(z)
-
+        if all_settings["temperature"] != 0.0:
+            struct.temperature = all_settings["temperature"]
         minimiser_settings = optim.local.get_minimiser_settings(struct)
         minimiser_settings["streamlit"] = True
         minimiser_settings["include_dw_factors"] = \

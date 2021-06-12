@@ -110,6 +110,13 @@ class DASHCifWriter:
         latt = struct.lattice
         comp = struct.composition
         no_oxi_comp = comp.element_composition
+        block["_diffrn_radiation_wavelength"] = struct.wavelength
+        if struct.wavelength == 1.54056:
+            block["_diffrn_radiation_type"] = "Cu K\\a"
+        else:
+            block["_diffrn_radiation_type"] = "synchrotron"
+        if struct.temperature is not None:
+            block["_diffrn_ambient_temperature"] = struct.temperature
         block["_symmetry_space_group_name_H-M"] = spacegroup[0]
         for cell_attr in ['a', 'b', 'c']:
             block["_cell_length_" + cell_attr] = format_str.format(

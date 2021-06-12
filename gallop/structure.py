@@ -66,7 +66,7 @@ class Structure(object):
         self.zmatrices = []
         self.absorb_H_Z_increase = absorb_H_Z_increase
         self.absorb_H_occu_increase = absorb_H_occu_increase
-
+        self.temperature = None
         self.original_sg_number = None
         self.total_dof_calculated = False
         self.sg_number = None

@@ -3,6 +3,7 @@
     "n_GALLOP_iters": 100,
     "seed": -1,
     "animate_structure": false,
+    "temperature":0.0,
     "optim": "Adam",
     "n_LO_iters": 500,
     "ignore_H_atoms": true,
