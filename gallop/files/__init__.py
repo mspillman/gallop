@@ -111,14 +111,6 @@ class DASHCifWriter:
         latt = struct.lattice
         comp = struct.composition
         no_oxi_comp = comp.element_composition
-        if wavelength is not None:
-            block["_diffrn_radiation_wavelength"] = str(wavelength)
-            if np.around(wavelength, 5) == 1.54056:
-                block["_diffrn_radiation_type"] = "Cu K\\a"
-            else:
-                block["_diffrn_radiation_type"] = "synchrotron"
-        if temperature is not None:
-            block["_diffrn_ambient_temperature"] = temperature
         block["_symmetry_space_group_name_H-M"] = spacegroup[0]
         for cell_attr in ['a', 'b', 'c']:
             block["_cell_length_" + cell_attr] = format_str.format(
@@ -136,7 +128,14 @@ class DASHCifWriter:
         else:
             fu = Z_prime
         block["_cell_formula_units_Z"] = str(fu*len(spacegroup.symmetry_ops))
-        #str(int(fu))
+        if wavelength is not None:
+            block["_diffrn_radiation_wavelength"] = str(wavelength)
+            if np.around(wavelength, 5) == 1.54056:
+                block["_diffrn_radiation_type"] = "Cu K\\a"
+            else:
+                block["_diffrn_radiation_type"] = "synchrotron"
+        if temperature is not None:
+            block["_diffrn_ambient_temperature"] = temperature
         if PO is not None:
             head = "  March-Dollase:"
             orientation = "   ".join([str(x) for x in PO["axis"]])
