@@ -664,7 +664,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         result["best_chi_2_with_H"] = chi_2_H.detach().cpu().numpy()[0]
     else:
-        result["best_chi_2_with_H"] = result["chi_2"].min()[0]
+        result["best_chi_2_with_H"] = result["chi_2"].min()
 
     # Now get the profile chi2 if using DASH data
     if Structure.source.lower() == "dash":
