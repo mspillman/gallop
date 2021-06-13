@@ -276,9 +276,9 @@ class Structure(object):
                                             just_asymmetric=False,
                                             from_cif=False):
         """
-        Much of this code is directly adapted from the PyMatGen code
-        for PXRD pattern generation, which can be found here:
-        https://pymatgen.org/pymatgen.analysis.diffraction.xrd.html
+        Much of this code is adapted from the PyMatGen code for PXRD pattern
+        generation, which can be found here:
+            https://pymatgen.org/pymatgen.analysis.diffraction.xrd.html
         A few modifications have been made. For example, ability to "absorb"
         H atoms by increasing the atomic number used to calculate
         atomic form factors, or increase the occupancy of the non-H
@@ -299,6 +299,7 @@ class Structure(object):
                 all_atoms_coords = []
                 all_atoms_elements = []
                 all_atoms_n_H_connected = []
+                all_occus = []
                 for zmat in self.zmatrices:
                     if self.ignore_H_atoms:
                         all_atoms_coords.append(
@@ -307,12 +308,15 @@ class Structure(object):
                             zmat.elements_no_H)
                         all_atoms_n_H_connected.append(
                             zmat.n_H_connected)
+                        all_occus.append(zmat.occus_no_H)
                     else:
                         all_atoms_coords.append(zmat.initial_cartesian)
                         all_atoms_elements.append(zmat.elements)
+                        all_occus.append(zmat.occus)
 
                 all_atoms_coords = np.vstack(all_atoms_coords)
                 all_atoms_elements = np.hstack(all_atoms_elements)
+                all_occus = np.hstack(all_occus)
                 if self.ignore_H_atoms:
                     all_atoms_n_H_connected = np.hstack(all_atoms_n_H_connected)
                 else:
@@ -338,22 +342,29 @@ class Structure(object):
                 species_expanded = []
                 fractional_expanded = []
                 n_H_connected_expanded = []
+                occus_expanded = []
                 xyzw = np.vstack((fractional_coords.T, np.ones((1,
                                     fractional_coords.shape[0]))))
                 for am in self.affine_matrices:
                     expanded = np.array(np.dot(am, xyzw).T)
                     fractional_expanded.append(expanded[:,:3])
                     species_expanded.append(all_atoms_elements)
+                    occus_expanded.append(all_occus)
                     n_H_connected_expanded.append(all_atoms_n_H_connected)
                 species_expanded = np.array(species_expanded).ravel()
                 fractional_expanded = np.vstack(fractional_expanded)
                 n_H_connected_expanded = np.hstack(n_H_connected_expanded)
+                occus_expanded = np.hstack(occus_expanded)
             else:
                 species_expanded = all_atoms_elements
                 fractional_expanded = fractional_coords
+                occus_expanded = all_occus
                 if not from_cif:
                     n_H_connected_expanded = all_atoms_n_H_connected
 
+            species_occus_expanded = []
+            for sp_oc in zip(species_expanded, occus_expanded):
+                species_occus_expanded.append({sp_oc[0] : sp_oc[1]})
             with open(
                 os.path.join(os.path.dirname(__file__),
                                         "atomic_scattering_params.json")) as f:
@@ -398,7 +409,7 @@ class Structure(object):
             # Create a pymatgen Structure object using the dummy atom positions
             # created earlier
             dummy_structure = pmg.Structure(lattice=self.lattice,
-                                species=species_expanded,
+                                species=species_occus_expanded,
                                 coords=fractional_expanded)
             i = 0
             for site in dummy_structure:
@@ -423,8 +434,8 @@ class Structure(object):
                                         for:" " %s." % sp.symbol) from no_key
                     coeffs.append(c)
                     dwfactors.append(debye_waller_factors.get(sp.symbol, 0))
-                    # DOUBLE CHECK THIS IS CORRECT FOR OCCUPANCY != 1
-                    occus.append(site[site.specie.symbol])
+                # DOUBLE CHECK THIS IS CORRECT FOR OCCUPANCY != 1
+                occus.append(site.species.get(site.species.elements[0]))
                 i += 1
 
             zs = np.array(zs)

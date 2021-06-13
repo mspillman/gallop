@@ -289,8 +289,15 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
             verbose=False)
 
     species = []
+    occus = []
     for zm in Structure.zmatrices:
         species += zm.elements
+        occus+=zm.occus.tolist()
+
+    species_and_occus = []
+    for s, o in zip(species, occus):
+        species_and_occus.append({s : o})
+
     element_counts = np.unique(np.array(species), return_counts=True)[1]
     reduced_formula = np.gcd.reduce(element_counts)
     Z_prime = min(reduced_formula, len(Structure.zmatrices))
@@ -302,7 +309,8 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     else:
         site_labels = None
 
-    output_structure = pmg.Structure(lattice=Structure.lattice, species=species,
+    output_structure = pmg.Structure(lattice=Structure.lattice,
+                                    species=species_and_occus,
                                     coords=best_frac_coords[0][:len(species)])
     ext_comment = "# GALLOP External Coords = " + ",".join(list(
                                 external[chi_2 == chi_2.min()][0].astype(str)))

@@ -169,6 +169,7 @@ class Z_matrix(object):
         bond_length, bond_connection, bond_refineable = [], [], []
         angle, angle_connection, angle_refineable = [], [], []
         torsion, torsion_connection, torsion_refineable = [], [], []
+        occus = []
         atom_names = []
         with open(input_filename, "r") as in_zm:
             i = 0
@@ -188,6 +189,7 @@ class Z_matrix(object):
                     torsion.append(line[5])
                     torsion_refineable.append(line[6])
                     torsion_connection.append(line[9])
+                    occus.append(line[11])
                     if element[-1] not in dw_factors:
                         dw_factors[element[-1]] = float(line[10])
                     atom_names.append(line[13])
@@ -208,6 +210,7 @@ class Z_matrix(object):
         self.coords = np.array([bond_length, angle, torsion]).astype(float).T
         self.elements = element
         self.dw_factors = dw_factors
+        self.occus = np.array(occus).astype(float)
         self.bond_refineable_indices = np.where(self.bond_refineable == 1)[0]
         self.angle_refineable_indices = np.where(self.angle_refineable == 1)[0]
         self.torsion_refineable_indices = np.where(
@@ -293,14 +296,15 @@ class Z_matrix(object):
         bond_refineable_no_H, angle_refineable_no_H = [], []
         torsion_refineable_no_H, elements_no_H = [], []
         atom_names_no_H = []
+        occus_no_H = []
         old_vs_new_index = []
         n_H_connected = np.zeros_like(self.bond_connection)
         i = 1
         j = 0
         for x in zip(self.elements, self.coords, self.bond_refineable,
-                            self.angle_refineable, self.torsion_refineable,
-                            self.bond_connection, self.angle_connection,
-                                    self.torsion_connection, self.atom_names):
+                        self.angle_refineable, self.torsion_refineable,
+                        self.bond_connection, self.angle_connection,
+                        self.torsion_connection, self.atom_names, self.occus):
             if x[0] != "H":
                 old_vs_new_index.append([i, i-j])
                 elements_no_H.append(x[0])
@@ -312,6 +316,7 @@ class Z_matrix(object):
                 angle_connection_no_H.append(x[6])
                 torsion_connection_no_H.append(x[7])
                 atom_names_no_H.append(x[8])
+                occus_no_H.append(x[9])
             if x[0] == "H":
                 n_H_connected[x[5]] += 1
                 j+=1
@@ -325,6 +330,7 @@ class Z_matrix(object):
         angle_refineable_no_H   = np.array(angle_refineable_no_H).astype(int)
         torsion_refineable_no_H = np.array(torsion_refineable_no_H).astype(int)
         n_H_connected = n_H_connected[np.array(self.elements) != "H"]
+        occus_no_H = np.array(occus_no_H)
 
         for x in old_vs_new_index:
             bond_connection_no_H[bond_connection_no_H == x[0]] = x[1]
@@ -342,6 +348,7 @@ class Z_matrix(object):
         self.elements_no_H = elements_no_H
         self.atom_names_no_H = atom_names_no_H
         self.n_H_connected = n_H_connected
+        self.occus_no_H = occus_no_H
 
         self.bond_refineable_indices_no_H = np.where(
                                         self.bond_refineable_no_H == 1)[0]
