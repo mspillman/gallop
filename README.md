@@ -1,5 +1,5 @@
 # **GALLOP**
-**Gradient Accelerated LocaL Optimisation and Particle Swarm: a fast method for crystal structure determination from powder diffraction data.**
+**GPU Accelerated LocaL Optimisation and Particle Swarm: a fast method for crystal structure determination from powder diffraction data.**
 
 Contents:
 1. [Introduction](#introduction)
