@@ -434,7 +434,6 @@ class Structure(object):
                                         for:" " %s." % sp.symbol) from no_key
                     coeffs.append(c)
                     dwfactors.append(debye_waller_factors.get(sp.symbol, 0))
-                # DOUBLE CHECK THIS IS CORRECT FOR OCCUPANCY != 1
                 occus.append(site.species.get(site.species.elements[0]))
                 i += 1
 
@@ -468,18 +467,18 @@ class Structure(object):
                 dw_correction.append(np.exp(-1*dwfactors * x))
             fs = np.array(fs)
             dw_correction = np.array(dw_correction).astype(float)
-
+            self.fs = fs
             prefix = np.empty_like(fs)
             for i in range(fs.shape[0]):
                 for j in range(fs.shape[1]):
                     if self.ignore_H_atoms and self.absorb_H_occu_increase:
                         new_occu = ((1 + n_H_connected_expanded[j]) / zs[j])
-                        prefix[i][j] = fs[i][j] * occus[j] \
-                                                * dw_correction[i][j] \
-                                                * new_occu
+                        prefix[i][j] = (fs[i][j] * occus[j]
+                                                * dw_correction[i][j]
+                                                * new_occu)
                     else:
                         prefix[i][j] = fs[i][j] * occus[j] * dw_correction[i][j]
-
+            self.prefix = prefix
             return prefix
 
     def get_total_degrees_of_freedom(self, verbose=True):
