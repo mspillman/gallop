@@ -100,6 +100,8 @@ class Structure(object):
         self.zm_torsions = None
         self.restraints = []
         self.restraints_no_H = []
+        self.fs = None
+        self.prefix = None
 
     def __repr__(self):
         return self.name
