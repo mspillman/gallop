@@ -150,17 +150,7 @@ def rotate_and_translate(cart_coords, R, translation, lattice_inv_matrix):
     rot_cart = torch.einsum("bjk,bij->bik", R, cart_coords)
     # Convert to fractional coords
     rot_cart = torch.einsum("jk,bij->bik",lattice_inv_matrix,rot_cart)
-    # Translate the sites. Must use repeat_interleave rather than repeat here.
-    # See Torch documentation here:
-    # https://pytorch.org/docs/stable/generated/torch.repeat_interleave.html
-    # >>> x = torch.tensor([1, 2, 3])
-    # >>> x.repeat_interleave(2)
-    # tensor([1, 1, 2, 2, 3, 3])
-    # >>> x.repeat(2)
-    # tensor([1, 2, 3, 1, 2, 3])
-    #translations = torch.repeat_interleave(translation,
-    #        repeats=cart_coords.shape[1], dim=0).reshape(translation.shape[0],
-    #                                                cart_coords.shape[1], 3)
+    # Translate the sites.
     fractional_coords = rot_cart + translation.view(translation.shape[0], 1, 3)
     return fractional_coords
 
