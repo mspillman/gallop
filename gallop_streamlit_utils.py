@@ -715,7 +715,7 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
         with col2:
             with st.beta_expander(label=" ", expanded=False):
                 minpoint = np.argmin(losses)
-                fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(8, 2))
+                fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 2))
                 ax[0].plot(lr[0], lr[1])
                 ax[1].plot(lrs[minpoint:],
                     lrs[minpoint:]-lrs[minpoint:].min(),alpha=0.5,c="k")
@@ -728,22 +728,24 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                 ax[1].plot(lrs[minpoint:], losses[minpoint:])
                 ax[0].set_xlabel('learning rate')
                 ax[1].set_xlabel('normalised learning rate')
-                ax[0].set_ylabel('loss')
-                ax[1].set_ylabel('normalised loss')
+                ax[0].set_ylabel('sum of $\\chi^{2}$ vals')
+                ax[1].set_ylabel('rescaled sum')
                 st.pyplot(fig)
                 if all_settings["find_lr_auto_mult"]:
-                    final_1 = (lrs[minpoint:]-lrs[minpoint:].min())[-1]
-                    final_0pt5 = 0.5 * final_1
-                    final_0pt25 = 0.25 * final_1
-                    if losses[-1] < final_0pt25:
-                        mult = 1.0
-                    elif losses[-1] < final_0pt5:
-                        mult = 0.75
-                    else:
-                        mult = 0.5
+                    #final_1 = (lrs[minpoint:]-lrs[minpoint:].min())[-1]
+                    #final_0pt5 = 0.5 * final_1
+                    #final_0pt25 = 0.25 * final_1
+                    #if losses[-1] < final_0pt25:
+                    #    mult = 1.0
+                    #elif losses[-1] < final_0pt5:
+                    #    mult = 0.75
+                    #else:
+                    #    mult = 0.5
+                    mult = min(1.0, 1.25
+                                    - (losses[-1] / (lrs[-1] - lrs[minpoint])))
                     minimiser_settings["learning_rate"] = lr[-1] * mult
                     st.write("Learning rate:", np.around(lr[-1] * mult,4))
-                    st.write("Mult:", mult)
+                    st.write("Mult:", np.around(mult, 4))
                     all_settings["mult"] = mult
                 else:
                     minimiser_settings["learning_rate"] = lr[-1]

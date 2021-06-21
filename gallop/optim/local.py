@@ -141,7 +141,7 @@ def find_learning_rate(Structure, external=None, internal=None,
 
     Args:
         min_lr (int, optional): Minimum (log10) learning rate to try.
-            Defaults to -5 (which is equivalent to 10^-4).
+            Defaults to -4 (which is equivalent to 10^-4).
         max_lr (int, optional): Maximum (log10) learning rate to try.
             Defaults to log10(0.15).
         n_trials (int, optional): Number of trials between min_lr and max_lr.
