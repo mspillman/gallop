@@ -632,6 +632,12 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             "GALLOP Iter"  : run
             }
 
+    if torsion_shadowing:
+        torsions = result["internal"]
+        torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
+        torsions = np.tile(torsions, (1,Z_prime))
+        result["internal"] = torsions
+
     # Now calculate the intensities with H-atoms included and use them to get a
     # profile chi2 estimate. If Structure.ignore_H_atoms is True, also calculate
     # the intensity chi2 with H-atoms included and add to the results dict.
@@ -681,11 +687,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["prof_chi_2"] = profchi2
         result["calc_profile"] = rescale*calc_profile
 
-    if torsion_shadowing:
-        torsions = result["internal"]
-        torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
-        torsions = np.tile(torsions, (1,Z_prime))
-        result["internal"] = torsions
 
     if save_trajectories:
         result["trajectories"] = trajectories
