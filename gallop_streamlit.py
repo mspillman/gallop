@@ -323,7 +323,7 @@ elif function == "GALLOP":
                             ax[0].set_ylabel('Intensity')
                             ax[0].legend(["Obs", "Calc"])
                             ax[1].set_xlabel('2$\\theta$')
-                            ax[1].set_ylabel('$\\Delta(I)/\\sigma(I_{obs}$')
+                            ax[1].set_ylabel('$\\Delta(I)/\\sigma(I_{obs})$')
                             st.pyplot(fig)
 
                 col1, col2 = result_placeholder.beta_columns([2,2])
