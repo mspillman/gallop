@@ -732,17 +732,17 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                 ax[1].set_ylabel('rescaled sum')
                 st.pyplot(fig)
                 if all_settings["find_lr_auto_mult"]:
-                    #final_1 = (lrs[minpoint:]-lrs[minpoint:].min())[-1]
-                    #final_0pt5 = 0.5 * final_1
-                    #final_0pt25 = 0.25 * final_1
-                    #if losses[-1] < final_0pt25:
-                    #    mult = 1.0
-                    #elif losses[-1] < final_0pt5:
-                    #    mult = 0.75
-                    #else:
-                    #    mult = 0.5
-                    mult = min(1.0, 1.25
-                                    - (losses[-1] / (lrs[-1] - lrs[minpoint])))
+                    final_1 = (lrs[minpoint:]-lrs[minpoint:].min())[-1]
+                    final_0pt5 = 0.5 * final_1
+                    final_0pt25 = 0.25 * final_1
+                    if losses[-1] < final_0pt25:
+                        mult = 1.0
+                    elif losses[-1] < final_0pt5:
+                        mult = 0.75
+                    else:
+                        mult = 0.5
+                    #mult = max(0.5, min(1.0, 1.25
+                    #                - (losses[-1] / (lrs[-1] - lrs[minpoint]))))
                     minimiser_settings["learning_rate"] = lr[-1] * mult
                     st.write("Learning rate:", np.around(lr[-1] * mult,4))
                     st.write("Mult:", np.around(mult, 4))
