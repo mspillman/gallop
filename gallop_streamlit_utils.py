@@ -717,19 +717,27 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                 minpoint = np.argmin(losses)
                 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 2))
                 ax[0].plot(lr[0], lr[1])
-                ax[1].plot(lrs[minpoint:],
-                    lrs[minpoint:]-lrs[minpoint:].min(),alpha=0.5,c="k")
-                ax[1].plot(lrs[minpoint:],
-                    0.5*(lrs[minpoint:]-lrs[minpoint:].min()),
+                ax[1].plot(lrs[minpoint:]-lrs[minpoint:].min(),
+                    lrs[minpoint:]-lrs[minpoint:].min(),":",alpha=0.5,c="k")
+                ax[1].plot(lrs[minpoint:]-lrs[minpoint:].min(),
+                    0.5*(lrs[minpoint:]-lrs[minpoint:].min()),"-.",
                     alpha=0.5,c="k")
-                ax[1].plot(lrs[minpoint:],
-                    0.25*(lrs[minpoint:]-lrs[minpoint:].min()),
+                ax[1].plot(lrs[minpoint:]-lrs[minpoint:].min(),
+                    0.25*(lrs[minpoint:]-lrs[minpoint:].min()),"--",
                     alpha=0.5,c="k")
-                ax[1].plot(lrs[minpoint:], losses[minpoint:])
+                ax[1].plot(lrs[minpoint:]-lrs[minpoint:].min(),
+                            losses[minpoint:])
+                gradient = ((losses[-1] - losses[minpoint])
+                            / (lrs[-1] - lrs[minpoint]))
+                ax[1].plot(lrs[minpoint:]-lrs[minpoint:].min(),
+                            gradient*(lrs[minpoint:]-lrs[minpoint:].min()),
+                            c="r")
                 ax[0].set_xlabel('learning rate')
                 ax[1].set_xlabel('normalised learning rate')
                 ax[0].set_ylabel('sum of $\\chi^{2}$ vals')
                 ax[1].set_ylabel('rescaled sum')
+                ax[1].legend(["y=x","y=0.5x","y=0.25x","rescaled sum", "approx"],
+                                loc=2, prop={'size': 8})
                 st.pyplot(fig)
                 if all_settings["find_lr_auto_mult"]:
                     final_1 = (lrs[minpoint:]-lrs[minpoint:].min())[-1]
