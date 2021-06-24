@@ -712,6 +712,7 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                                 plot=False,
                                 logplot=False,
                                 minimiser_settings = minimiser_settings)
+        torch.cuda.empty_cache()
         lrs = lr[0].copy()
         losses = lr[1].copy()
         lrs -= lrs.min()
