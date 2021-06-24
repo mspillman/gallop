@@ -236,7 +236,7 @@ elif function == "GALLOP":
             GPU_split = all_settings["particle_division"]
             n_GPUs = torch.cuda.device_count()
             if (GPU_split is not None and n_GPUs >= len(GPU_split)):
-                import multiprocessing as mp
+                import torch.multiprocessing as mp
                 pool = mp.Pool(processes = len(GPU_split))
 
             for i in range(all_settings["n_GALLOP_iters"]):
