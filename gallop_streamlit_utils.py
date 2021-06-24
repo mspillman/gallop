@@ -182,11 +182,17 @@ def get_all_settings(loaded_values):
             GPUs = st.multiselect("Select GPUs to use",GPUs[:-1],
                                                 default=GPUs[:-1])
             all_settings["particle_division"] = []
-            for i in GPUs:
-                all_settings["particle_division"].append([i.split(" = ")[0],
-                    st.number_input("Enter % of particles to run on "+i,
+            if loaded_values["particle_division"] is None:
+                loaded_values["particle_division"] = []
+                for i in GPUs:
+                    loaded_values["particle_division"].append([i.split(" =")[0],
+                                                        100./float(len(GPUs))])
+            for i, name in enumerate(GPUs):
+                all_settings["particle_division"].append([name.split(" = ")[0],
+                    st.number_input("Enter % of particles to run on "+name,
                         min_value=0., max_value=100.,
-                        value=loaded_values["particle_division"][i][1])])
+                        value=loaded_values["particle_division"][i][1],
+                        step=5.0)])
             if sum(x[1] for x in all_settings["particle_division"]) != 100.:
                 st.error("Percentages do not sum to 100 %")
         else:

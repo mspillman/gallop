@@ -119,3 +119,4 @@ GALLOP_results/
 .vscode/
 GALLOP_user_settings/test.json
 viz.html
+gallop/user_settings/multiGPU.json

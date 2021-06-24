@@ -233,6 +233,12 @@ elif function == "GALLOP":
                 os.mkdir(os.path.join("GALLOP_results", date))
             zipname = os.path.join("GALLOP_results",date,zipname)
 
+            GPU_split = all_settings["particle_division"]
+            n_GPUs = torch.cuda.device_count()
+            if (GPU_split is not None and n_GPUs >= len(GPU_split)):
+                import multiprocessing as mp
+                pool = mp.Pool(processes = len(GPU_split))
+
             for i in range(all_settings["n_GALLOP_iters"]):
                 itertext = "GALLOP iteration " + str(i+1)
                 if ((i+1)%all_settings["global_update_freq"] == 0 and i != 0 and
@@ -249,12 +255,10 @@ elif function == "GALLOP":
                 iter_placeholder.text(itertext)
                 with progress_bar_placeholder:
                     try:
-                        GPU_split = all_settings["particle_division"]
-                        n_GPUs = torch.cuda.device_count()
                         if (GPU_split is not None and n_GPUs >= len(GPU_split)):
                             result = multiGPU.minimise(i, struct, swarm,
-                                    external, internal, GPU_split,
-                                    minimiser_settings, start_time=start_time)
+                                external, internal, GPU_split,
+                                minimiser_settings, pool, start_time=start_time)
 
                         else:
                             result = optim.local.minimise(struct,
@@ -402,3 +406,7 @@ elif function == "GALLOP":
                     # all be the same. This is roughly +/- 10 deg
                     internal += np.random.uniform(-0.157,0.157,
                                     size=internal.shape)
+
+            if (GPU_split is not None and n_GPUs >= len(GPU_split)):
+                pool.close()
+                pool.join()

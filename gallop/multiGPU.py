@@ -50,11 +50,12 @@ def multiGPU(GPU, start, end, external, internal, structure_files,
     result = optim.local.minimise(temp_struct, external=external, internal=internal,
                                 **minimiser_settings)
     result = {GPU : result}
+    torch.cuda.empty_cache()
     return result
 
 
 def minimise(iteration, struct, swarm, external, internal, GPU_split,
-            minimiser_settings, start_time=None):
+            minimiser_settings, pool=None, start_time=None):
     """[summary]
 
     Args:
@@ -74,6 +75,10 @@ def minimise(iteration, struct, swarm, external, internal, GPU_split,
             expressed in the range [0,100] rather than [0,1].
         minimiser_settings (dict): Dictionary with the settings needed for the
             local optimiser
+        pool (multiprocessing.Pool): The multiprocessing pool to use for the
+            parallel processing. For speed, this should be defined separately
+            otherwise a significant overhead will be encountered. Defaults to
+            None.
         start_time (float, optional): The time at which the runs started. Used
             in the save_CIF function to add timestamps to the files.
             Defaults to None.
@@ -101,30 +106,53 @@ def minimise(iteration, struct, swarm, external, internal, GPU_split,
         args.append([gpuid,start,end]+common_args)
     if start_time is None:
         start_time = time.time()
-    with mp.Pool(processes = len(GPU_split)) as p:
-        results = p.starmap(multiGPU, args)
-    p.close()
-    p.join()
+    if pool is None:
+        pool =  mp.Pool(processes = len(GPU_split))
+        close_pool = True
+    else:
+        close_pool = False
+
+    results = pool.starmap(multiGPU, args)
+    if close_pool:
+        pool.close()
+        pool.join()
     combined = results[0]
     for x in results[1:]:
         combined.update(x)
     # Now reconstruct the full results dict
     result = {"GALLOP Iter" : iteration}
+    if struct.source.lower() == "dash":
+        profiles = []
+        prof_chi2s = []
     for d in devices:
-        if "external" in result.keys():
-            result["external"] = np.vstack([result["external"],
-                                            combined[d]["external"]])
-        else:
-            result["external"] = combined[d]["external"]
-        if "internal" in result.keys():
-            result["internal"] = np.vstack([result["internal"],
-                                            combined[d]["internal"]])
-        else:
-            result["internal"] = combined[d]["internal"]
-        if "chi_2" in result.keys():
-            result["chi_2"] = np.hstack([result["chi_2"], combined[d]["chi_2"]])
-        else:
-            result["chi_2"] = combined[d]["chi_2"]
+        for k in ["external", "internal"]:
+            if k in result.keys():
+                result[k] = np.vstack([result[k], combined[d][k]])
+            else:
+                result[k] = combined[d][k]
+        for k in ["chi_2", "best_chi_2_with_H"]:
+            if k in result.keys():
+                result[k] = np.hstack([result[k], combined[d][k]])
+            else:
+                if k in combined[d].keys():
+                    result[k] = combined[d][k]
+        if "PO_axis" in combined[d].keys():
+            if "PO_axis" not in result.keys():
+                result["PO_axis"] = combined[d]["PO_axis"]
+            if "MD_factor" in result.keys():
+                result["MD_factor"] = np.vstack([result["MD_factor"],
+                                                    combined[d]["MD_factor"]])
+            else:
+                result["MD_factor"] = combined[d]["MD_factor"]
+        if struct.source.lower() == "dash":
+            prof_chi2s.append(combined[d]["prof_chi_2"])
+            profiles.append(combined[d]["calc_profile"])
+    if struct.source.lower() == "dash":
+        index = prof_chi2s.index(min(prof_chi2s))
+        result["prof_chi_2"] = prof_chi2s[index]
+        result["calc_profile"] = profiles[index]
+    result["best_chi_2_with_H"] = min(result["best_chi_2_with_H"])
+
     files.save_CIF_of_best_result(struct, result, start_time,
                                     minimiser_settings["n_reflections"])
     return result
