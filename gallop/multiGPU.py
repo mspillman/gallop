@@ -104,6 +104,12 @@ def minimise(iteration, struct, swarm, external, internal, GPU_split,
             start = end
             end = start + int(np.ceil(percentage*swarm.n_particles))
         args.append([gpuid,start,end]+common_args)
+    for i, a in enumerate(args):
+        if i == 0:
+            a[-1]["use_progress_bar"] = True
+        else:
+            a[-1]["use_progress_bar"] = False
+            a[-1]["verbose"] = False
     if start_time is None:
         start_time = time.time()
     if pool is None:
