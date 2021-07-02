@@ -512,26 +512,25 @@ def get_files():
         with col2:
             pawley_program = st.radio("Choose Pawley refinement program",
                                     ["DASH","GSAS-II", "TOPAS"])
-        upload_key = 1
         if pawley_program == "DASH":
             uploaded_files = st.file_uploader("Upload DASH Pawley files and \
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "sdi", "hcv", "tic", "dsl",
                                         "pik", "dbf", "json"],
-                                    key=upload_key)
+                                    key=None)
         elif pawley_program == "GSAS-II":
             uploaded_files = st.file_uploader("Upload GSAS-II project file and\
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "gpx", "json"],
-                                    key=upload_key)
+                                    key=None)
         else:
             uploaded_files = st.file_uploader("Upload TOPAS .out file and\
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "out", "json"],
-                                    key=upload_key)
+                                    key=None)
         col1, col2 = st.beta_columns([2,2])
         with col1:
             clear_files=st.checkbox(
