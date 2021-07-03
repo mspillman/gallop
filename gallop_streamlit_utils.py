@@ -801,7 +801,7 @@ def browse_solved_zips():
         dates.sort(reverse=True)
         sorteddates = [datetime.datetime.strftime(d, "%Y-%b-%d") for d in dates]
         for i, s in enumerate(sorteddates):
-            folders.append(st.sidebar.checkbox(s,value=i==0, key=i))
+            folders.append(st.sidebar.checkbox(s,value=i==0, key=str(i)))
         for i, d in enumerate(zip(sorteddates, folders)):
             if d[1]:
                 with st.beta_expander(label=d[0], expanded=True):
@@ -812,7 +812,7 @@ def browse_solved_zips():
                         zipnames.append([zipname,
                                         os.path.getmtime(zipname)])
                     zipnames = [x[0] for x in sorted(zipnames, reverse=True,
-                                                            key=lambda x: x[1])]
+                                                    key=lambda x: str(x[1]))]
                     for zipname in zipnames:
                         with col2:
                             filename = zipname.split(d[0])[1].strip(
