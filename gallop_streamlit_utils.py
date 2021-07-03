@@ -511,7 +511,7 @@ def get_files():
     else:
         with col2:
             pawley_program = st.radio("Choose Pawley refinement program",
-                                    ["DASH","GSAS-II", "TOPAS"])
+                                    ["DASH","GSAS-II", "TOPAS (experimental)"])
         if pawley_program == "DASH":
             uploaded_files = st.file_uploader("Upload DASH Pawley files and \
                                     Z-matrices",
