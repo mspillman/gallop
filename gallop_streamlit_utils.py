@@ -855,8 +855,8 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
             {"doAssembly" : True,
             "normalizeAssembly":True,
             'duplicateAssemblyAtoms':True})
-        view.setStyle({"stick":{'sphere':{"scale":0.15},
-                                'stick':{"radius":0.25}}})
+        view.setStyle({'sphere':{"scale":0.15},
+                        'stick':{"radius":0.25}})
         view.addUnitCell()
         view.zoomTo()
         view.render()
