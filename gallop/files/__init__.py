@@ -322,7 +322,7 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
             "magnitude" : factor[chi_2 == chi_2.min()][0]}
     else:
         PO = None
-    if Structure.source.lower() == "dash":
+    if Structure.source.lower() == "dash" and "prof_chi_2" in result.keys():
         comment += "\n# Profile chisqd = " + str(
                                             np.around(result["prof_chi_2"], 3))
     writer = DASHCifWriter(output_structure, symprec=1e-12,
