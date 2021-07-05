@@ -315,8 +315,9 @@ elif function == "GALLOP":
                                             np.around(result["prof_chi_2"], 3)))
                             ratio = np.around(
                                 result["prof_chi_2"] / struct.PawleyChiSq, 3)
-                            st.write("$\\frac{\\chi^{2}_{G}}{\\chi^{2}_{P}}$ ="
-                                + " " + str(ratio))
+                            st.write("$\\frac{\\chi^{2}_{prof}}"
+                                    + "{\\chi^{2}_{Pawley}}$ ="
+                                    + " " + str(ratio))
 
                             fig, ax = plt.subplots(2, 1, gridspec_kw={
                                                     'height_ratios': [4, 1]},
