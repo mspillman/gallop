@@ -327,6 +327,9 @@ elif function == "GALLOP":
                             ax[1].plot(struct.profile[:,0], (struct.profile[:,1]
                                 - result["calc_profile"])/struct.profile[:,2])
                             #ax[0].set_xlabel('2$\\theta$')
+                            ax[0].title.set_text(f"Iteration {i+1}, "
+                                        +"$\\chi^{2}_{prof}$ = "+str(
+                                        np.around(result["prof_chi_2"], 3)))
                             ax[0].set_ylabel('Intensity')
                             ax[0].legend(["Obs", "Calc"])
                             ax[1].set_xlabel('2$\\theta$')
