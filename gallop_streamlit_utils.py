@@ -504,7 +504,7 @@ def get_files():
     if file_source == "Use examples":
         pawley_program = "DASH"
         example = st.selectbox("Select example structure",
-                    ["Verapamil hydrochloride", "Famotidine form B"])
+                    ["Famotidine form B", "Verapamil hydrochloride"])
         uploaded_files = []
         clear_files = False
         load_settings_from_file = False
