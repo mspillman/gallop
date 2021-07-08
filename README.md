@@ -141,7 +141,7 @@ A simple example is given below:
 import time
 from gallop.structure import Structure
 from gallop.optim import local
-from gallop.optim.swarm import Swarm
+from gallop.optim import Swarm
 
 # Create a Structure object, then add data and Z-matrices
 mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
