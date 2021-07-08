@@ -51,12 +51,12 @@ An example Z-matrix is below, showing the expected format. Lines 1-3 are placeho
 9. Atom index for angle
 10. Atom index for torsion
 11. Debye-Waller factor for atom
+12. Occupancy of atom
 
 \* refinement of bond lengths and angles in GALLOP is not yet supported
 
-Columns 12-17 are not currently needed for GALLOP
+Columns 13-17 are not currently needed for GALLOP
 
-12. Occupancy of atom
 13. Atom index in file used to generate Z-matrix
 14. to 17. Atom labels in file used to generate Z-matrix. 14 = current atom, 15-17 linked to indices in columns 8-10.
 ```
