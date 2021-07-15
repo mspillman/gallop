@@ -251,7 +251,7 @@ If you make use of GALLOP in your work, please cite the following papers:
 
 - [GSAS-II](https://scripts.iucr.org/cgi-bin/paper?aj5212)
 
-- [TOPAS](https://scripts.iucr.org/cgi-bin/paper?jo5037)
+- [TOPAS (experimental)](https://scripts.iucr.org/cgi-bin/paper?jo5037)
 ### **Python Libraries**
 GALLOP makes use of a number of libraries, without which its development would have been significantly more challenging. In particular:
 

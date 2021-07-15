@@ -325,8 +325,12 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     if Structure.source.lower() == "dash" and "prof_chi_2" in result.keys():
         comment += "\n# Profile chisqd = " + str(
                                             np.around(result["prof_chi_2"], 3))
+    if Structure.original_sg_number is not None:
+        sg_number = Structure.original_sg_number
+    else:
+        sg_number = Structure.sg_number
     writer = DASHCifWriter(output_structure, symprec=1e-12,
-                            sg_number=Structure.original_sg_number,
+                            sg_number=sg_number,
                             comment=comment, site_labels=site_labels, PO=PO,
                             wavelength=Structure.wavelength, Z_prime=Z_prime,
                             temperature=Structure.temperature)
