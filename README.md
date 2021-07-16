@@ -164,7 +164,7 @@ lr = optim.local.find_learning_rate(mystructure, external=external,
         internal=internal, minimiser_settings=minimiser_settings)
 minimiser_settings["learning_rate"] = lr[-1]
 
-# Set the total number of iterations for the _GALLOP_ run
+# Set the total number of iterations for the GALLOP run
 n_gallop_iters = 10
 
 # The main GALLOP loop
