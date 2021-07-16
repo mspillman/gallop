@@ -24,7 +24,7 @@ from gallop import optim
 from gallop import structure
 from gallop import multiGPU
 
-st.set_page_config(page_title='GALLOP Web App', page_icon = None,
+st.set_page_config(page_title='GALLOP Web App', page_icon = ":gem:",
                     layout = 'centered', initial_sidebar_state = 'auto')
 
 
