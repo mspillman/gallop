@@ -167,7 +167,7 @@ minimiser_settings["learning_rate"] = lr[-1]
 # Set the total number of iterations for the _GALLOP_ run
 n_gallop_iters = 10
 
-# The main _GALLOP_ loop
+# The main GALLOP loop
 start_time = time.time()
 for i in range(n_gallop_iters):
     # Local optimisation of particle positions
