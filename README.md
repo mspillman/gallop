@@ -187,9 +187,9 @@ Instructions coming soon
 
 ------------------------------
 ## **Local Installation**
-Some users may wish to make use of _GALLOP_ locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments. The below instructions assume a Windows-based system. The only major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
+Some users may wish to make use of _GALLOP_ locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
-For optimal performance, an NVidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
+For optimal performance, an Nvidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
 <br />
 
@@ -199,8 +199,8 @@ For optimal performance, an NVidia GPU is recommended. However, it may be possib
 |------------|---------|--------|
 | [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution strongly recommended.|
 | [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs, though this has not yet been tested thoroughly |
-| [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with CUDA 10.2 or 11.x | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
-| [Visual C++ build tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation (see below).|
+| [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with installed CUDA | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
+| [Visual C++ build tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation.|
 
 <br />
 
@@ -212,9 +212,9 @@ Once the above are installed, several Python Libraries must also be installed. T
 |---------|--------|
 | [PyTorch](https://pytorch.org/get-started/locally/) | Must be compatible with the version of CUDA installed. Installation via conda package manager recommended. |
 | [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
-| [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Allows for non-standard local optimisers such as DiffGrad |
-| [pyDOE](https://pythonhosted.org/pyDOE/) | Latin-hypercube sampling for initial points |
-| [Streamlit](https://streamlit.io/) | Needed for the Web App |
+| [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Allows for non-standard local optimisers such as diffGrad |
+| [pyDOE](https://pythonhosted.org/pyDOE/) | Provides [Latin-hypercube](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) sampling for initial points, which gives a more even coverage of the hypersurface than uniform random sampling. |
+| [Streamlit](https://streamlit.io/) | Needed for the web app |
 | [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
 <br />
