@@ -71,29 +71,31 @@ def improve_GPU_memory_use(struct, minimiser_settings):
 
 def load_settings():
     with st.sidebar.beta_expander(label="Load settings", expanded=False):
-        filedir = os.path.dirname(gallop.__file__)
-        if not os.path.exists(os.path.join(filedir,"user_settings")):
-            st.error("No settings directory found")
-        else:
-            settings_files = list(glob.iglob(
-                            os.path.join(filedir,"user_settings","*.json")))
-            settings_files = [x.split(
-                        "user_settings")[-1].strip("\\").strip("/")
-                        for x in settings_files]
-            settings_files = get_options("Default.json", settings_files)
-            if len(settings_files) > 0:
-                file = st.selectbox(
-                    "Choose settings file to load", settings_files,
-                    key="load_settings")
+        with st.form(key="loadsettings"):
+            filedir = os.path.dirname(gallop.__file__)
+            if not os.path.exists(os.path.join(filedir,"user_settings")):
+                st.error("No settings directory found")
             else:
-                st.error("No saved settings files found")
-            filepath = os.path.join(filedir,"user_settings", file)
-            with open(filepath, "r") as f:
-                json_settings = json.load(f)
-            f.close()
-            all_settings = {}
-            all_settings.update(json_settings)
-            st.success(f"Loaded settings from {file}")
+                settings_files = list(glob.iglob(
+                                os.path.join(filedir,"user_settings","*.json")))
+                settings_files = [x.split(
+                            "user_settings")[-1].strip("\\").strip("/")
+                            for x in settings_files]
+                settings_files = get_options("Default.json", settings_files)
+                if len(settings_files) > 0:
+                    file = st.selectbox(
+                        "Choose settings file to load", settings_files,
+                        key="load_settings")
+                else:
+                    st.error("No saved settings files found")
+                st.form_submit_button(label="Load")
+                filepath = os.path.join(filedir,"user_settings", file)
+                with open(filepath, "r") as f:
+                    json_settings = json.load(f)
+                f.close()
+                all_settings = {}
+                all_settings.update(json_settings)
+                st.success(f"Loaded settings from {file}")
     return all_settings, file
 
 def save_settings(all_settings, filename):
@@ -123,40 +125,41 @@ def get_all_settings(loaded_values):
     # for general, local optimiser and particle swarm optimiser respectively.
     all_settings = {}
     with st.sidebar.beta_expander(label="General", expanded=False):
-        structure_name = st.text_input("Structure name (optional)",
+        with st.form(key="general"):
+            structure_name = st.text_input("Structure name (optional)",
                         value=loaded_values["structure_name"], max_chars=None,
                         key=None, type='default')
-        all_settings["structure_name"] = structure_name.replace(" ", "_")
-        all_settings["n_GALLOP_iters"] = st.number_input(
+            all_settings["structure_name"] = structure_name.replace(" ", "_")
+            all_settings["n_GALLOP_iters"] = st.number_input(
                                         "Total number of GALLOP iterations",
                                         min_value=1, max_value=None,
                                         value=loaded_values["n_GALLOP_iters"],
                                         step=1, format=None, key=None)
 
-        all_settings["seed"] = st.number_input(
+            all_settings["seed"] = st.number_input(
                     "Set random seed (integer >= 0), or use -1 to randomise",
                     min_value=-1, max_value=None, value=loaded_values["seed"],
                     step=1, format=None, key=None)
-        if all_settings["seed"] != -1:
-            st.write("Note that setting the seed does not guarantee "
-                    "reproducibility due to some CUDA algorithms being "
-                    "non-deterministic. See link for more information: "
-                    "https://pytorch.org/docs/stable/notes/randomness.html")
-            optim.seed_everything(seed=all_settings["seed"],
+            if all_settings["seed"] != -1:
+                st.write("Note that setting the seed does not guarantee "
+                        "reproducibility due to some CUDA algorithms being "
+                        "non-deterministic. See link for more information: "
+                        "https://pytorch.org/docs/stable/notes/randomness.html")
+                optim.seed_everything(seed=all_settings["seed"],
                                                         change_backend=False)
-        all_settings["animate_structure"] = st.checkbox("Save animation of "
-                                "trajectory of best particle during LO",
-                                value=loaded_values["animate_structure"])
-        if all_settings["animate_structure"]:
-            st.write("Note: animation will slow down the local optimisation"
-                " and web app significantly.")
-        all_settings["temperature"] = st.number_input(
-                                        "Data collection temperature / K \
-                                        (Optional. If > 0.0, will be added to \
-                                        CIF)",
-                                        min_value=0.0, max_value=None,
-                                        value=loaded_values["temperature"],
-                                        step=100.0, format=None, key=None)
+            all_settings["animate_structure"] = st.checkbox("Save animation of "
+                                    "trajectory of best particle during LO",
+                                    value=loaded_values["animate_structure"])
+            if all_settings["animate_structure"]:
+                st.write("Note: animation will slow down the local optimisation"
+                    " and web app significantly.")
+            all_settings["temperature"] = st.number_input(
+                                            "Data collection temperature / K",
+                                            min_value=0.0, max_value=None,
+                                            value=loaded_values["temperature"],
+                                            step=100.0, format=None, key=None)
+            st.caption("(If > 0.0, temp will be added to CIF)")
+            st.form_submit_button(label="Apply")
 
     # Local optimiser settings
     with st.sidebar.beta_expander(label="Local Optimiser", expanded=False):
