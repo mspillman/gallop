@@ -163,6 +163,8 @@ def get_all_settings(loaded_values):
 
     # Local optimiser settings
     with st.sidebar.beta_expander(label="Local Optimiser", expanded=False):
+        show_advanced_lo = st.checkbox("Show advanced options", value=False,
+                                        key="show_advanced_lo")
         options = get_options(loaded_values["optim"], ["Adam", "diffGrad"])
         all_settings["optim"] = st.selectbox("Algorithm", options)
         all_settings["n_LO_iters"] = st.number_input(
@@ -218,10 +220,8 @@ def get_all_settings(loaded_values):
                 all_settings["PO_axis"] = PO_axis
             except ValueError:
                 st.write("Invalid PO axis!")
-        st.markdown("***Advanced***")
-        show_advanced_lo = st.checkbox("Show advanced options", value=False,
-                                        key="show_advanced_lo")
         if show_advanced_lo:
+            st.markdown("***Advanced***")
             find_lr = st.checkbox("Find learning rate",
                         value=loaded_values["find_lr"], key=None)
             if find_lr:
@@ -349,6 +349,8 @@ def get_all_settings(loaded_values):
 
     # Particle Swarm settings
     with st.sidebar.beta_expander(label="Particle Swarm", expanded=False):
+        show_advanced_pso = st.checkbox("Show advanced options", value=False,
+                                        key="show_advanced_pso")
         all_settings["n_swarms"] = st.number_input("Number of swarms",
                                 min_value=1, max_value=None,
                                 value=loaded_values["n_swarms"], step=1,
@@ -389,10 +391,8 @@ def get_all_settings(loaded_values):
         else:
             all_settings["randomise_percentage"] = 0
             all_settings["randomise_freq"] = all_settings["n_GALLOP_iters"]+1
-        st.markdown("***Advanced***")
-        show_advanced_pso = st.checkbox("Show advanced options", value=False,
-                                        key="show_advanced_pso")
         if show_advanced_pso:
+            st.markdown("***Advanced***")
             c1 = st.number_input("c1 (social component)", min_value=0.0,
                                     max_value=None, value=loaded_values["c1"],
                                     step=0.1)
