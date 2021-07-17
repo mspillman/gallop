@@ -213,7 +213,7 @@ Once the above are installed, several Python Libraries must also be installed. T
 | [PyTorch](https://pytorch.org/get-started/locally/) | Must be compatible with the version of CUDA installed. Installation via conda package manager recommended. |
 | [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
 | [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Allows for non-standard local optimisers such as diffGrad |
-| [pyDOE](https://pythonhosted.org/pyDOE/) | Provides [Latin-hypercube](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) sampling for initial points, which gives a more even coverage of the hypersurface than uniform random sampling. |
+| [pyDOE](https://pythonhosted.org/pyDOE/) | Provides [Latin hypercube](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) sampling for initial points, which gives a more even coverage of the hypersurface than uniform random sampling. |
 | [Streamlit](https://streamlit.io/) | Needed for the web app |
 | [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
@@ -226,7 +226,7 @@ PyTorch should be installed first using the instructions on the [PyTorch website
 >>> print(torch.cuda.is_available())
 ```
 
-If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that _GALLOP_ will work using CPU-only PyTorch, but it will likely be extremely slow.
+If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that _GALLOP_ will work using CPU-only PyTorch, but it will be extremely slow except with very small numbers of particles.
 
 Once PyTorch is properly installed, the remaining libraries can be installed using the following command, run from powershell or command prompt.
 

@@ -35,10 +35,13 @@ st.markdown("[*GPU Accelerated LocaL Optimisation and Particle Swarm*]"
             "(https://github.com/mspillman/gallop)")
 st.sidebar.title("Options")
 function = st.sidebar.radio("Choose function",
-                            ["GALLOP","View previous results"])
+                            ["GALLOP","View previous results","Instructions"])
 
 if "View" in function:
     gsu.browse_solved_zips()
+
+elif "Instructions" in function:
+    gsu.instructions()
 
 elif function == "GALLOP":
     st.sidebar.markdown("**Settings**")

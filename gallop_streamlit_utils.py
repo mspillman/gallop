@@ -886,3 +886,11 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         html = t.startjs + "\n" + t.endjs + "\n"
 
         return html
+
+def instructions():
+    with open("README.md") as readme:
+        lines = readme.readlines()
+    readme.close()
+    lines = "".join(lines)
+    st.video('https://www.youtube.com/watch?v=n0aovGUS4JU')
+    st.markdown(lines, unsafe_allow_html=True)
