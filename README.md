@@ -154,7 +154,7 @@ mystructure.add_zmatrix("./data/FOGVIG03_1.zmatrix")
 # Create swarm object and get the initial particle positions.
 # This will initialise 10k particles, split into
 # 10 independent swarms.
-swarm = Swarm(Structure=mystructure, n_particles=10000, n_swarms=10)
+swarm = Swarm(mystructure, n_particles=10000, n_swarms=10)
 external, internal = swarm.get_initial_positions()
 
 # Get the minimiser settings and optionally modify them
