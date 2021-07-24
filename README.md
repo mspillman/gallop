@@ -235,7 +235,7 @@ git clone https://github.com/mspillman/gallop.git
 ```
 Or by downloading and extracting a zip of the full source code using the green Code button at the top of this page.
 
-Navigated to the resultant gallop directory using a command prompt or powershell window and run the following command:
+Navigate to the resultant gallop directory using a command prompt or powershell window and run the following command:
 
 ```
 pip install .
