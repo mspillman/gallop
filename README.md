@@ -168,11 +168,11 @@ lr = optim.local.find_learning_rate(mystructure, external=external,
 minimiser_settings["learning_rate"] = lr[-1]
 
 # Set the total number of iterations for the GALLOP run
-n_gallop_iters = 10
+gallop_iters = 10
 
 # The main GALLOP loop
 start_time = time.time()
-for i in range(n_gallop_iters):
+for i in range(gallop_iters):
     # Local optimisation of particle positions
     result = local.minimise(mystructure, external=external, internal=internal,
                 run=i, start_time=start_time, **minimiser_settings)
