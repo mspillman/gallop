@@ -257,9 +257,9 @@ If you make use of _GALLOP_ in your work, please cite the following article:
 
 - [_DASH_](https://scripts.iucr.org/cgi-bin/paper?ks5103)
 
-- [GSAS-II](https://scripts.iucr.org/cgi-bin/paper?aj5212)
+- [_GSAS-II_](https://scripts.iucr.org/cgi-bin/paper?aj5212)
 
-- [TOPAS (experimental)](https://scripts.iucr.org/cgi-bin/paper?jo5037)
+- [_TOPAS_ (experimental)](https://scripts.iucr.org/cgi-bin/paper?jo5037)
 ### **Python Libraries**
 _GALLOP_ makes use of a number of libraries, without which its development would have been significantly more challenging. In particular:
 
