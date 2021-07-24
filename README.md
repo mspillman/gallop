@@ -15,7 +15,7 @@ Other software is required for PXRD data indexing and intensity extraction via P
 
 Once all data is prepared, _GALLOP_ can be used via a convenient browser-based GUI or as part of a Python program.
 
-\* coming soon
+\* instructions coming soon
 
 ------------------------------
 ## **Try _GALLOP_**
