@@ -431,19 +431,19 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         A = 2 * (chx + ckx + clx)
 
         # Using hexagonal coordinates, the equivalent equations would be as below
-        #i = -1*(hkl[0] + hkl[1])
-        #chkl   = torch.cos(2 * pi * (hkl[1] + hkl[2] - hkl[0]).view(1,peaks,1)/3)
-        #hxkylz = 2 * pi * torch.einsum("ji,klj->kil", hkl, asymmetric_frac_coords)
-        #kxiyhz = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0])
-        #                   + torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,1])
-        #                   + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
-        #ixhylz = 2 * pi * (torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,0])
-        #                   + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1])
-        #                   + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
-        #chx = torch.cos(hxkylz)
-        #ckx = torch.cos(kxiyhz)
-        #cix = torch.cos(ixhylz)#
-        #A = 2 * (1 + 2*chkl) * chx * ckx * cix
+        # i = -1*(hkl[0] + hkl[1])
+        # chkl   = torch.cos(2 * pi * (hkl[1] + hkl[2] - hkl[0]).view(1,peaks,1)/3)
+        # hxkylz = 2 * pi * torch.einsum("ji,klj->kil", hkl, asymmetric_frac_coords)
+        # kxiyhz = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,0])
+        #                    + torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,1])
+        #                    + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
+        # ixhylz = 2 * pi * (torch.einsum("i,jk->jik", i, asymmetric_frac_coords[:,:,0])
+        #                    + torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,1])
+        #                    + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2]))
+        # chx = torch.cos(hxkylz)
+        # ckx = torch.cos(kxiyhz)
+        # cix = torch.cos(ixhylz)#
+        # A = 2 * (1 + 2*chkl) * chx * ckx * cix
 
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
 
@@ -458,7 +458,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
     return intensities
 
 @torch.jit.script
-def apply_MD_PO_correction(calculated_intensities, cosP, sinP, factor):
+def apply_MD_PO_correction(calculated_intensities, cosP, sinP, factor, eps=1e-12):
+    # type: (Tensor, Tensor, Tensor, Tensor, float) -> Tensor
     """
     An implementation of March-Dollase preferred orientation correction, adapted
     from the GSAS-II source code.
@@ -475,9 +476,11 @@ def apply_MD_PO_correction(calculated_intensities, cosP, sinP, factor):
         sinP (Tensor): sinP, calculated in advance - see tensor_prep.py
         factor (Tensor): The (sqrt of the) March-Dollase factor. Sqrt used to
             avoid negative numbers.
+        eps (float): A small number to prevent numerical errors when using loss
+            functions such as X*log(X). Defaults to 1e-12
 
     Returns:
         Tensor: Modified intensities, with PO correction applied
     """
-    A_all = (1.0/torch.sqrt(((factor**2)*cosP)**2+sinP**2/(factor**2)))**3
+    A_all = (1.0/torch.sqrt((((factor+eps)**2)*cosP)**2+sinP**2/((factor+eps)**2)))**3
     return calculated_intensities * A_all
