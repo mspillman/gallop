@@ -23,10 +23,10 @@ You will need a Google account to run the notebooks linked below.
 
 | Notebook | Description |
 |---------|--------|
-|[Web app](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ web app *|
+|[Browser interface](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ browser interface *|
 |[Python mode](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing) | Try _GALLOP_ as part of a Python program |
 
-\* To use the web app notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
+\* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 ### **PXRD Data preparation**
 _GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS.
 
@@ -107,9 +107,9 @@ A commonly encountered error in _GALLOP_ is when a Z-matrix has torsion angles t
 
 Other programs can in principle be used to produce Z-matrices suitable for _GALLOP_. For more information, see the ```gallop.z_matrix``` module documentation.
 
-### **Run _GALLOP_ via the Web App**
+### **Run _GALLOP_ via the browser interface**
 #### **Cloud operation:**
-Use this [Colab Notebook to try the _GALLOP_ Web App for free](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing).
+Use this [Colab Notebook to try the _GALLOP_ browser interface for free](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing).
 You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
 Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
@@ -215,7 +215,7 @@ Once the above are installed, several Python Libraries must also be installed. T
 | [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
 | [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Provides additional local optimisers not available natively in PyTorch |
 | [pyDOE](https://pythonhosted.org/pyDOE/) | Provides [Latin hypercube](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) sampling for initial points, which gives a more even coverage of the hypersurface than uniform random sampling. |
-| [Streamlit](https://streamlit.io/) | Needed for the web app |
+| [Streamlit](https://streamlit.io/) | Provides the browser interface - not needed for Python mode use|
 | [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
 <br />
