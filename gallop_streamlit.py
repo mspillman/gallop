@@ -31,8 +31,6 @@ st.set_page_config(page_title='GALLOP Web App', page_icon = ":gem:",
 
 # Top section
 st.title("GALLOP")
-st.markdown("[*GPU Accelerated LocaL Optimisation and Particle Swarm*]"
-            "(https://github.com/mspillman/gallop)")
 st.sidebar.title("Options")
 function = st.sidebar.radio("Choose function",
                             ["GALLOP","View previous results","Instructions"])

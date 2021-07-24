@@ -1,5 +1,5 @@
 # **_GALLOP_**
-**GPU Accelerated LocaL Optimisation and Particle Swarm: a fast method for crystal structure determination from powder diffraction data.**
+**GPU Accelerated Local Optimisation and Particle Swarm: fast crystal structure determination from powder diffraction data.**
 
 Contents:
 1. [Introduction](#introduction)
@@ -9,23 +9,24 @@ Contents:
 
 ## **Introduction**
 
-_GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. This repository provides an implementation of _GALLOP_ that is capable of running on graphical processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages allowing complex crystal structures to be solved rapidly.
+_GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
 
-Other software is required for PXRD data indexing and intensity extraction via Pawley refinement. _GALLOP_ currently accepts as input files produced by [_DASH_](https://www.ccdc.cam.ac.uk/solutions/csd-materials/components/dash/), [GSAS-II](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [TOPAS](http://www.topas-academic.net/). Z-matrices of the molecular fragments of interest are also required.
+Other software is required for PXRD data indexing and intensity extraction via Pawley refinement. _GALLOP_ currently accepts as input files produced by [_DASH_](https://www.ccdc.cam.ac.uk/solutions/csd-materials/components/dash/), [_GSAS-II_](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [_TOPAS_](http://www.topas-academic.net/) (experimental). Z-matrices of the molecular fragments of interest are also required.
 
-Once all data is prepared, _GALLOP_ can be used via a convenient web-based GUI or as part of a Python program.
+Once all data is prepared, _GALLOP_ can be used via a convenient browser-based GUI or as part of a Python program.
 
-*coming soon
+\* coming soon
 
 ------------------------------
 ## **Try _GALLOP_**
-You will need a Google account to run the notebooks linked below. To use the web app notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
+You will need a Google account to run the notebooks linked below.
 
 | Notebook | Description |
 |---------|--------|
-|[Web app](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ web app |
+|[Web app](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ web app *|
 |[Python mode](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing) | Try _GALLOP_ as part of a Python program |
 
+\* To use the web app notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 ### **PXRD Data preparation**
 _GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS.
 
@@ -38,7 +39,7 @@ _GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II
 ### **Z-matrices**
 _GALLOP_ is able to read Z-matrices that have been produced by the ```MakeZmatrix.exe``` program that is bundled with _DASH_.
 
-An example Z-matrix is below, showing the expected format. Lines 1-3 are ignored by _GALLOP_, line 4 onwards contains information about the atoms. The columns have the following format:
+An example Z-matrix is below, showing the expected format. Lines 1-3 are ignored by _GALLOP_ (but should still be present in the file), line 4 onwards contains information about the atoms. The columns have the following format:
 
 1. Element symbol
 2. Bond length
@@ -53,10 +54,7 @@ An example Z-matrix is below, showing the expected format. Lines 1-3 are ignored
 11. Debye-Waller factor for atom
 12. Occupancy of atom
 13. Atom index in file used to generate Z-matrix
-14. to 17. Atom labels in file used to generate Z-matrix. 14 = current atom, 15-17 linked to indices in columns 8-10.
-The current atom label can be used for defining distance restraints.
-
-Column 13 and columns 15-17 are not currently needed for _GALLOP_
+14. to 17. Atom labels in file used to generate Z-matrix. 14 = current atom, 15-17 linked to indices in columns 8-10. The index for an atom is equivalent to the zero-indexed order in which it appears in the Z-matrix, i.e. for a Z-matrix with _N_ atoms, the first atom in the ZM = index 0, the last atom in the ZM = index _N_-1.
 
 \* refinement of bond lengths and angles in _GALLOP_ is not yet supported
 ```
@@ -101,7 +99,7 @@ Z-matrix generated by ToolKit
 
 ```
 
-#### **Troubleshooting**
+#### **Troubleshooting Z-matrices**
 A commonly encountered error in _GALLOP_ is when a Z-matrix has torsion angles to be refined that are defined in terms of one or more hydrogen atoms. This error is also encountered when using Mogul or MDB for torsion angle restraints in _DASH_. To fix this issue, use the following steps:
 1. Produce a CIF of the structure from which the Z-matrix is being generated
 2. Reorder the atoms in the CIF such that all hydrogen atoms are listed *after* all non-hydrogen atoms.
@@ -115,11 +113,17 @@ Use this [Colab Notebook to try the _GALLOP_ Web App for free](https://colab.res
 You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
 Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
-In the folder containing _GALLOP_ code, open a command prompt and run the following command:
+Once _GALLOP_ has been installed successfully, in the folder containing _GALLOP_ code, open a command prompt and run the following command:
 ```
 streamlit run .\gallop_streamlit.py
 ```
-This will automatically open a browser window displaying the _GALLOP_ Web App.
+Windows users can simply double click on the supplied ```gallop.bat``` file to automatically run the above command.
+
+A browser window will be opened displaying the _GALLOP_ interface:
+
+
+![alt text](screenshot.png "GALLOP browser interface")
+
 ### **Run _GALLOP_ via Python scripts / Jupyter notebooks**
 #### **Cloud operation:**
 Use this [Colab Notebook to try _GALLOP_ in Python mode for free](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing).
@@ -132,20 +136,19 @@ In general, the script or notebook should:
 3. Add data and Z-matrices to the Structure
 4. Create a _GALLOP_ Swarm object, and generate the initial positions of the particles
 5. Define the settings needed for the local optimisation
-6. Optionally find an appropriate learning_rate for the local optimiser
+6. Optionally find an appropriate ```learning_rate``` for the local optimiser
 6. Have a loop that performs some number of local optimisation steps, followed by a swarm update step.
 
-A simple example is given below:
+A simple example is given below, which will output a CIF of the best structure found after each iteration:
 ```python
 import time
 from gallop.structure import Structure
 from gallop.optim import local
 from gallop.optim import Swarm
-from gallop import files
 
 # Create a Structure object, then add data and Z-matrices
 mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
-mystructure.add_data("./data/Famotidine.sdi", source="_DASH_")
+mystructure.add_data("./data/Famotidine.sdi", source="DASH")
 mystructure.add_zmatrix("./data/FOGVIG03_1.zmatrix")
 
 # Create swarm object and get the initial particle positions.
@@ -175,8 +178,6 @@ for i in range(n_gallop_iters):
                 run=i, start_time=start_time, **minimiser_settings)
     # Particle swarm update generates new positions to be optimised
     external, internal = swarm.update_position(result=result)
-    # Save a CIF of the best result
-    files.save_CIF_of_best_result(mystructure, result, start_time=start_time)
     # Print out the best chi2 value found by each subswarm
     print(swarm.best_subswarm_chi2)
 
@@ -187,7 +188,7 @@ Instructions coming soon
 
 ------------------------------
 ## **Local Installation**
-Some users may wish to make use of _GALLOP_ locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
+Some users may wish to make use of _GALLOP_ locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments - the colab notebooks linked above run on a Linux for example. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
 For optimal performance, an Nvidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
@@ -197,7 +198,7 @@ For optimal performance, an Nvidia GPU is recommended. However, it may be possib
 
 | Dependency | Version |Comments|
 |------------|---------|--------|
-| [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution strongly recommended.|
+| [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution **strongly** recommended.|
 | [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs, though this has not yet been tested thoroughly |
 | [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with installed CUDA | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
 | [Visual C++ build tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation.|
@@ -212,14 +213,14 @@ Once the above are installed, several Python Libraries must also be installed. T
 |---------|--------|
 | [PyTorch](https://pytorch.org/get-started/locally/) | Must be compatible with the version of CUDA installed. Installation via conda package manager recommended. |
 | [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
-| [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Allows for non-standard local optimisers such as diffGrad |
+| [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Provides additional local optimisers not available natively in PyTorch |
 | [pyDOE](https://pythonhosted.org/pyDOE/) | Provides [Latin hypercube](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) sampling for initial points, which gives a more even coverage of the hypersurface than uniform random sampling. |
 | [Streamlit](https://streamlit.io/) | Needed for the web app |
 | [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
 <br />
 
-PyTorch should be installed first using the instructions on the [PyTorch website](https://pytorch.org/get-started/locally/). Once installed, test that it has been properly installed and is recognising the local GPU by opening a Python prompt and running the following commands:
+PyTorch should be installed first using the instructions on the [PyTorch website](https://pytorch.org/get-started/locally/). Once installed, ensure that it is recognising the local GPU by opening a Python prompt and running the following commands:
 
 ```python
 >>> import torch
@@ -228,22 +229,28 @@ PyTorch should be installed first using the instructions on the [PyTorch website
 
 If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that _GALLOP_ will work using CPU-only PyTorch, but it will be extremely slow except with very small numbers of particles.
 
-Once PyTorch is properly installed, the remaining libraries can be installed using the following command, run from powershell or command prompt.
+Once PyTorch is properly installed, download the _GALLOP_ code either using git:
+```
+git clone https://github.com/mspillman/gallop.git
+```
+Or by downloading and extracting a zip of the full source code using the green Code button at the top of this page.
+
+Navigated to the resultant gallop directory using a command prompt or powershell window and run the following command:
 
 ```
-pip install pymatgen==2021.2.8.1 torch_optimizer pyDOE streamlit tqdm
+pip install .
 ```
+This will automatically download and install the remaining dependencies and _GALLOP_.
 
 If C++ build tools are not available, this is likely to result in an error.
-
 
 ------------------------------
 
 ## **References and resources**
-If you make use of _GALLOP_ in your work, please cite the following papers:
+If you make use of _GALLOP_ in your work, please cite the following article:
 - Placeholder
 
-### **Relevant articles**
+### **Other Relevant articles**
 [Internal to Cartesian](https://pubmed.ncbi.nlm.nih.gov/15898109/) - _GALLOP_ uses the Natural Extension Reference Frame method for converting internal to Cartesian coordinates.
 
 [Correlated Integrated Intensity &chi;<sup>2</sup>](https://scripts.iucr.org/cgi-bin/paper?ks5013) - This is faster to calculate than *R<sub>wp</sub>* and other goodness of fit metrics, but requires the inverse of the covariance matrix obtained from a Pawley refinement performed with one of the following programs:

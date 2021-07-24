@@ -888,7 +888,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         return html
 
 def instructions():
-    with open("README.md") as readme:
+    with open("help.md") as readme:
         lines = readme.readlines()
     readme.close()
     lines = "".join(lines)
