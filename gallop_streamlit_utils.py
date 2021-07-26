@@ -633,9 +633,9 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
     col1, col2 = st.beta_columns([2,2])
     with col1:
         with st.beta_expander(label="GALLOP parameters used", expanded=False):
-            gallop_info = [["Number of swarms", all_settings["n_swarms"]],
-                        ["Particles per swarm", all_settings["swarm_size"]],
-                        ["Total particles", (all_settings["n_swarms"]
+            gallop_info = [["Number of swarms", str(all_settings["n_swarms"])],
+                        ["Particles per swarm", str(all_settings["swarm_size"])],
+                        ["Total particles", str(all_settings["n_swarms"]
                                                 *all_settings["swarm_size"])],
                         ["Local optimiser", all_settings["optim"]],
                         ["Local optimiser hardware", device_name],]
@@ -645,13 +645,16 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
             st.table(gallop_info)
     with col2:
         with st.beta_expander(label="Data", expanded=False):
-            data_info = [["Wavelength", struct.wavelength],
+            data_info = [
+                ["Wavelength", str(struct.wavelength)],
                 ["Percentage of reflections used",
-                                        all_settings["reflection_percentage"]],
-                ["Number of reflections", minimiser_settings["n_reflections"]],
+                                str(all_settings["reflection_percentage"])],
+                ["Number of reflections", 
+                                str(minimiser_settings["n_reflections"])],
                 ["Data resolution",
-                        struct.dspacing[minimiser_settings["n_reflections"]-1]],
-                ["Pawley Refinement Software", pawley_program]]
+                    str(struct.dspacing[minimiser_settings["n_reflections"]-1])],
+                ["Pawley Refinement Software", pawley_program]
+                ]
             data_info = pd.DataFrame(data_info, columns=["Parameter", "Value"])
             data_info.index = [""] * len(data_info)
             st.table(data_info)
@@ -660,13 +663,13 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
     with col1:
         with st.beta_expander(label="Unit Cell", expanded=False):
             space_group = struct.space_group.symbol
-            cell_info = [["a", np.around(struct.lattice.a, 3)],
-                        ["b", np.around(struct.lattice.b, 3)],
-                        ["c", np.around(struct.lattice.c, 3)],
-                        ["al", np.around(struct.lattice.alpha, 3)],
-                        ["be", np.around(struct.lattice.beta, 3)],
-                        ["ga", np.around(struct.lattice.gamma, 3)],
-                        ["Volume", np.around(struct.lattice.volume, 3)],
+            cell_info = [["a", str(np.around(struct.lattice.a, 3))],
+                        ["b",  str(np.around(struct.lattice.b, 3))],
+                        ["c",  str(np.around(struct.lattice.c, 3))],
+                        ["al", str(np.around(struct.lattice.alpha, 3))],
+                        ["be", str(np.around(struct.lattice.beta, 3))],
+                        ["ga", str(np.around(struct.lattice.gamma, 3))],
+                        ["Volume", str(np.around(struct.lattice.volume, 3))],
                         ["Space Group", space_group],]
                         #["International number", struct.sg_number]]
             cell_info = pd.DataFrame(cell_info, columns=["Parameter", "Value"])
@@ -681,9 +684,9 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
                 filename, dof = zm.filename, zm.degrees_of_freedom
                 if zm.rotation_degrees_of_freedom == 4:
                     dof -= 1
-                zm_info.append([filename, dof])
+                zm_info.append([filename, str(dof)])
                 dof_tot+=dof
-            zm_info.append(["TOTAL:", dof_tot])
+            zm_info.append(["TOTAL:", str(dof_tot)])
             zm_info = pd.DataFrame(zm_info, columns=["Filename", "DoF"])
             zm_info.index = [""] * len(zm_info)
             st.table(zm_info)
