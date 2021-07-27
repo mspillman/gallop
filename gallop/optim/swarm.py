@@ -443,7 +443,7 @@ class Swarm(object):
             self.velocity[unlimited < -1*self.vmax] = -1*self.vmax
 
     def update_position(self, result=None, external=None, internal=None,
-        chi_2=None, run=None, global_update=False, verbose=True, n_swarms=None):
+        chi_2=None, run=None, global_update=False, verbose=False, n_swarms=None):
         """
         Take a set of results from the minimisation algorithm and use
         them to generate a new set of starting points to be minimised. This
