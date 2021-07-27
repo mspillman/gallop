@@ -546,7 +546,7 @@ class Swarm(object):
             if external.shape[0] > 1:
                 external = external[0]
                 internal = internal[0]
-            chi_2 = chi_2.min()
+            chi2s = [chi_2.min()]
             external = external.reshape(1,-1)
             internal = internal.reshape(1,-1)
         else:
