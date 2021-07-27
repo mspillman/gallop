@@ -165,7 +165,7 @@ minimiser_settings["n_iterations"] = 500
 minimiser_settings["save_CIF"] = True
 
 # Automatically set the learning rate (aka step size) for the local optimiser
-lr = optim.local.find_learning_rate(mystructure, external=external,
+lr = local.find_learning_rate(mystructure, external=external,
         internal=internal, minimiser_settings=minimiser_settings)
 minimiser_settings["learning_rate"] = lr[-1]
 
