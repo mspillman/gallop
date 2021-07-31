@@ -223,7 +223,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
     save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
-    PO_axis=(0, 0, 1)):
+    PO_axis=(0, 0, 1), notebook=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -354,6 +354,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             to the intensities during optimization. Defaults to False.
         PO_axis (tuple, optional): The axis along which to apply the
             March-Dollase PO correction. Defaults to (0, 0, 1).
+        notebook (bool, optional): If the code is running in a Jupyter notebook,
+            use the tqdm notebook progress bars instead. Defaults to False.
 
     Returns:
         dictionary: A dictionary containing the optimised external and internal
@@ -464,7 +466,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
     # Add the progress bar, if using
     if use_progress_bar and not streamlit:
-        iters = tqdm.trange(n_iterations)
+        if notebook:
+            from tqdm.notebook import trange
+        else:
+            from tqdm import trange
+        iters = trange(n_iterations)
     else:
         iters = range(n_iterations)
         if streamlit:
