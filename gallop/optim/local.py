@@ -7,7 +7,6 @@ Provides functions for local optimisation
 
 import time
 import torch
-import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import torch_optimizer as t_optim
