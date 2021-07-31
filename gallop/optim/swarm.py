@@ -463,7 +463,7 @@ class Swarm(object):
                 run number. Defaults to None.
             global_update (bool, optional): If True, update all of the particles
                 as a single swarm. Defaults to False.
-            verbose (bool, optional): Print out information. Defaults to True.
+            verbose (bool, optional): Print out information. Defaults to False.
             n_swarms (int, optional): If global_update is False, it use the
                 Swarm.n_swarms parameter. This value can be overwritten if
                 desired by supplying it as an argument. This could be useful for

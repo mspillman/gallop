@@ -126,7 +126,12 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
         else:
             # Slower updates for second parameter group, i.e. PO factor
             param_group['lr'] = lr/10
-        param_group['betas'] = [b1, b2]
+        if 'betas' in param_group.keys():
+            if len(param_group['betas']) <= 2:
+                param_group['betas'] = [b1, b2]
+            else:
+                param_group['betas'][0] = b1
+                param_group['betas'][0] = b2
         param_group["momentum"] = b1
     return lr
 
