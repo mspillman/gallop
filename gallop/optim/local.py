@@ -205,7 +205,8 @@ def find_learning_rate(Structure, external=None, internal=None,
                 multiplication_factor = 0.75
             else:
                 multiplication_factor = 0.5
-
+        if minimiser_settings["learning_rate_schedule"] == "constant":
+            multiplication_factor *= 0.5
         minimum_point = trial_values[losses == losses.min()][0]
         return trial_values, losses, multiplication_factor, multiplication_factor * minimum_point
     else:
