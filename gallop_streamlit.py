@@ -242,7 +242,7 @@ elif function == "GALLOP":
                                                         # Unix systems
                 pool = mp.Pool(processes = len(GPU_split))
 
-            for i in range(all_settings["n_GALLOP_iters"]):
+            for i in range(int(all_settings["n_GALLOP_iters"])):
                 itertext = "GALLOP iteration " + str(i+1)
                 if ((i+1)%all_settings["global_update_freq"] == 0 and i != 0 and
                                                 all_settings["global_update"]):
