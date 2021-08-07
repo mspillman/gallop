@@ -70,7 +70,7 @@ def improve_GPU_memory_use(struct, minimiser_settings):
 
 
 def load_settings():
-    with st.sidebar.beta_expander(label="Load settings", expanded=False):
+    with st.sidebar.expander(label="Load settings", expanded=False):
         with st.form(key="loadsettings"):
             filedir = os.path.dirname(gallop.__file__)
             if not os.path.exists(os.path.join(filedir,"user_settings")):
@@ -100,7 +100,7 @@ def load_settings():
 
 def save_settings(all_settings, filename):
     filedir = os.path.dirname(gallop.__file__)
-    with st.sidebar.beta_expander(label="Save settings", expanded=False):
+    with st.sidebar.expander(label="Save settings", expanded=False):
         settings_name = st.text_input("Enter name to save",
                                             value=filename, max_chars=None,
                                             key=None, type='default')
@@ -124,7 +124,7 @@ def get_all_settings(loaded_values):
     # Get GALLOP settings. Menu appears on the sidebar, with expandable sections
     # for general, local optimiser and particle swarm optimiser respectively.
     all_settings = {}
-    with st.sidebar.beta_expander(label="General", expanded=False):
+    with st.sidebar.expander(label="General", expanded=False):
         with st.form(key="general"):
             structure_name = st.text_input("Structure name (optional)",
                         value=loaded_values["structure_name"], max_chars=None,
@@ -162,7 +162,7 @@ def get_all_settings(loaded_values):
             st.form_submit_button(label="Apply")
 
     # Local optimiser settings
-    with st.sidebar.beta_expander(label="Local Optimiser", expanded=False):
+    with st.sidebar.expander(label="Local Optimiser", expanded=False):
         show_advanced_lo = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_lo")
         options = get_options(loaded_values["optim"], ["Adam", "diffGrad"])
@@ -348,7 +348,7 @@ def get_all_settings(loaded_values):
     all_settings["restraints"] = restraints
 
     # Particle Swarm settings
-    with st.sidebar.beta_expander(label="Particle Swarm", expanded=False):
+    with st.sidebar.expander(label="Particle Swarm", expanded=False):
         show_advanced_pso = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_pso")
         all_settings["n_swarms"] = st.number_input("Number of swarms",
@@ -500,7 +500,7 @@ def sidebar():
 
 def get_files():
     # Upload files using uploader or select from examples
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     with col1:
         file_source = st.radio("Upload files or select from examples",
                                         ["Upload files","Use examples"])
@@ -534,7 +534,7 @@ def get_files():
                                     accept_multiple_files=True,
                                     type=["zmatrix", "out", "json"],
                                     key=None)
-        col1, col2 = st.beta_columns([2,2])
+        col1, col2 = st.columns([2,2])
         with col1:
             clear_files=st.checkbox(
                                 "Remove uploaded files once no longer needed",
@@ -544,7 +544,7 @@ def get_files():
                         "Load GALLOP settings from json", value=False, key=None)
         example = None
     if load_settings_from_file:
-        with st.beta_expander(label="Choose settings to load", expanded=False):
+        with st.expander(label="Choose settings to load", expanded=False):
             selection=st.multiselect("",settings,default=settings,key="upload")
 
     sdi = None
@@ -630,9 +630,9 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
     else:
         device_name = all_settings["device"].split(" = ")[-1]
 
-    col1, col2 = st.beta_columns([2,2])
+    col1, col2 = st.columns([2,2])
     with col1:
-        with st.beta_expander(label="GALLOP parameters used", expanded=False):
+        with st.expander(label="GALLOP parameters used", expanded=False):
             gallop_info = [["Number of swarms", str(all_settings["n_swarms"])],
                         ["Particles per swarm", str(all_settings["swarm_size"])],
                         ["Total particles", str(all_settings["n_swarms"]
@@ -644,7 +644,7 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
             gallop_info.index = [""] * len(gallop_info)
             st.table(gallop_info)
     with col2:
-        with st.beta_expander(label="Data", expanded=False):
+        with st.expander(label="Data", expanded=False):
             data_info = [
                 ["Wavelength", str(struct.wavelength)],
                 ["Percentage of reflections used",
@@ -659,9 +659,9 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
             data_info.index = [""] * len(data_info)
             st.table(data_info)
 
-    col1, col2 = st.beta_columns([2,2])
+    col1, col2 = st.columns([2,2])
     with col1:
-        with st.beta_expander(label="Unit Cell", expanded=False):
+        with st.expander(label="Unit Cell", expanded=False):
             space_group = struct.space_group.symbol
             cell_info = [["a", str(np.around(struct.lattice.a, 3))],
                         ["b",  str(np.around(struct.lattice.b, 3))],
@@ -677,7 +677,7 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
             st.table(cell_info)
 
     with col2:
-        with st.beta_expander(label="Degrees of freedom", expanded=False):
+        with st.expander(label="Degrees of freedom", expanded=False):
             zm_info = []
             dof_tot = 0
             for zm in struct.zmatrices:
@@ -699,7 +699,7 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
 def find_learning_rate(all_settings, minimiser_settings, struct,
                         external, internal):
     # Learning rate finder interface
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     with col1:
         st.write("Finding the learning rate")
     if not all_settings["find_lr_auto_mult"]:
@@ -725,7 +725,7 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
         lrs /= lrs.max()
         losses /= losses.max()
         with col2:
-            with st.beta_expander(label=" ", expanded=False):
+            with st.expander(label=" ", expanded=False):
                 minpoint = np.argmin(losses)
                 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 2))
                 ax[0].plot(lr[0], lr[1])
@@ -810,8 +810,8 @@ def browse_solved_zips():
             folders.append(st.sidebar.checkbox(s,value=i==0, key=str(i)))
         for i, d in enumerate(zip(sorteddates, folders)):
             if d[1]:
-                with st.beta_expander(label=d[0], expanded=True):
-                    col1, col2 = st.beta_columns([1,3])
+                with st.expander(label=d[0], expanded=True):
+                    col1, col2 = st.columns([1,3])
                     zipnames = []
                     for zipname in glob.iglob(os.path.join("GALLOP_results",
                                                             d[0],"*.zip")):

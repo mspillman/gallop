@@ -292,7 +292,7 @@ elif function == "GALLOP":
                 result_info_df.index = np.arange(1, len(result_info_df) + 1)
                 with structure_plot_placeholder:
                     hide_H = True
-                    with st.beta_expander(label="Show structure", expanded=False):
+                    with st.expander(label="Show structure", expanded=False):
                         html = gsu.show_structure(result, struct, all_settings,
                                                             hide_H=hide_H)
                         #st.components.v1.html(open(
@@ -306,7 +306,7 @@ elif function == "GALLOP":
 
                 if struct.source.lower() == "dash":
                     with profile_plot_placeholder:
-                        with st.beta_expander(label="Show profile",
+                        with st.expander(label="Show profile",
                                                                 expanded=False):
                             if struct.ignore_H_atoms:
                                 st.write("Stats with H-atoms included:")
@@ -337,7 +337,7 @@ elif function == "GALLOP":
                             ax[1].set_ylabel('$\\Delta(I)/\\sigma(I_{obs})$')
                             st.pyplot(fig)
 
-                col1, col2 = result_placeholder.beta_columns([2,2])
+                col1, col2 = result_placeholder.columns([2,2])
                 with col1:
                     # Zip and then delete the cifs, then download the zip
                     if i == 0:
