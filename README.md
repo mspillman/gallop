@@ -150,8 +150,8 @@ from gallop.optim import Swarm
 
 # Create a Structure object, then add data and Z-matrices
 mystructure = Structure(name="Famotidine", ignore_H_atoms=True)
-mystructure.add_data("./data/Famotidine.sdi", source="DASH")
-mystructure.add_zmatrix("./data/FOGVIG03_1.zmatrix")
+mystructure.add_data("./gallop/example_data/Famotidine.sdi", source="DASH")
+mystructure.add_zmatrix("./gallop/example_data/FOGVIG03_1.zmatrix")
 
 # Create swarm object and get the initial particle positions.
 # This will initialise 10k particles, split into
