@@ -134,7 +134,7 @@ class Swarm(object):
         tot_external = total_pos+total_rot
         total_tors = self.Structure.total_internal_degrees_of_freedom
         # Separate hypercube for each subswarm
-        for _ in tqdm.tqdm(range(self.n_swarms)):
+        for _ in tqdm.tqdm(range(int(self.n_swarms))):
             if method == "latin":
                 all_dof = np.array(pyDOE.lhs(total_pos + total_rot + total_tors,
                             samples=subswarm, criterion=latin_criterion))
