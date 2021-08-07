@@ -184,6 +184,71 @@ for i in range(gallop_iters):
     print(swarm.best_subswarm_chi2)
 
 ```
+For more sophisticated control of the optimisation, add the following imports:
+
+```python
+import torch
+from gallop import tensor_prep
+from gallop import zm_to_cart
+from gallop import intensities
+from gallop import chi2
+from gallop import files
+```
+Add in ```minimiser_settings["learning_rate_schedule"] = "constant"``` before calling the learning rate finder, then replace the main GALLOP loop with something like:
+
+```python
+# The main GALLOP loop
+start_time = time.time()
+for i in range(gallop_iters):
+    tensors = tensor_prep.get_all_required_tensors(mystructure,
+                            external=external, internal=internal)
+
+    optimizer = torch.optim.Adam([tensors["zm"]["external"],
+                                  tensors["zm"]["internal"]],
+                                  lr=minimiser_settings["learning_rate"],
+                                  betas=[0.9,0.9])
+    local_iters = range(minimiser_settings["n_iterations"])
+
+    for j in local_iters:
+        # Zero the gradients before each iteration otherwise they accumulate
+        optimizer.zero_grad()
+
+        asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(**tensors["zm"])
+
+        calculated_intensities = intensities.calculate_intensities(
+                                asymmetric_frac_coords, **tensors["int_tensors"])
+
+        chi_2 = chi2.calc_chisqd(calculated_intensities, **tensors["chisqd_tensors"])
+
+        # pytorch needs a scalar from which to calculate the gradients, here use
+        # the sum of all values - as all of the chi-squared values are independent,
+        # the gradients will be correctly propagated to the relevant DoFs.
+        L = torch.sum(chi_2)
+
+        # For the last iteration, don't step the optimiser, otherwise the chi2
+        # value won't correspond to the DoFs
+        if j != minimiser_settings["n_iterations"] - 1:
+            # Backwards pass through computational graph gives the gradients
+            L.backward()
+            optimizer.step()
+        # Print out some info during the runs
+        if j == 0 or (j+1) % 10 == 0:
+            print(i, j, chi_2.min().item())
+    # Save the results in a dictionary which is expected by the files and swarm
+    # functions. The tensors should be converted to CPU-based numpy arrays.
+    result = {
+        "external"     : tensors["zm"]["external"].detach().cpu().numpy(),
+        "internal"     : tensors["zm"]["internal"].detach().cpu().numpy(),
+        "chi_2"        : chi_2.detach().cpu().numpy(),
+        "GALLOP Iter"  : i
+        }
+    # Output a CIF of the best result
+    files.save_CIF_of_best_result(struct, result, start_time)
+    # Swarm update step
+    external, internal = swarm.update_position(result=result, verbose=False)
+```
+Swarm behaviour can also be modified by creating a new swarm class which inherits the GALLOP swarm. Then modify the relevant methods to obtain the behaviour desired. Most likely to be of interest is ```PSO_velocity_update```. See Swarm code and comments for more information.
+
 ### **TPU use**
 
 Instructions coming soon

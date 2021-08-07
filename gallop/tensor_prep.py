@@ -292,7 +292,7 @@ def get_data_related_tensors(Structure, n_reflections, dtype, device,
     return intensity_tensors, chi2_tensors
 
 def get_all_required_tensors(Structure, external=None, internal=None,
-    n_samples=10000, device=None, dtype=None, n_reflections=None, verbose=True,
+    n_samples=10000, device=None, dtype=None, n_reflections=None, verbose=False,
     include_dw_factors=True, requires_grad=True, from_CIF=False):
     """
     Gather all of the information needed to run calculations on the GPU. This
@@ -318,7 +318,7 @@ def get_all_required_tensors(Structure, external=None, internal=None,
         n_reflections (int, optional): Number of reflections to consider in
             chi^2 calculations. If None, will use all available.
         verbose (bool, optional): Print out some information or not. Defaults
-            to True.
+            to False.
         include_dw_factors (bool, optional): Include Debye-Waller factors in
             the intensity calculations. Defaults to True.
         requires_grad (bool, optional): Gradients are required if parameters
