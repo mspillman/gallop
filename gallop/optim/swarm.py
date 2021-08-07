@@ -125,7 +125,7 @@ class Swarm(object):
             print("n_particles should be divisible by n_swarms.")
             self.n_particles = self.n_swarms * (self.n_particles//self.n_swarms)
             print("Setting n_particles to", self.n_particles)
-        subswarm = self.n_particles // self.n_swarms
+        subswarm = int(self.n_particles // self.n_swarms)
         init_external = []
         init_internal = []
 
@@ -136,7 +136,8 @@ class Swarm(object):
         # Separate hypercube for each subswarm
         for _ in tqdm.tqdm(range(int(self.n_swarms))):
             if method == "latin":
-                all_dof = np.array(pyDOE.lhs(total_pos + total_rot + total_tors,
+                all_dof = np.array(pyDOE.lhs(
+                            int(total_pos + total_rot + total_tors),
                             samples=subswarm, criterion=latin_criterion))
                 external = all_dof[:,:total_pos+total_rot]
                 pos = external[:,:total_pos]

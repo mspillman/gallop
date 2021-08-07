@@ -136,10 +136,10 @@ def get_all_settings(loaded_values):
                                         value=loaded_values["n_GALLOP_iters"],
                                         step=1, format=None, key=None)
 
-            all_settings["seed"] = st.number_input(
+            all_settings["seed"] = int(st.number_input(
                     "Set random seed (integer >= 0), or use -1 to randomise",
                     min_value=-1, max_value=None, value=loaded_values["seed"],
-                    step=1, format=None, key=None)
+                    step=1, format=None, key=None))
             if all_settings["seed"] != -1:
                 st.write("Note that setting the seed does not guarantee "
                         "reproducibility due to some CUDA algorithms being "
@@ -167,11 +167,11 @@ def get_all_settings(loaded_values):
                                         key="show_advanced_lo")
         options = get_options(loaded_values["optim"], ["Adam", "diffGrad"])
         all_settings["optim"] = st.selectbox("Algorithm", options)
-        all_settings["n_LO_iters"] = st.number_input(
+        all_settings["n_LO_iters"] = int(st.number_input(
                                 "Number of LO steps per GALLOP iteration",
                                 min_value=1, max_value=None,
                                 value=loaded_values["n_LO_iters"],
-                                step=1, format=None, key=None)
+                                step=1, format=None, key=None))
         all_settings["ignore_H_atoms"]=st.checkbox("Remove H atoms for speed",
                                         value=loaded_values["ignore_H_atoms"],
                                         key=None)
@@ -249,24 +249,24 @@ def get_all_settings(loaded_values):
             learning_rate_schedule = st.selectbox("Learning rate schedule",
                                         options)
             if learning_rate_schedule == "1cycle":
-                n_cooldown = st.number_input("Cooldown iters", min_value=1,
+                n_cooldown = int(st.number_input("Cooldown iters", min_value=1,
                                     max_value=all_settings["n_LO_iters"],
                                     value=loaded_values["n_cooldown"],
-                                    step=1, format=None, key=None)
+                                    step=1, format=None, key=None))
             else:
                 n_cooldown = loaded_values["n_cooldown"]
             torsion_shadowing = st.checkbox("Use torsion shadowing",
                                     value=loaded_values["torsion_shadowing"])
             if torsion_shadowing:
-                Z_prime = st.number_input("Enter Z' of structure",
+                Z_prime = int(st.number_input("Enter Z' of structure",
                                 min_value=1, max_value=None,
                                 value=loaded_values["Z_prime"], step=1,
-                                format=None, key=None)
-                shadow_iters = st.number_input("Number of shadowing iterations",
+                                format=None, key=None))
+                shadow_iters = int(st.number_input("Number of shadowing iterations",
                                 min_value=0,
                                 max_value=all_settings["n_GALLOP_iters"],
                                 value=loaded_values["shadow_iters"],
-                                step=1, format=None, key=None)
+                                step=1, format=None, key=None))
             else:
                 Z_prime = False
                 shadow_iters = 0
@@ -316,15 +316,15 @@ def get_all_settings(loaded_values):
             lr = loaded_values["lr"]
             mult = loaded_values["mult"]
             learning_rate_schedule = loaded_values["learning_rate_schedule"]
-            n_cooldown = loaded_values["n_cooldown"]
+            n_cooldown = int(loaded_values["n_cooldown"])
             loss = loaded_values["loss"]
             reflection_percentage = loaded_values["reflection_percentage"]
             include_dw_factors = loaded_values["include_dw_factors"]
             memory_opt = loaded_values["memory_opt"]
             percentage_cutoff = loaded_values["percentage_cutoff"]
             torsion_shadowing = loaded_values["torsion_shadowing"]
-            Z_prime = loaded_values["Z_prime"]
-            shadow_iters = loaded_values["shadow_iters"]
+            Z_prime = int(loaded_values["Z_prime"])
+            shadow_iters = int(loaded_values["shadow_iters"])
             use_restraints = loaded_values["use_restraints"]
             n_restraints = loaded_values["n_restraints"]
             restraints = loaded_values["restraints"]
@@ -351,15 +351,15 @@ def get_all_settings(loaded_values):
     with st.sidebar.expander(label="Particle Swarm", expanded=False):
         show_advanced_pso = st.checkbox("Show advanced options", value=False,
                                         key="show_advanced_pso")
-        all_settings["n_swarms"] = st.number_input("Number of swarms",
+        all_settings["n_swarms"] = int(st.number_input("Number of swarms",
                                 min_value=1, max_value=None,
                                 value=loaded_values["n_swarms"], step=1,
-                                format=None, key=None)
-        all_settings["swarm_size"] = st.number_input(
+                                format=None, key=None))
+        all_settings["swarm_size"] = int(st.number_input(
                                     "Number of particles per swarm",
                                     min_value=1,max_value=None,
                                     value=loaded_values["swarm_size"],
-                                    step=100, format=None, key=None)
+                                    step=100, format=None, key=None))
         st.write("Total particles =",
                             all_settings["n_swarms"]*all_settings["swarm_size"])
         all_settings["global_update"] = st.checkbox(
@@ -367,13 +367,13 @@ def get_all_settings(loaded_values):
                                         value=loaded_values["global_update"],
                                         key=None)
         if all_settings["global_update"]:
-            all_settings["global_update_freq"] = st.number_input(
+            all_settings["global_update_freq"] = int(st.number_input(
                         "All-swarm global update frequency",
                         min_value=1, max_value=all_settings["n_GALLOP_iters"],
                         value=loaded_values["global_update_freq"],
-                        step=1, format=None, key=None)
+                        step=1, format=None, key=None))
         else:
-            all_settings["global_update_freq"]=all_settings["n_GALLOP_iters"]
+            all_settings["global_update_freq"]=int(all_settings["n_GALLOP_iters"])
         all_settings["randomise_worst"] = st.checkbox(
                         "Periodically randomise the worst performing particles",
                         value=loaded_values["randomise_worst"], key=None)

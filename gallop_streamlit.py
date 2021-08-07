@@ -161,8 +161,8 @@ elif function == "GALLOP":
             inertia = all_settings["inertia_type"]
         swarm = optim.swarm.Swarm(
                     Structure = struct,
-                    n_particles=n_particles,
-                    n_swarms = all_settings["n_swarms"],
+                    n_particles=int(n_particles),
+                    n_swarms = int(all_settings["n_swarms"]),
                     global_update = all_settings["global_update"],
                     global_update_freq = all_settings["global_update_freq"],
                     inertia_bounds = all_settings["inertia_bounds"],

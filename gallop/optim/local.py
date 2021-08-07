@@ -474,7 +474,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     else:
         iters = range(n_iterations)
         if streamlit:
-            col1, col2, col3 = st.beta_columns([10,1,1])
+            col1, col2, col3 = st.columns([10,1,1])
             with col1:
                 prog_bar = st.progress(0.0)
             with col2:
