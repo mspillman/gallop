@@ -299,13 +299,14 @@ def get_all_settings(loaded_values):
                                         value=loaded_values["n_restraints"],
                                         step=1, format=None, key=None)
                 restraints = loaded_values["restraints"]
+                st.write("Enter the atom labels, distance and \
+                        % weight (separated by commas, e.g. C1,C2,1.54,50)")
                 if restraints is None:
                     restraints = defaultdict(str)
                 for i in range(n_restraints):
-                    st.write(f"Restraint {i+1}:")
-                    r = st.text_input("Enter the atom labels, distance and \
-                        % weight (separated by commas, e.g. C1,C2,1.54,50)",
-                        key=f"r_{i+1}", value=restraints[str(i)])
+                    #st.write()
+                    r = st.text_input(f"Restraint {i+1}:",key=f"r_{i+1}",
+                                        value=restraints[str(i)])
                     restraints[str(i)] = r
             else:
                 restraints = None
@@ -891,7 +892,7 @@ def show_structure(result, Structure, all_settings, hide_H=True, interval=30):
         return html
 
 def instructions():
-    with open("help.md") as readme:
+    with open("./help.md") as readme:
         lines = readme.readlines()
     readme.close()
     lines = "".join(lines)
