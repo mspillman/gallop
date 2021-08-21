@@ -249,6 +249,22 @@ for i in range(gallop_iters):
 ```
 Swarm behaviour can also be modified by creating a new swarm class which inherits from the _GALLOP_ Swarm. Then replace the relevant methods to obtain the behaviour desired. Most likely to be of interest is ```PSO_velocity_update(...)```. See Swarm code and comments for more information.
 
+It is also trivial to replace the swarm element of GALLOP with another optimiser which can return numpy arrays for the external and internal degrees of freedom. For example, the [ask-and-tell interface](http://cma.gforge.inria.fr/apidocs-pycma/cma.evolution_strategy.CMAEvolutionStrategy.html) of the [_pycma_](https://github.com/CMA-ES/pycma) implementation of CMA-ES could be used as an alternative to the particle swarm:
+
+```python
+while not es.stop():
+    solutions = es.ask()
+    external = solutions[:,:mystructure.total_external_degrees_of_freedom]
+    internal = solutions[:,mystructure.total_external_degrees_of_freedom:]
+    result = local.minimise(mystructure, external=external, internal=internal,
+                run=i, start_time=start_time, **minimiser_settings)
+    # Optionally overwrite the starting positions
+    # solutions = np.hstack([result["external"], result["internal"]])
+    es.tell(solutions, result["chi_2"])
+    es.disp()
+es.result_pretty()
+```
+
 ### **TPU use**
 
 Instructions coming soon
