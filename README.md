@@ -243,7 +243,7 @@ for i in range(gallop_iters):
         "GALLOP Iter"  : i
         }
     # Output a CIF of the best result
-    files.save_CIF_of_best_result(struct, result, start_time)
+    files.save_CIF_of_best_result(mystructure, result, start_time)
     # Swarm update step
     external, internal = swarm.update_position(result=result, verbose=False)
 ```
