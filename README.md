@@ -247,7 +247,7 @@ for i in range(gallop_iters):
     # Swarm update step
     external, internal = swarm.update_position(result=result, verbose=False)
 ```
-Swarm behaviour can also be modified by creating a new swarm class which inherits the _GALLOP_ Swarm. Then modify the relevant methods to obtain the behaviour desired. Most likely to be of interest is ```PSO_velocity_update(...)```. See Swarm code and comments for more information.
+Swarm behaviour can also be modified by creating a new swarm class which inherits from the _GALLOP_ Swarm. Then replace the relevant methods to obtain the behaviour desired. Most likely to be of interest is ```PSO_velocity_update(...)```. See Swarm code and comments for more information.
 
 ### **TPU use**
 
