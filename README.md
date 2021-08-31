@@ -218,12 +218,12 @@ for i in range(gallop_iters):
         calculated_intensities = intensities.calculate_intensities(
                                 asymmetric_frac_coords, **tensors["int_tensors"])
 
-        chi_2 = chi2.calc_chisqd(calculated_intensities, **tensors["chisqd_tensors"])
+        chisquared = chi2.calc_chisqd(calculated_intensities, **tensors["chisqd_tensors"])
 
         # pytorch needs a scalar from which to calculate the gradients, here use
         # the sum of all values - as all of the chi-squared values are independent,
         # the gradients will be correctly propagated to the relevant DoFs.
-        L = torch.sum(chi_2)
+        L = torch.sum(chisquared)
 
         # For the last iteration, don't step the optimiser, otherwise the chi2
         # value won't correspond to the DoFs
@@ -233,13 +233,13 @@ for i in range(gallop_iters):
             optimizer.step()
         # Print out some info during the runs
         if j == 0 or (j+1) % 10 == 0:
-            print(i, j, chi_2.min().item())
+            print(i, j, chisquared.min().item())
     # Save the results in a dictionary which is expected by the files and swarm
     # functions. The tensors should be converted to CPU-based numpy arrays.
     result = {
         "external"     : tensors["zm"]["external"].detach().cpu().numpy(),
         "internal"     : tensors["zm"]["internal"].detach().cpu().numpy(),
-        "chi_2"        : chi_2.detach().cpu().numpy(),
+        "chi_2"        : chisquared.detach().cpu().numpy(),
         "GALLOP Iter"  : i
         }
     # Output a CIF of the best result
