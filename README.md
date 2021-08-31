@@ -21,7 +21,7 @@ Once all data is prepared, _GALLOP_ can be used via a convenient browser-based G
 
 ------------------------------
 ## **Try _GALLOP_**
-You will need a Google account to run the notebooks linked below. These notebooks will allow you to try _GALLOP_ for free, via your browser. You will not need to download or install anything to your computer, and do you not require local GPU hardware in order to run these notebooks.
+You will need a Google account to run the notebooks linked below. These notebooks will allow you to try _GALLOP_ for free, via your browser. You will not need to download or install anything to your computer, and do not require local GPU hardware in order to run these notebooks.
 
 | Notebook | Description |
 |---------|--------|
