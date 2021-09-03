@@ -19,6 +19,9 @@ Once all data is prepared, _GALLOP_ can be used via a convenient browser-based G
 
 \* instructions coming soon
 
+#### Video showing browser interface in use
+A video showing _GALLOP_ solving CT-DMF2 in real time via the _GALLOP_ broswer-based interface is available in this short [YouTube video](https://www.youtube.com/watch?v=n0aovGUS4JU).
+
 ------------------------------
 ## **Try _GALLOP_**
 You will need a Google account to run the notebooks linked below. These notebooks will allow you to try _GALLOP_ for free, via your browser. You will not need to download or install anything to your computer, and do not require local GPU hardware in order to run these notebooks.
@@ -110,8 +113,7 @@ A commonly encountered error in _GALLOP_ is when a Z-matrix has torsion angles t
 Other programs can in principle be used to produce Z-matrices suitable for _GALLOP_. For more information, see the ```gallop.z_matrix``` module documentation.
 
 ### **Run _GALLOP_ via the browser interface**
-#### Video showing browser interface in use
-A demonstration showing _GALLOP_ in use to solve CT-DMF2 in real time is available in this short [YouTube video](https://www.youtube.com/watch?v=n0aovGUS4JU).
+
 #### **Cloud operation:**
 Use this [Colab Notebook to try the _GALLOP_ browser interface for free](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing).
 You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
