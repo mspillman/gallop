@@ -540,7 +540,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             if loss.lower() == "sse":
                 L = ((chi_2 + restraint_penalty)**2).sum()
             elif loss.lower() == "sum":
-                L = chi_2.sum() + restraint_penalty
+                L = (chi_2 + restraint_penalty).sum()
             elif loss.lower() == "xlogx":
                 L = torch.sum(torch.log(chi_2)*(chi_2 + restraint_penalty))
         else:
