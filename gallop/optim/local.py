@@ -644,7 +644,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     Structure.ignore_H_atoms = False
     best = result["chi_2"] == result["chi_2"].min()
     if best.shape[0] > 1:
-        best = best[0]
+        best = best[0].reshape(1,1)
     # Create tensors on CPU as it will be faster for a single data point.
     best_tensors = tensor_prep.get_all_required_tensors(Structure,
         external=result["external"][best][0].reshape(1,-1),
