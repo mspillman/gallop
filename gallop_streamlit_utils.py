@@ -305,7 +305,7 @@ def get_all_settings(loaded_values):
                     distance_restraints = defaultdict(str)
                 for i in range(n_distance_restraints):
                     #st.write()
-                    r = st.text_input(f"Distant restraint {i+1}:",key=f"dr_{i+1}",
+                    r = st.text_input(f"Distance restraint {i+1}:",key=f"dr_{i+1}",
                                         value=distance_restraints[str(i)])
                     distance_restraints[str(i)] = r
             else:
