@@ -6,6 +6,7 @@ Calculates PXRD intensities given fractional atomic coordinates.
 """
 
 import torch
+from torch import Tensor
 
 # Not PEP8 compliant in most of the file but it's been formatted to try to be
 # readable

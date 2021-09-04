@@ -16,6 +16,7 @@ from gallop import tensor_prep
 from gallop import files
 from gallop import intensities
 from gallop import zm_to_cart
+from gallop.optim import restraints
 
 
 
@@ -213,7 +214,6 @@ def find_learning_rate(Structure, external=None, internal=None,
         print("ERROR! Minimiser Settings are needed!")
         return None
 
-
 def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
     n_reflections=None, learning_rate_schedule="1cycle",
@@ -401,19 +401,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
 
     if use_restraints:
-        if Structure.ignore_H_atoms:
-            restraints = np.array(Structure.restraints_no_H)
-        else:
-            restraints = np.array(Structure.restraints)
-        atoms = restraints[:,:2]
-        distances = restraints[:,2]
-        percentages = restraints[:,3] / 100.
-
-        atoms = torch.from_numpy(atoms).type(torch.long).to(device)
-        distances = torch.from_numpy(distances).type(dtype).to(device)
-        percentages = torch.from_numpy(percentages).type(dtype).to(device)
-        lattice_matrix = torch.from_numpy(
-                    np.copy(Structure.lattice.matrix)).type(dtype).to(device)
+        restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
+                                                                dtype, device)
 
 
     # Initialize the optimizer
@@ -539,31 +528,28 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         if use_restraints:
             with torch.no_grad():
-                min_chi_2 = chi_2.min()
-            cart = torch.einsum("jk,bilj->bilk",
-                            lattice_matrix,asymmetric_frac_coords[:,atoms,:])
-            atomic_distances = torch.sqrt(
-                            ((cart[:,:,0,:] - cart[:,:,1,:])**2).sum(dim=-1))
-            distance_penalty = (min_chi_2*percentages*(
-                                            distances-atomic_distances)**2).sum()
+                min_chi_2 = chi_2#.min()
+            restraint_penalty = restraints.get_restraint_penalties(
+                                asymmetric_frac_coords, min_chi_2, 
+                                **restraint_tensors)
         else:
-            distance_penalty = 0
+            restraint_penalty = 0
         # PyTorch expects a single value for backwards pass.
         # Need a function to convert all of the chi_2 values into a scalar
         if isinstance(loss, str):
             if loss.lower() == "sse":
-                L = ((chi_2 + distance_penalty)**2).sum()
+                L = ((chi_2 + restraint_penalty)**2).sum()
             elif loss.lower() == "sum":
-                L = chi_2.sum() + distance_penalty
+                L = chi_2.sum() + restraint_penalty
             elif loss.lower() == "xlogx":
-                L = torch.sum(torch.log(chi_2)*(chi_2 + distance_penalty))
+                L = torch.sum(torch.log(chi_2)*(chi_2 + restraint_penalty))
         else:
             if loss is None:
                 # Default to the sum operation if loss is None
-                L = chi_2.sum() + distance_penalty
+                L = chi_2.sum() + restraint_penalty
             else:
                 try:
-                    L = loss(chi_2, distance_penalty)
+                    L = loss(chi_2, restraint_penalty)
                 except TypeError:
                     try:
                         L = loss(chi_2)

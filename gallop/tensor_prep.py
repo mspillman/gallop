@@ -483,3 +483,83 @@ def get_PO_tensors(Structure, PO_axis, n_reflections, n_samples, device, dtype):
     factor.requires_grad = True
 
     return cosP, sinP, factor
+
+
+def get_restraint_tensors(Structure, dtype, device):
+    if Structure.ignore_H_atoms:
+        distance_restraints = np.array(Structure.distance_restraints_no_H)
+        angle_restraints = np.array(Structure.angle_restraints_no_H)
+        torsion_restraints = np.array(Structure.torsion_restraints_no_H)
+    else:
+        distance_restraints = np.array(Structure.distance_restraints)
+        angle_restraints = np.array(Structure.angle_restraints)
+        torsion_restraints = np.array(Structure.torsion_restraints)
+
+    lattice_matrix = torch.from_numpy(np.copy(
+                            Structure.lattice.matrix)).type(dtype).to(device)
+
+    if len(distance_restraints) != 0:
+        restrain_d = True
+        d_atoms = distance_restraints[:,:2]
+        distances = distance_restraints[:,2]
+        d_weights = distance_restraints[:,3] / 100.
+    else:
+        restrain_d = False
+        d_atoms = np.array([])
+        distances = np.array([])
+        d_weights = np.array([])
+
+    d_atoms = torch.from_numpy(d_atoms).type(torch.long).to(device)
+    distances = torch.from_numpy(distances).type(dtype).to(device)
+    d_weights = torch.from_numpy(d_weights).type(dtype).to(device)
+
+    if len(angle_restraints) != 0:
+        restrain_a = True
+        a_atoms   = angle_restraints[:,:3]
+        cos_angles = np.cos(np.deg2rad(angle_restraints[:,3]))
+        a_weights = angle_restraints[:,4] / 100.
+    else:
+        restrain_a = False
+        a_atoms = np.array([])
+        cos_angles = np.array([])
+        a_weights = np.array([])
+
+    a_atoms = torch.from_numpy(a_atoms).type(torch.long).to(device)
+    cos_angles = torch.from_numpy(cos_angles).type(dtype).to(device)
+    a_weights = torch.from_numpy(a_weights).type(dtype).to(device)
+
+    if len(torsion_restraints) != 0:
+        restrain_t = True
+        t_atoms   = torsion_restraints[:,:4]
+        costorsions = np.cos(np.deg2rad(torsion_restraints[:,4]))
+        sintorsions = np.sin(np.deg2rad(torsion_restraints[:,4]))
+        t_weights = torsion_restraints[:,5] / 100.
+    else:
+        restrain_t = False
+        t_atoms = np.array([])
+        costorsions = np.array([])
+        sintorsions = np.array([])
+        t_weights = np.array([])
+
+    t_atoms = torch.from_numpy(t_atoms).type(torch.long).to(device)
+    costorsions = torch.from_numpy(costorsions).type(dtype).to(device)
+    sintorsions = torch.from_numpy(sintorsions).type(dtype).to(device)
+    t_weights = torch.from_numpy(t_weights).type(dtype).to(device)
+
+    restraints = {}
+    restraints["lattice_matrix"] = lattice_matrix
+    restraints["d_atoms"] = d_atoms
+    restraints["distances"] = distances
+    restraints["d_weights"] = d_weights
+    restraints["a_atoms"] = a_atoms
+    restraints["cos_angles"] = cos_angles
+    restraints["a_weights"] = a_weights
+    restraints["t_atoms"] = t_atoms
+    restraints["sintorsions"] = sintorsions
+    restraints["costorsions"] = costorsions
+    restraints["t_weights"] = t_weights
+    restraints["restrain_d"] = restrain_d
+    restraints["restrain_a"] = restrain_a
+    restraints["restrain_t"] = restrain_t
+
+    return restraints

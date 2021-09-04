@@ -140,14 +140,46 @@ elif function == "GALLOP":
             PO_axis_split = [int(x) for x in PO_axis_split]
             minimiser_settings["PO_axis"] = PO_axis_split
 
-        if all_settings["use_restraints"]:
-            if all_settings["restraints"] is not None:
-                for r in all_settings["restraints"].keys():
-                    r = all_settings["restraints"][r]
+        if all_settings["use_distance_restraints"]:
+            if all_settings["distance_restraints"] is not None:
+                for r in all_settings["distance_restraints"].keys():
+                    r = all_settings["distance_restraints"][r]
                     r = r.replace(" ","").split(",")
-                    struct.add_restraint(atom1=r[0], atom2=r[1],
-                        distance=float(r[2]), percentage=float(r[3]))
+                    struct.add_restraint({"type" : "distance",
+                                            "atom1" : r[0],
+                                            "atom2" : r[1],
+                                            "value" : float(r[2]),
+                                            "weight" : float(r[3])})
             minimiser_settings["use_restraints"] = True
+
+        if all_settings["use_angle_restraints"]:
+            if all_settings["angle_restraints"] is not None:
+                for r in all_settings["angle_restraints"].keys():
+                    r = all_settings["angle_restraints"][r]
+                    r = r.replace(" ","").split(",")
+                    struct.add_restraint({"type" : "angle",
+                                            "atom1" : r[0],
+                                            "atom2" : r[1],
+                                            "atom3" : r[2],
+                                            "value" : float(r[3]),
+                                            "weight" : float(r[4])})
+            minimiser_settings["use_restraints"] = True
+
+
+        if all_settings["use_torsion_restraints"]:
+            if all_settings["torsion_restraints"] is not None:
+                for r in all_settings["torsion_restraints"].keys():
+                    r = all_settings["torsion_restraints"][r]
+                    r = r.replace(" ","").split(",")
+                    struct.add_restraint({"type" : "torsion",
+                                            "atom1" : r[0],
+                                            "atom2" : r[1],
+                                            "atom3" : r[2],
+                                            "atom4" : r[3],
+                                            "value" : float(r[4]),
+                                            "weight" : float(r[5])})
+            minimiser_settings["use_restraints"] = True
+
         if all_settings["animate_structure"]:
             minimiser_settings["save_trajectories"] = True
         if all_settings["memory_opt"]:

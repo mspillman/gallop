@@ -11,7 +11,7 @@ import os
 import numpy as np
 import pymatgen as pmg
 from pymatgen.symmetry import groups
-import gallop.z_matrix as zm
+import gallop.z_matrix as z_matrix
 import gallop.files as files
 
 class Structure(object):
@@ -98,8 +98,12 @@ class Structure(object):
         self.total_position_degrees_of_freedom = None
         self.total_rotation_degrees_of_freedom = None
         self.zm_torsions = None
-        self.restraints = []
-        self.restraints_no_H = []
+        self.distance_restraints = []
+        self.distance_restraints_no_H = []
+        self.angle_restraints = []
+        self.angle_restraints_no_H = []
+        self.torsion_restraints = []
+        self.torsion_restraints_no_H = []
         self.fs = None
         self.prefix = None
 
@@ -154,7 +158,7 @@ class Structure(object):
                 if k == "zmatrices":
                     zmatrices = []
                     for zmstring in v:
-                        zmat = zm.Z_matrix()
+                        zmat = z_matrix.Z_matrix()
                         zmat.from_json(zmstring, is_json=is_json)
                         zmatrices.append(zmat)
                     setattr(self, k, zmatrices)
@@ -177,7 +181,7 @@ class Structure(object):
             filename (str): filename of the Z-matrix
             verbose (bool, optional): Print out information. Defaults to True.
         """
-        self.zmatrices.append(zm.Z_matrix(filename))
+        self.zmatrices.append(z_matrix.Z_matrix(filename))
         if verbose:
             print("Added Z-matrix with",self.zmatrices[-1])
 
@@ -531,110 +535,122 @@ class Structure(object):
             self.zm_torsions = np.array([])
         self.total_dof_calculated = True
 
-    def add_restraint(self, zm1="", atom1=None, zm2="", atom2=None,
-                        distance=None, percentage=50., indexing=1):
+    def add_restraint(self, restraint, indexing=1):
         """
         Add a restraint to use during the local optimisation that adds a penalty
-        when atom1 and atom2 are further than "distance" angstroms apart.
-        These atoms can be from the same or from different z-matrices.
-        The associated ZMs can be supplied as arguments, and can either be
-        integers referencing the index of the zmatrix in the Structure.zmatrices
-        list, or can be the filenames of the zmatrices of interest.
+        when distances, angles or torsions deviate from a specified value.
+        The atoms involved can be from the same or from different z-matrices.
+        The associated ZMs can be supplied as integers referencing the index of
+        the zmatrix in the Structure.zmatrices list, or can be the filenames of
+        the zmatrices of interest.
         Alternatively, if all of the atoms in the structure have unique atom
         labels, then the zmatrix labels are not needed.
 
-        e.g. atom4 in zmatrix_1.zmatrix and atom8 in zmatrix_3.zmatrix, with a
-            distance of 3.0 A and percentage of 50 % can be added via:
-                Structure.add_restraint(zm1="zmatrix_1.zmatrix", atom1=4,
-                                        zm2="zmatrix_2.zmatrix", atom2=8,
-                                        distance=3.0, percentage=50)
+        e.g. a distance restraint for atom4 in zmatrix_1.zmatrix and atom8 in
+            zmatrix_3.zmatrix, with a distance of 3.0 A and weight of 50 % can
+            be added via:
+                Structure.add_restraint({"type" : "distance",
+                                        "zm1":"zmatrix_1.zmatrix", "atom1":4,
+                                        "zm2":"zmatrix_2.zmatrix", "atom2":8,
+                                        "value":3, "weight":50})
             Or, assuming that the zmatrices were added sequentially starting
             with zmatrix_1.zmatrix:
-                Structure.add_restraint(zm1=1, atom1=4, zm2=3, atom2=8,
-                                        distance=3.0, percentage=50)
+                Structure.add_restraint({"type":"distance", "zm1":1, "atom1":4,
+                                        "zm2":3, "atom2":8,"value":3.0,
+                                        "weight":50})
+
+        Alternative and recommended method:
 
             If all of the atoms have unique labels, and assuming atom1 = N1 and
             atom2 = Cl1, then the following is sufficient:
-                Structure.add_restraint(atom1="N1", atom2="Cl1", distance=3.0,
-                                        percentage=50)
+                Structure.add_restraint("type":"distance", "atom1":"N1",
+                                        "atom2":"Cl1", "value":3.0, "weight":50)
 
         Users can change between 0- and 1-indexing. Default is 1-index to match
         the indexing given in the z-matrices.
 
 
         Args:
-            zm1 (int or string): The index or filename of the zmatrix for atom 1
-            atom1 (int): The index of atom1 in the restraint in zmatrix 1.
-            zm2 (int or string): The index or filename of the zmatrix for atom 2
-            atom2 (int): The index of atom1 in the restraint in zmatrix 1.
-            distance (float): The distance to use for the restraint.
-            percentage (float): What percentage of the minimum chi2 value to
-                assign as the weight for this restraint. Defaults to 50.
+            restraint (dict): dictionary to specify the type of restraint to add
+                as well as the atoms involved, zmatrices (as described above),
+                the value of the restraint - if distance, should be in Angstroms,
+                if angle or torsion, should be in degrees, and the weight to
+                apply to this restraint, expressed as a percentage.
+                Required keys:    
+                    "type" - can be one of distance, angle or torsion
+                    "value" - the numerical value of the expected restraint
+                    "weight" - the weight to assign to this restraint
+                    "atom1" - the first atom involved
+                    "atom2" - the second atom involved
+                Other keys that may be needed:
+                    "atom3" - if specifying an angle or torsion restraint
+                    "atom4" - if specifying a torsion
+                    "zm1" to "zm4" - if specifying the zmatrices to index the
+                                        atoms involved.
             indexing (int, optional): Use python 0-indexing (i.e. first atom in
                 zmatrix = 0) or normal 1-indexing (i.e. first atom in zmatrix
-                = 1). Defaults to 1.
+                has index 1). Defaults to 1.
 
         """
-        assert indexing in [0,1], "indexing must be 0 or 1"
-        assert atom1 is not None and atom2 is not None, "you must specify the "\
-                                                        "atoms"
-        assert distance is not None, "you must specify the distance"
-        check_all_zm1 = False
-        check_all_zm2 = False
-        if not isinstance(zm1, int):
-            assert isinstance(zm1, str), "zm1 must be integer or string"
-            if len(zm1) != 0:
-                for i, zmat in enumerate(self.zmatrices):
-                    if zm1 in zmat.filename:
-                        zm1 = i + indexing
-                        break
+        assert "type" in restraint.keys(), "You must supply a restraint type"
+        assert restraint["type"] in ["distance", "angle", "torsion"],(
+            "Restraint type must be \"distance\", \"angle\" or \"torsion\"")
+        assert "value" in restraint.keys(), "You must supply a restraint value"
+        restraint_type = restraint["type"]
+        restraint_value = restraint["value"]
+        restraint_weight = restraint["weight"]
+        n_atoms = {"distance" : 2, "angle" : 3,
+                    "torsion" : 4}[restraint_type.lower()]
+        # Now check to see if the ZMs have been specified or if we should use
+        # the atom labels to work out which atoms the restraint should be
+        # applied to. If no ZM names are specified, then append True to zm_check
+        # If names are supplied, they are converted to integer indices for the
+        # ZMs.
+        zm_check = []
+        zms = []
+        for i in range(n_atoms):
+            value = False
+            if "zm"+str(i+1) in restraint.keys():
+                zm = restraint["zm"+str(i+1)]
+                if not isinstance(zm, int):
+                    assert isinstance(zm, str), "zm1 must be integer or string"
+                    if len(zm) != 0:
+                        for j, zmat in enumerate(self.zmatrices):
+                            if zm in zmat.filename:
+                                zm = j + indexing
+                                zms.append(zm)
+                                break
+                    else:
+                        value = True
             else:
-                check_all_zm1 = True
-        if not isinstance(zm2, int):
-            assert isinstance(zm2, str), "zm1 must be integer or string"
-            if len(zm2) != 0:
-                for i, zmat in enumerate(self.zmatrices):
-                    if zm2 in zmat.filename:
-                        zm2 = i + indexing
-                        break
-            else:
-                check_all_zm2 = True
-
-        assert check_all_zm1 == check_all_zm2, ("You must specify either a "
-                                                "Z-matrix for both atoms or "
-                                                "supply empty strings for both "
-                                                "Z-matrices")
-
-        if check_all_zm1 and check_all_zm2:
+                value = True
+            zm_check.append(value)
+        assert (all(zm_check) or not(any(zm_check))), ("You must either specify"
+                                                    " a Z-matrix for all atoms"
+                                                    " or no atoms.")
+        if all(zm_check):
             all_atom_names = []
             all_atom_names_no_H = []
             for zmat in self.zmatrices:
                 all_atom_names += zmat.atom_names
                 all_atom_names_no_H += zmat.atom_names_no_H
             assert len(set(all_atom_names)) == len(all_atom_names), ("Not all "
-            "atoms have unique names! Rename atom labels in Z-matrices to use "
-            "atom-name-only indexing")
-            atom1_idx = all_atom_names.index(atom1)
-            atom2_idx = all_atom_names.index(atom2)
-            atom1_no_H_idx = all_atom_names_no_H.index(atom1)
-            atom2_no_H_idx = all_atom_names_no_H.index(atom2)
-            restraint = [atom1_idx, atom2_idx]
-            restraint_no_H = [atom1_no_H_idx, atom2_no_H_idx]
+                "atoms have unique names! Rename atom labels in Z-matrices to "
+                "use atom-name-only indexing")
+            atom_idx = []
+            atom_idx_no_H = []
+            for i in range(n_atoms):
+                atom = restraint["atom"+str(i+1)]
+                atom_idx.append(all_atom_names.index(atom))
+                atom_idx_no_H.append(all_atom_names_no_H.index(atom))
         else:
             # Now correct to get python zero-indexes if using 1-indexing
-            zm1 -= indexing
-            zm2 -= indexing
-
-            if not isinstance(atom1, int):
-                assert isinstance(atom1, str), "atom1 must be integer or string"
-                atom1 = self.zmatrices[zm1].atom_names.index(atom1) + indexing
-
-            if not isinstance(atom2, int):
-                assert isinstance(atom2, str), "atom2 must be integer or string"
-                atom2 = self.zmatrices[zm2].atom_names.index(atom2) + indexing
-
-            atom1 -= indexing
-            atom2 -= indexing
+            zms = [x - indexing for x in zms]
+            atoms = []
+            for i, zm in enumerate(zms):
+                assert isinstance(self.zmatrices[i][restraint["atom"+str(i+1)]],
+                        int), "If ZM is supplied, atoms must be integer indices"
+                atoms.append(restraint["atom"+str(i+1)] - indexing)
 
             elements = {}
             elements_no_H = {}
@@ -649,9 +665,9 @@ class Structure(object):
                 all_elements += zmat.elements
                 all_elements_no_H += zmat.elements_no_H
 
-            restraint = []
-            restraint_no_H = []
-            for zmat, atom in zip([zm1, zm2],[atom1, atom2]):
+            atom_idx = []
+            atom_idx_no_H = []
+            for zmat, atom in zip([zms, atoms]):
                 prev_atoms = 0
                 prev_atoms_no_H = 0
                 for i in range(zmat):
@@ -662,11 +678,18 @@ class Structure(object):
                 atom += prev_atoms
                 atom_no_H += prev_atoms_no_H
 
-                restraint.append(atom)
-                restraint_no_H.append(atom_no_H)
+                atom_idx.append(atom)
+                atom_idx_no_H.append(atom_no_H)
 
-        restraint += [distance, percentage]
-        restraint_no_H += [distance, percentage]
+        atom_idx += [restraint_value, restraint_weight]
+        atom_idx_no_H += [restraint_value, restraint_weight]
 
-        self.restraints.append(restraint)
-        self.restraints_no_H.append(restraint_no_H)
+        if restraint_type.lower() == "distance":
+            self.distance_restraints.append(atom_idx)
+            self.distance_restraints_no_H.append(atom_idx_no_H)
+        elif restraint_type.lower() == "angle":
+            self.angle_restraints.append(atom_idx)
+            self.angle_restraints_no_H.append(atom_idx_no_H)
+        else:
+            self.torsion_restraints.append(atom_idx)
+            self.torsion_restraints_no_H.append(atom_idx_no_H)

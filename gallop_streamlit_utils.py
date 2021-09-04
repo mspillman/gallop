@@ -291,26 +291,69 @@ def get_all_settings(loaded_values):
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
                             value=loaded_values["memory_opt"], key=None)
-            use_restraints = st.checkbox("Use distance restraints",
-                                        value=loaded_values["use_restraints"])
-            if use_restraints:
-                n_restraints = st.number_input("Enter number of restraints to use",
+            use_distance_restraints = st.checkbox("Use distance restraints",
+                                    value=loaded_values["use_distance_restraints"])
+            if use_distance_restraints:
+                n_distance_restraints = int(st.number_input("Enter number of distance restraints to use",
                                         min_value=0, max_value=None,
-                                        value=loaded_values["n_restraints"],
-                                        step=1, format=None, key=None)
-                restraints = loaded_values["restraints"]
+                                        value=loaded_values["n_distance_restraints"],
+                                        step=1, format=None, key=None))
+                distance_restraints = loaded_values["distance_restraints"]
                 st.write("Enter the atom labels, distance and \
                         % weight (separated by commas, e.g. C1,C2,1.54,50)")
-                if restraints is None:
-                    restraints = defaultdict(str)
-                for i in range(n_restraints):
+                if distance_restraints is None:
+                    distance_restraints = defaultdict(str)
+                for i in range(n_distance_restraints):
                     #st.write()
-                    r = st.text_input(f"Restraint {i+1}:",key=f"r_{i+1}",
-                                        value=restraints[str(i)])
-                    restraints[str(i)] = r
+                    r = st.text_input(f"Distant restraint {i+1}:",key=f"dr_{i+1}",
+                                        value=distance_restraints[str(i)])
+                    distance_restraints[str(i)] = r
             else:
-                restraints = None
-                n_restraints = 0
+                distance_restraints = None
+                n_distance_restraints = 0
+
+            use_angle_restraints = st.checkbox("Use angle restraints",
+                                    value=loaded_values["use_angle_restraints"])
+            if use_angle_restraints:
+                n_angle_restraints = int(st.number_input("Enter number of angle restraints to use",
+                                        min_value=0, max_value=None,
+                                        value=loaded_values["n_angle_restraints"],
+                                        step=1, format=None, key=None))
+                angle_restraints = loaded_values["angle_restraints"]
+                st.write("Enter the atom labels, bond angle and \
+                        % weight (separated by commas, e.g. C1,C2,C3,121.1,50)")
+                if angle_restraints is None:
+                    angle_restraints = defaultdict(str)
+                for i in range(n_angle_restraints):
+                    #st.write()
+                    r = st.text_input(f"Angle restraint {i+1}:",key=f"ar_{i+1}",
+                                        value=angle_restraints[str(i)])
+                    angle_restraints[str(i)] = r
+            else:
+                angle_restraints = None
+                n_angle_restraints = 0
+
+            use_torsion_restraints = st.checkbox("Use torsion restraints",
+                                    value=loaded_values["use_torsion_restraints"])
+            if use_torsion_restraints:
+                n_torsion_restraints = int(st.number_input("Enter number of torsion restraints to use",
+                                        min_value=0, max_value=None,
+                                        value=loaded_values["n_torsion_restraints"],
+                                        step=1, format=None, key=None))
+                torsion_restraints = loaded_values["torsion_restraints"]
+                st.write("Enter the atom labels, torsion angle and \
+                        % weight (separated by commas, e.g. C1,C2,C3,C4,121.1,50)")
+                if torsion_restraints is None:
+                    torsion_restraints = defaultdict(str)
+                for i in range(n_torsion_restraints):
+                    #st.write()
+                    r = st.text_input(f"Torsion restraint {i+1}:",key=f"tr_{i+1}",
+                                        value=torsion_restraints[str(i)])
+                    torsion_restraints[str(i)] = r
+            else:
+                torsion_restraints = None
+                n_torsion_restraints = 0
+
         else:
             find_lr = loaded_values["find_lr"]
             find_lr_auto_mult = loaded_values["find_lr_auto_mult"]
@@ -326,9 +369,15 @@ def get_all_settings(loaded_values):
             torsion_shadowing = loaded_values["torsion_shadowing"]
             Z_prime = int(loaded_values["Z_prime"])
             shadow_iters = int(loaded_values["shadow_iters"])
-            use_restraints = loaded_values["use_restraints"]
-            n_restraints = loaded_values["n_restraints"]
-            restraints = loaded_values["restraints"]
+            use_distance_restraints = loaded_values["use_distance_restraints"]
+            n_distance_restraints = loaded_values["n_distance_restraints"]
+            distance_restraints = loaded_values["distance_restraints"]
+            use_angle_restraints = loaded_values["use_angle_restraints"]
+            n_angle_restraints = loaded_values["n_angle_restraints"]
+            angle_restraints = loaded_values["angle_restraints"]
+            use_torsion_restraints = loaded_values["use_torsion_restraints"]
+            n_torsion_restraints = loaded_values["n_torsion_restraints"]
+            torsion_restraints = loaded_values["torsion_restraints"]
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -344,9 +393,15 @@ def get_all_settings(loaded_values):
     all_settings["torsion_shadowing"] = torsion_shadowing
     all_settings["Z_prime"] = Z_prime
     all_settings["shadow_iters"] = shadow_iters
-    all_settings["use_restraints"] = use_restraints
-    all_settings["n_restraints"] = n_restraints
-    all_settings["restraints"] = restraints
+    all_settings["use_distance_restraints"] = use_distance_restraints
+    all_settings["n_distance_restraints"] = n_distance_restraints
+    all_settings["distance_restraints"] = distance_restraints
+    all_settings["use_angle_restraints"] = use_angle_restraints
+    all_settings["n_angle_restraints"] = n_angle_restraints
+    all_settings["angle_restraints"] = angle_restraints
+    all_settings["use_torsion_restraints"] = use_torsion_restraints
+    all_settings["n_torsion_restraints"] = n_torsion_restraints
+    all_settings["torsion_restraints"] = torsion_restraints
 
     # Particle Swarm settings
     with st.sidebar.expander(label="Particle Swarm", expanded=False):
