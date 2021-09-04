@@ -264,7 +264,7 @@ def get_all_settings(loaded_values):
                                 format=None, key=None))
                 shadow_iters = int(st.number_input("Number of shadowing iterations",
                                 min_value=0,
-                                max_value=all_settings["n_GALLOP_iters"],
+                                max_value=int(all_settings["n_GALLOP_iters"]),
                                 value=int(loaded_values["shadow_iters"]),
                                 step=1, format=None, key=None))
             else:
