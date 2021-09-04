@@ -643,13 +643,17 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     ignore_H_setting = Structure.ignore_H_atoms
     Structure.ignore_H_atoms = False
     best = result["chi_2"] == result["chi_2"].min()
-    if best.shape[0] > 1:
-        best = best[0].reshape(1,1)
     # Create tensors on CPU as it will be faster for a single data point.
-    best_tensors = tensor_prep.get_all_required_tensors(Structure,
-        external=result["external"][best][0].reshape(1,-1),
-        internal=result["internal"][best][0].reshape(1,-1),
-        requires_grad=False, device=torch.device("cpu"), verbose=False)
+    if best.sum() > 1:
+        best_tensors = tensor_prep.get_all_required_tensors(Structure,
+            external=result["external"][best][0].reshape(1,-1),
+            internal=result["internal"][best][0].reshape(1,-1),
+            requires_grad=False, device=torch.device("cpu"), verbose=False)
+    else:
+        best_tensors = tensor_prep.get_all_required_tensors(Structure,
+            external=result["external"][best].reshape(1,-1),
+            internal=result["internal"][best].reshape(1,-1),
+            requires_grad=False, device=torch.device("cpu"), verbose=False)
     # Restore the Structure.ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting
 
