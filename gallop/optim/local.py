@@ -528,7 +528,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         if use_restraints:
             with torch.no_grad():
-                min_chi_2 = chi_2#.min()
+                min_chi_2 = chi_2.min()
             restraint_penalty = restraints.get_restraint_penalties(
                                 asymmetric_frac_coords, min_chi_2, 
                                 **restraint_tensors)
