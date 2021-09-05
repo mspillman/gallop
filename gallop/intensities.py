@@ -159,8 +159,8 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
         # in the other space groups. For reference, it would be:
         # A = 4 * cos(2pi (h+k/4))*cos(2pi(hx+lz))*cos(2piky)
         # B = 4 * cos(2pi (h+k/4))*cos(2pi(hx+lz))*sin(2piky)
-        # This would require a minimum of 3 x trig functions to determine
-        # whereas the following only requires 2.
+        # This would require a minimum of 4 x trig functions to determine
+        # whereas the following only requires 3.
         chl = torch.cos(2.*pi*(torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
                                 + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])))
         ky = 2 * pi * torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
