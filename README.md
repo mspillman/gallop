@@ -334,7 +334,7 @@ If C++ build tools are not available, this is likely to result in an error.
 ------------------------------
 
 ## **References and resources**
-If you make use of _GALLOP_ in your work, please cite the following article:
+If you make use of _GALLOP_ in your work, please consider citing the following article:
 - [CrystEngComm, 2021, DOI: 10.1039/D1CE00978H](https://pubs.rsc.org/en/content/articlelanding/2021/ce/d1ce00978h)
 
 ### **Other Relevant articles**
