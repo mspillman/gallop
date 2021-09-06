@@ -33,7 +33,7 @@ You will need a Google account to run the notebooks linked below. These notebook
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 ### **PXRD Data preparation**
-_GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS.
+_GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS. Space groups _must_ be in their standard setting.
 
 - _DASH_: follow the Pawley fitting procedure as normal, and ensure that the resultant ```.sdi, .dsl, .hcv, .pik``` and ```.tic``` files are available.
 
