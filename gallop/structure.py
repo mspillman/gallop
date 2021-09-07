@@ -523,11 +523,11 @@ class Structure(object):
         for zmat in self.zmatrices:
             if self.ignore_H_atoms:
                 if zmat.internal_degrees_of_freedom > 0:
-                    idx = zmat.torsion_refineable_indices_no_H
+                    idx = zmat.torsion_refinable_indices_no_H
                     zm_torsions.append(zmat.coords_radians_no_H[:,2][idx])
             else:
                 if zmat.internal_degrees_of_freedom > 0:
-                    idx = zmat.torsion_refineable_indices
+                    idx = zmat.torsion_refinable_indices
                     zm_torsions.append(zmat.coords_radians[:,2][idx])
         if len(zm_torsions) > 0:
             self.zm_torsions = np.hstack(zm_torsions)

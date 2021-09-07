@@ -94,7 +94,7 @@ elif function == "GALLOP":
                 struct.add_zmatrix(z)
             elif all_settings["ignore_H_atoms"] and check.H_atom_torsion_defs:
                 st.markdown("**Problem with z-matrix "+z+" - H-atoms used to "
-                    "define refineable torsion angles. Please generate a new ZM "
+                    "define refinable torsion angles. Please generate a new ZM "
                     "to allow H-atoms to be ignored or refresh the page and "
                     "uncheck the ignore H atoms box.**")
                 st.write("Attempting to continue with H-atoms included")

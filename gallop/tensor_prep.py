@@ -47,7 +47,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
                     "rotation" : zm_rotation_indices,
                     "torsion" : zm_torsion_indices,
                     "initial_D2" : init_D2,
-                    "torsion_refineable_indices" : torsion_refineable_indices,
+                    "torsion_refinable_indices" : torsion_refinable_indices,
                     "bond_connection" : bond_connection,
                     "angle_connection" : angle_connection,
                     "torsion_connection" : torsion_connection,
@@ -60,7 +60,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
     torsion_indices = []
     zm_degrees_of_freedom = []
     init_D2 = []
-    torsion_refineable_indices = []
+    torsion_refinable_indices = []
     bond_connection = []
     angle_connection = []
     torsion_connection = []
@@ -96,7 +96,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
                                             + max_tor + 1)
         zm_degrees_of_freedom.append(zm.degrees_of_freedom)
 
-        # Now get initial D2 matrix and torsion refineable indices for
+        # Now get initial D2 matrix and torsion refinable indices for
         # internal -> Cartesian conversion
         # and get initial Cartesian coordinates for rigid bodies. See (S)NeRF
         # paper and gallop.z_matrix for more details.
@@ -104,8 +104,8 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
             init_D2_stacked = zm.initial_D2_no_H.reshape(1,
                         zm.initial_D2_no_H.shape[0],
                         zm.initial_D2_no_H.shape[1]).repeat(n_samples,axis=0)
-            torsion_refineable_indices.append(torch.from_numpy(
-                zm.torsion_refineable_indices_no_H).type(torch.long).to(device))
+            torsion_refinable_indices.append(torch.from_numpy(
+                zm.torsion_refinable_indices_no_H).type(torch.long).to(device))
             if zm.degrees_of_freedom == 7:
                 init_cart_coords.append(torch.from_numpy(
                         zm.initial_cartesian_no_H.reshape(1,
@@ -118,9 +118,9 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
             init_D2_stacked = zm.initial_D2.reshape(1,
                                 zm.initial_D2.shape[0],
                                 zm.initial_D2.shape[1]).repeat(n_samples,axis=0)
-            torsion_refineable_indices.append(
+            torsion_refinable_indices.append(
                 torch.from_numpy(
-                    zm.torsion_refineable_indices).type(torch.long).to(device)
+                    zm.torsion_refinable_indices).type(torch.long).to(device)
                 )
             if zm.degrees_of_freedom == 7:
                 init_cart_coords.append(torch.from_numpy(
@@ -210,7 +210,7 @@ def get_zm_related_tensors(Structure, n_samples, dtype, device):
                 "rotation" : zm_rotation_indices,
                 "torsion" : zm_torsion_indices,
                 "initial_D2" : init_D2,
-                "torsion_refineable_indices" : torsion_refineable_indices,
+                "torsion_refinable_indices" : torsion_refinable_indices,
                 "bond_connection" : bond_connection,
                 "angle_connection" : angle_connection,
                 "torsion_connection" : torsion_connection,
@@ -458,7 +458,7 @@ def get_PO_tensors(Structure, PO_axis, n_reflections, n_samples, device, dtype):
 
     Returns:
         Tuple of tensors: cosP, sinP (same meaning as used in GSAS code, but
-            Tensors so applied for all reflections). Factor = refineable
+            Tensors so applied for all reflections). Factor = refinable
             parameter, initialized to 1.0.
     """
     if n_reflections is not None:
