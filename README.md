@@ -20,7 +20,7 @@ Once all data is prepared, _GALLOP_ can be used via a convenient browser-based G
 \* instructions coming soon
 
 #### Video showing browser interface in use
-A video showing _GALLOP_ solving CT-DMF2 in real time via the _GALLOP_ broswer-based interface is available in this short [YouTube video](https://www.youtube.com/watch?v=n0aovGUS4JU).
+A video showing _GALLOP_ solving CT-DMF2 (42 degrees of freedom) in real time via the _GALLOP_ broswer-based interface is available in this short [YouTube video](https://www.youtube.com/watch?v=n0aovGUS4JU).
 
 ------------------------------
 ## **Try _GALLOP_**
