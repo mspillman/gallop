@@ -381,12 +381,12 @@ elif function == "GALLOP":
                     else:
                         zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
                     if all_settings["animate_structure"]:
-                        html = f'viz_{result["GALLOP Iter"]+1}_anim.html'
+                        html = f'plot_iter_{result["GALLOP Iter"]+1}_both_anim.html'
                         zipObj.write(html)
                         os.remove(html)
-                        html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
-                        zipObj.write(html)
-                        os.remove(html)
+                        #html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
+                        #zipObj.write(html)
+                        #os.remove(html)
                     for fn in glob.iglob("*_chisqd_*"):
                         zipObj.write(fn)
                         os.remove(fn)
