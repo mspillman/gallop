@@ -3,7 +3,7 @@
 
 Contents:
 1. [Introduction](#introduction)
-2. [Try _GALLOP_](#try-_GALLOP_)
+2. [Try _GALLOP_ for free](#try-_GALLOP_-for-free)
 3. [Local Installation](#local-installation)
 4. [References and Resources](#references-and-resources)
 
@@ -23,7 +23,7 @@ Once all data is prepared, _GALLOP_ can be used via a convenient browser-based G
 A video showing _GALLOP_ solving CT-DMF2 (42 degrees of freedom) in real time via the _GALLOP_ broswer-based interface is available in this short [YouTube video](https://www.youtube.com/watch?v=n0aovGUS4JU).
 
 ------------------------------
-## **Try _GALLOP_**
+## **Try _GALLOP_ for free**
 You will need a Google account to run the notebooks linked below. These notebooks will allow you to try _GALLOP_ for free, via your browser. You will not need to download or install anything to your computer, and do not require local GPU hardware in order to run these notebooks.
 
 | Notebook | Description |
