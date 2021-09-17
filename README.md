@@ -290,7 +290,7 @@ For optimal performance, an Nvidia GPU is recommended. However, it may be possib
 | [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution **strongly** recommended.|
 | [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs, though this has not yet been tested thoroughly |
 | [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with installed CUDA | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
-| [Visual C++ build tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation.|
+| [Visual C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation.|
 
 <br />
 
