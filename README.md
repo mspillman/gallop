@@ -24,7 +24,7 @@ A video showing _GALLOP_ solving CT-DMF2 (42 degrees of freedom) in real time vi
 
 ------------------------------
 ## **Try _GALLOP_ on a free cloud GPU**
-You will need a Google account to run the notebooks linked below. These notebooks will allow you to try _GALLOP_ for free, via your browser. You will not need to download or install anything to your computer, and do not require local GPU hardware in order to run these notebooks.
+You will need a Google account to run the notebooks linked below. These notebooks will allow you to try _GALLOP_ for free, via your browser. You will not need to download or install anything to your computer, and you do not require local GPU hardware in order to run these notebooks.
 
 | Notebook | Description |
 |---------|--------|
