@@ -3,7 +3,7 @@
 
 Contents:
 1. [Introduction](#introduction)
-2. [Try _GALLOP_ on a free cloud GPU](#try-_GALLOP_-on-a-free-cloud-gpu)
+2. [Try _GALLOP_ on a free cloud GPU](#try-gallop-on-a-free-cloud-gpu)
 3. [Local Installation](#local-installation)
 4. [References and Resources](#references-and-resources)
 
