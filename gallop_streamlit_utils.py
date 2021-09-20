@@ -723,7 +723,8 @@ def display_info(struct, all_settings, minimiser_settings, pawley_program):
             zm_info = []
             dof_tot = 0
             for zm in struct.zmatrices:
-                filename, dof = zm.filename, zm.degrees_of_freedom
+                filename = os.path.split(zm.filename)[-1]
+                dof = zm.degrees_of_freedom
                 if zm.rotation_degrees_of_freedom == 4:
                     dof -= 1
                 zm_info.append([filename, str(dof)])
