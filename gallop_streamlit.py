@@ -212,7 +212,6 @@ elif function == "GALLOP":
         if clear_files:
             for u in uploaded_files:
                 u.read()
-                name = u.name.replace(" ", "_")
                 os.remove(name)
 
         gsu.display_info(struct, all_settings, minimiser_settings,
