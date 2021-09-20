@@ -127,7 +127,10 @@ Once _GALLOP_ has been installed successfully, in the folder containing _GALLOP_
 ```
 streamlit run .\gallop_streamlit.py
 ```
-Windows users can simply double click on the supplied ```gallop.bat``` file to automatically run the above command.
+Windows users with Python added to their PATH environment variable can simply double click on the supplied ```gallop.bat``` file to automatically run the above command. Alternatively, those using Anaconda can navigate to located the ```gallop.bat``` file in an Anaconda prompt, then run the batch file by typing:
+```
+gallop.bat
+```
 
 A browser window will be opened displaying the _GALLOP_ interface:
 
@@ -279,9 +282,11 @@ Instructions coming soon
 
 ------------------------------
 ## **Local Installation**
-Some users may wish to make use of _GALLOP_ locally. Whilst these instructions have only been tested on Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments - the colab notebooks linked above run on a Linux for example. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
+Some users may wish to make use of _GALLOP_ locally. Whilst these instructions are specific to Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments - the colab notebooks linked above run on a Linux virtual machine for example. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
 For optimal performance, an Nvidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
+
+Older Nvidia GPUs may not work with PyTorch. Your GPU should have a compute capability of 3.5 or higher. See [here](https://developer.nvidia.com/cuda-gpus) to check your GPU. It is recommended that your GPU have a large amount of on-board memory (> 6 GB) in order to be able to tackle highly complex structures in a reasonable time.
 
 <br />
 
