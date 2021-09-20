@@ -284,20 +284,21 @@ Instructions coming soon
 ## **Local Installation**
 Some users may wish to make use of _GALLOP_ locally. Whilst these instructions are specific to Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments - the colab notebooks linked above run on a Linux virtual machine for example. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
+**Hardware requirements:**
 For optimal performance, an Nvidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
-Older Nvidia GPUs may not work with PyTorch. Your GPU should have a compute capability of 3.5 or higher. See [here](https://developer.nvidia.com/cuda-gpus) to check your GPU. It is recommended that your GPU have a large amount of on-board memory (> 6 GB) in order to be able to tackle highly complex structures in a reasonable time.
+Older Nvidia GPUs may not work with PyTorch. Your GPU should have a compute capability of 3.5 or higher. See [here](https://developer.nvidia.com/cuda-gpus) to check your GPU. It is _recommended_ that your GPU have a large amount of on-board memory (> 6 GB) in order to be able to tackle high-complexity structures in a reasonable time.
 
 <br />
 
-**_GALLOP_ requires:**
+**_GALLOP_ software prerequisites:**
 
 | Dependency | Version |Comments|
 |------------|---------|--------|
 | [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution **strongly** recommended.|
 | [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs, though this has not yet been tested thoroughly |
 | [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with installed CUDA | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
-| [Visual C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools if prompted to do so during library installation.|
+| [Visual C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools (e.g. gcc) if not already installed.|
 
 <br />
 
@@ -323,7 +324,9 @@ PyTorch should be installed first using the instructions on the [PyTorch website
 >>> print(torch.cuda.is_available())
 ```
 
-If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that _GALLOP_ will work using CPU-only PyTorch, but it will be extremely slow except with very small numbers of particles.
+If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU*. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that _GALLOP_ will work using CPU-only PyTorch, but it will be extremely slow except with very small numbers of particles.
+
+* One user has informed us that an old GPU returned True for this test, but was still not suitable. Please ensure that your [GPU compute capability](https://developer.nvidia.com/cuda-gpus) is 3.5 or higher to ensure that it will work with PyTorch.
 
 Once PyTorch is properly installed, download the _GALLOP_ code either using git:
 ```
@@ -338,7 +341,12 @@ pip install .
 ```
 This will automatically download and install the remaining dependencies and _GALLOP_.
 
-If C++ build tools are not available, this is likely to result in an error.
+On Linux systems, assuming CUDA and PyTorch is already installed, this can be accomplished using the following code:
+```
+git clone https://github.com/mspillman/gallop.git && cd gallop && pip install .
+```
+
+Regardless of platform, if C++ build tools are not available, attempting installation is likely to result in an error.
 
 ------------------------------
 
