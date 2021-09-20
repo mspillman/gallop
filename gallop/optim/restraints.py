@@ -8,11 +8,11 @@ import torch
 from torch import Tensor
 
 @torch.jit.script
-def get_restraint_penalties(asymmetric_frac_coords, min_chi_2, lattice_matrix, d_atoms,
+def get_restraint_penalties(asymmetric_frac_coords, lattice_matrix, d_atoms,
                     distances, d_weights, a_atoms, cos_angles, a_weights,
                     t_atoms, sintorsions, costorsions, t_weights, restrain_d,
                     restrain_a, restrain_t):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool) -> Tensor
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool) -> Tensor
     """
     Supply the asymmetric fractional coordinates and atoms associated with
         pre-defined distances, angles and torsions then calculate these values
@@ -22,8 +22,6 @@ def get_restraint_penalties(asymmetric_frac_coords, min_chi_2, lattice_matrix, d
 
     Args:
         asymmetric_frac_coords (Tensor): The asymmetric unit fractional coordinates.
-        min_chi_2 (Tensor): The minimum chi2 value found by all particles, used
-            for weighting the penalties.
         lattice_matrix (Tensor): Matrix representation of the lattice used to
             convert fractional to cartesian coordinates.
         d_atoms (Tensor - long): Indices of the atoms involved in the distance
@@ -55,7 +53,7 @@ def get_restraint_penalties(asymmetric_frac_coords, min_chi_2, lattice_matrix, d
         atomic_distances = torch.sqrt((
                 (cart[:,d_atoms,:][:,:,0,:] - cart[:,d_atoms,:][:,:,1,:])**2
                     ).sum(dim=-1))
-        distance_penalty = (min_chi_2*d_weights.view(1,d_weights.shape[0])*(
+        distance_penalty = (d_weights.view(1,d_weights.shape[0])*(
                                                 distances-atomic_distances)**2)
         penalty += distance_penalty.sum(dim=-1)
 
@@ -66,7 +64,7 @@ def get_restraint_penalties(asymmetric_frac_coords, min_chi_2, lattice_matrix, d
         atomic_cos_angles = torch.einsum('bij,bij->bi', u, v).div(
                                 u.norm(p=2, dim=-1)*v.norm(p=2, dim=-1))
 
-        angle_penalty = (min_chi_2*a_weights.view(1,a_weights.shape[0])*(
+        angle_penalty = (a_weights.view(1,a_weights.shape[0])*(
                                             cos_angles-atomic_cos_angles)**2)
         penalty += angle_penalty.sum(dim=-1)
 
@@ -84,7 +82,7 @@ def get_restraint_penalties(asymmetric_frac_coords, min_chi_2, lattice_matrix, d
                                                                     u1u2n_u2u3n)
         cosphi = torch.einsum("bij,bij->bi",u1u2, u2u3).div(u1u2n_u2u3n)
 
-        torsion_penalty = (min_chi_2*t_weights.view(1,t_weights.shape[0])*(
+        torsion_penalty = (t_weights.view(1,t_weights.shape[0])*(
                             ((sintorsions-sinphi)**2)+(costorsions-cosphi)**2))
         penalty += torsion_penalty.sum(dim=-1)
 

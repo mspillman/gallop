@@ -527,11 +527,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             chi_2 = chi2.get_chi_2(**tensors)
 
         if use_restraints:
-            with torch.no_grad():
-                min_chi_2 = torch.ones_like(chi_2.min())#chi_2.min()
             restraint_penalty = restraints.get_restraint_penalties(
-                                asymmetric_frac_coords, min_chi_2,
-                                **restraint_tensors)
+                                asymmetric_frac_coords, **restraint_tensors)
         else:
             restraint_penalty = 0
         # PyTorch expects a single value for backwards pass.
@@ -542,7 +539,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             elif loss.lower() == "sum":
                 L = (chi_2*(1.0 + restraint_penalty)).sum()
             elif loss.lower() == "xlogx":
-                L = torch.sum(torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty)))
+                L = (torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty))).sum()
         else:
             if loss is None:
                 # Default to the sum operation if loss is None
