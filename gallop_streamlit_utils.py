@@ -260,12 +260,12 @@ def get_all_settings(loaded_values):
             if torsion_shadowing:
                 Z_prime = int(st.number_input("Enter Z' of structure",
                                 min_value=1, max_value=None,
-                                value=int(loaded_values["Z_prime"]), step=1,
+                                value=loaded_values["Z_prime"], step=1,
                                 format=None, key=None))
                 shadow_iters = int(st.number_input("Number of shadowing iterations",
                                 min_value=0,
-                                max_value=int(all_settings["n_GALLOP_iters"]),
-                                value=int(loaded_values["shadow_iters"]),
+                                max_value=all_settings["n_GALLOP_iters"],
+                                value=loaded_values["shadow_iters"],
                                 step=1, format=None, key=None))
             else:
                 Z_prime = False
@@ -291,9 +291,26 @@ def get_all_settings(loaded_values):
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
                             value=loaded_values["memory_opt"], key=None)
-
-
-
+            use_restraints = st.checkbox("Use distance restraints",
+                                        value=loaded_values["use_restraints"])
+            if use_restraints:
+                n_restraints = st.number_input("Enter number of restraints to use",
+                                        min_value=0, max_value=None,
+                                        value=loaded_values["n_restraints"],
+                                        step=1, format=None, key=None)
+                restraints = loaded_values["restraints"]
+                st.write("Enter the atom labels, distance and \
+                        % weight (separated by commas, e.g. C1,C2,1.54,50)")
+                if restraints is None:
+                    restraints = defaultdict(str)
+                for i in range(n_restraints):
+                    #st.write()
+                    r = st.text_input(f"Restraint {i+1}:",key=f"r_{i+1}",
+                                        value=restraints[str(i)])
+                    restraints[str(i)] = r
+            else:
+                restraints = None
+                n_restraints = 0
         else:
             find_lr = loaded_values["find_lr"]
             find_lr_auto_mult = loaded_values["find_lr_auto_mult"]
@@ -309,6 +326,9 @@ def get_all_settings(loaded_values):
             torsion_shadowing = loaded_values["torsion_shadowing"]
             Z_prime = int(loaded_values["Z_prime"])
             shadow_iters = int(loaded_values["shadow_iters"])
+            use_restraints = loaded_values["use_restraints"]
+            n_restraints = loaded_values["n_restraints"]
+            restraints = loaded_values["restraints"]
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -324,7 +344,9 @@ def get_all_settings(loaded_values):
     all_settings["torsion_shadowing"] = torsion_shadowing
     all_settings["Z_prime"] = Z_prime
     all_settings["shadow_iters"] = shadow_iters
-
+    all_settings["use_restraints"] = use_restraints
+    all_settings["n_restraints"] = n_restraints
+    all_settings["restraints"] = restraints
 
     # Particle Swarm settings
     with st.sidebar.expander(label="Particle Swarm", expanded=False):
