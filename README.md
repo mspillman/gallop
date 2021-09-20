@@ -284,6 +284,8 @@ Instructions coming soon
 ## **Local Installation**
 Some users may wish to make use of _GALLOP_ locally. Whilst these instructions are specific to Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments - the colab notebooks linked above run on a Linux virtual machine for example. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
+Warning - this is not for the faint of heart! You will need to use the command line.
+
 **Hardware requirements:**
 For optimal performance, an Nvidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
