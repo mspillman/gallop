@@ -180,7 +180,14 @@ elif function == "GALLOP":
         if clear_files:
             for u in uploaded_files:
                 u.read()
-                os.remove(name)
+                try:
+                    os.remove(name)
+                except FileNotFoundError:
+                    name = u.name.replace(" ", "_")
+                    try:
+                        os.remove(name)
+                    except FileNotFoundError:
+                        print("Failed to remove file", name)
 
         gsu.display_info(struct, all_settings, minimiser_settings,
                                                     pawley_program)
