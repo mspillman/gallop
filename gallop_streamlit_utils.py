@@ -614,7 +614,6 @@ def get_files():
             for u in uploaded_files:
                 data = u.read()
                 name = u.name
-                name = name.replace(" ","_")
                 if ".gpx" in name:
                     data = bytearray(data)
                     with open(name, "wb") as output:
@@ -622,20 +621,7 @@ def get_files():
                 else:
                     data = StringIO(data.decode("utf-8")).read().split("\r")
                     with open(name, "w") as output:
-                        if ".sdi" not in name:
-                            output.writelines(data)
-                        else:
-                            lines = []
-                            for line in data:
-                                if any(item in line for item in [
-                                                "TIC","HCV","PIK","RAW","DSL"]):
-                                    line = line.split(".\\")
-                                    line[1] = line[1].replace(" ", "_")
-                                    line = ".\\".join(line)
-                                    lines.append(line)
-                                else:
-                                    lines.append(line)
-                            output.writelines(lines)
+                        output.writelines(data)
                     output.close()
                 if ".sdi" in name:
                     sdi = name

@@ -202,14 +202,19 @@ def read_DASH_sdi(filename):
     with open(filename) as in_sdi:
         for line in in_sdi:
             line = list(filter(None,line.strip().split(" ")))
+
             if line[0] == "HCV":
-                hcv = os.path.join(os.getcwd(),directory,line[1].strip(".\\"))
+                hcv = os.path.join(os.getcwd(),
+                                directory,(" ").join(line[1:]).strip(".\\"))
             if line[0] == "PIK":
-                pik = os.path.join(os.getcwd(),directory,line[1].strip(".\\"))
+                pik = os.path.join(os.getcwd(),
+                                directory,(" ").join(line[1:]).strip(".\\"))
             if line[0] == "TIC":
-                tic = os.path.join(os.getcwd(),directory,line[1].strip(".\\"))
+                tic = os.path.join(os.getcwd(),
+                                directory,(" ").join(line[1:]).strip(".\\"))
             if line[0] == "DSL":
-                dsl = os.path.join(os.getcwd(),directory,line[1].strip(".\\"))
+                dsl = os.path.join(os.getcwd(),
+                                directory,(" ").join(line[1:]).strip(".\\"))
             if line[0] == "Cell":
                 unit_cell = np.array(line[1:]).astype(float)
             if line[0] == "SpaceGroup":
