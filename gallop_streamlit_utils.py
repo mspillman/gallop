@@ -260,12 +260,12 @@ def get_all_settings(loaded_values):
             if torsion_shadowing:
                 Z_prime = int(st.number_input("Enter Z' of structure",
                                 min_value=1, max_value=None,
-                                value=loaded_values["Z_prime"], step=1,
+                                value=int(loaded_values["Z_prime"]), step=1,
                                 format=None, key=None))
                 shadow_iters = int(st.number_input("Number of shadowing iterations",
                                 min_value=0,
-                                max_value=all_settings["n_GALLOP_iters"],
-                                value=loaded_values["shadow_iters"],
+                                max_value=int(all_settings["n_GALLOP_iters"]),
+                                value=int(loaded_values["shadow_iters"]),
                                 step=1, format=None, key=None))
             else:
                 Z_prime = False
