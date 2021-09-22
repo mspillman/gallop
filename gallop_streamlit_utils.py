@@ -425,8 +425,8 @@ def get_all_settings(loaded_values):
         if all_settings["global_update"]:
             all_settings["global_update_freq"] = int(st.number_input(
                         "All-swarm global update frequency",
-                        min_value=1, max_value=all_settings["n_GALLOP_iters"],
-                        value=loaded_values["global_update_freq"],
+                        min_value=1, max_value=int(all_settings["n_GALLOP_iters"]),
+                        value=int(loaded_values["global_update_freq"]),
                         step=1, format=None, key=None))
         else:
             all_settings["global_update_freq"]=int(all_settings["n_GALLOP_iters"])
@@ -439,11 +439,11 @@ def get_all_settings(loaded_values):
                         min_value=0.0, max_value=100.0,
                         value=loaded_values["randomise_percentage"],
                         step=10.0, format=None, key=None)
-            all_settings["randomise_freq"] = st.number_input(
+            all_settings["randomise_freq"] = int(st.number_input(
                         "Randomisation frequency",
-                        min_value=1, max_value=all_settings["n_GALLOP_iters"],
-                        value=loaded_values["randomise_freq"],
-                        step=1, format=None, key=None)
+                        min_value=1, max_value=int(all_settings["n_GALLOP_iters"]),
+                        value=int(loaded_values["randomise_freq"]),
+                        step=1, format=None, key=None))
         else:
             all_settings["randomise_percentage"] = 0
             all_settings["randomise_freq"] = all_settings["n_GALLOP_iters"]+1

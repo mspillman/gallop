@@ -386,19 +386,26 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     gradients = []
     losses = []
     if torsion_shadowing:
-        # Only pay attention to the first block of torsions accounting for Z'>1.
-        # This assumes that all of the fragments have similar torsion angles.
-        # This can significantly speed up solving Z'>1 structures where this
-        # assumption is valid.
-        # To use this, the ZMs supplied must be in blocks that correspond to the
-        # unique fragments in Z', for example, a structure with two flexible
-        # fragments and two ions would need to be entered into the structure as
-        # ion1 fragment1 ion2 fragment2
-        # This is different to the way DASH converts ZMs by default, where ions
-        # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
-        n_torsion_fragments = len(tensors["zm"]["torsion"])
-        first_frag = int(n_torsion_fragments / Z_prime)
-        tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
+        torsion_tweaks = torch.zeros((internal.shape[0], 1), device=device,
+                                            dtype=dtype, requires_grad=False)
+        torsion_tweaks[1::6] += np.pi
+        torsion_tweaks[2::6] += 2*np.pi/3
+        torsion_tweaks[3::6] -= 2*np.pi/3
+        torsion_tweaks[4::6] += np.pi/2
+        torsion_tweaks[5::6] -= np.pi/2
+    #    # Only pay attention to the first block of torsions accounting for Z'>1.
+    #    # This assumes that all of the fragments have similar torsion angles.
+    #    # This can significantly speed up solving Z'>1 structures where this
+    #    # assumption is valid.
+    #    # To use this, the ZMs supplied must be in blocks that correspond to the
+    #    # unique fragments in Z', for example, a structure with two flexible
+    #    # fragments and two ions would need to be entered into the structure as
+    #    # ion1 fragment1 ion2 fragment2
+    #    # This is different to the way DASH converts ZMs by default, where ions
+    #    # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
+    #    n_torsion_fragments = len(tensors["zm"]["torsion"])
+    #    first_frag = int(n_torsion_fragments / Z_prime)
+    #    tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
 
     if use_restraints:
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
@@ -508,8 +515,31 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
-        if use_restraints or include_PO:
-            asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+        if use_restraints or include_PO or torsion_shadowing:
+            if torsion_shadowing:
+                internal = tensors["zm"]["internal"]
+                first_frag = int(internal.shape[1] / Z_prime)
+                first_frag_tors = internal[:,:first_frag]
+                all_tors = torch.cat((first_frag_tors,
+                        torsion_tweaks+first_frag_tors.repeat(1,Z_prime-1)),-1)
+
+                asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                    tensors["zm"]["external"],
+                    all_tors,
+                    tensors["zm"]["position"],
+                    tensors["zm"]["rotation"],
+                    tensors["zm"]["torsion"],
+                    tensors["zm"]["initial_D2"],
+                    tensors["zm"]["zmatrices_degrees_of_freedom"],
+                    tensors["zm"]["bond_connection"],
+                    tensors["zm"]["angle_connection"],
+                    tensors["zm"]["torsion_connection"],
+                    tensors["zm"]["torsion_refinable_indices"],
+                    tensors["zm"]["lattice_inv_matrix"],#
+                    tensors["zm"]["init_cart_coords"]
+                    )
+            else:
+                asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                                                             **tensors["zm"])
 
             calculated_intensities = intensities.calculate_intensities(
