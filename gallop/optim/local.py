@@ -674,7 +674,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
     # Now get the profile chi2 if using DASH data
     if Structure.source.lower() == "dash":
-        calc_profile = (best_intensities.cpu().numpy().reshape(
+        calc_profile = (best_intensities.detach().cpu().numpy().reshape(
                         max(best_intensities.shape),1)
                     * Structure.baseline_peaks[:max(best.shape)]).sum(axis=0)
         sum1 = calc_profile[Structure.n_contributing_peaks != 0].sum()
