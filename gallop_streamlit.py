@@ -33,13 +33,15 @@ st.set_page_config(page_title='GALLOP Web App', page_icon = ":gem:",
 st.title("GALLOP")
 st.sidebar.title("Options")
 function = st.sidebar.radio("Choose function",
-                            ["GALLOP","View previous results","Instructions"])
+                            ["GALLOP","View previous results",])
+# Re-enable this in a future update, once help files are written!
+# "Instructions"])
 
 if "View" in function:
     gsu.browse_solved_zips()
 
-elif "Instructions" in function:
-    gsu.instructions()
+#elif "Instructions" in function:
+#    gsu.instructions()
 
 elif function == "GALLOP":
     st.sidebar.markdown("**Settings**")
