@@ -657,10 +657,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             }
 
     if torsion_shadowing:
-        torsions = result["internal"]
-        torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
-        torsions = np.tile(torsions, (1,Z_prime))
-        result["internal"] = torsions
+        ##torsions = result["internal"]
+        #torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
+        #torsions = np.tile(torsions, (1,Z_prime))
+        #result["internal"] = torsions
+        result["internal"] = all_tors.detach().cpu().numpy()
 
     # Now calculate the intensities with H-atoms included and use them to get a
     # profile chi2 estimate. If Structure.ignore_H_atoms is True, also calculate
