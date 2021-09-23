@@ -129,10 +129,15 @@ def get_all_settings(loaded_values):
                     value=loaded_values["structure_name"], max_chars=None,
                     key=None, type='default')
         all_settings["structure_name"] = structure_name.replace(" ", "_")
-        all_settings["n_GALLOP_iters"] = st.number_input(
-                                    "Total number of GALLOP iterations",
+        all_settings["n_GALLOP_runs"] = st.number_input(
+                                    "Total number of GALLOP runs",
                                     min_value=1, max_value=None,
-                                    value=loaded_values["n_GALLOP_iters"],
+                                    value=int(loaded_values["n_GALLOP_runs"]),
+                                    step=1, format=None, key=None)
+        all_settings["n_GALLOP_iters"] = st.number_input(
+                                    "Total number of iterations per run",
+                                    min_value=1, max_value=None,
+                                    value=int(loaded_values["n_GALLOP_iters"]),
                                     step=1, format=None, key=None)
 
         all_settings["seed"] = int(st.number_input(

@@ -1,5 +1,6 @@
 {
     "structure_name": "",
+    "n_GALLOP_runs" : 1,
     "n_GALLOP_iters": 100,
     "seed": -1,
     "animate_structure": false,
