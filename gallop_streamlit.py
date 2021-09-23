@@ -88,7 +88,7 @@ elif function == "GALLOP":
         else:
             struct.add_data(out, source="TOPAS",
                         percentage_cutoff=all_settings["percentage_cutoff"])
-        for z in zms:
+        for z in sorted(zms):
             check = z_matrix.Z_matrix(z)
             if all_settings["ignore_H_atoms"] and not check.H_atom_torsion_defs:
                 struct.add_zmatrix(z)
