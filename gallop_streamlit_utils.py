@@ -135,9 +135,9 @@ def get_all_settings(loaded_values):
                                     value=int(loaded_values["n_GALLOP_runs"]),
                                     step=1, format=None, key=None)
         all_settings["n_GALLOP_iters"] = st.number_input(
-                                    "Total number of GALLOP iterations",
+                                    "Total number of iterations per run",
                                     min_value=1, max_value=None,
-                                    value=loaded_values["n_GALLOP_iters"],
+                                    value=int(loaded_values["n_GALLOP_iters"]),
                                     step=1, format=None, key=None)
 
         all_settings["seed"] = int(st.number_input(

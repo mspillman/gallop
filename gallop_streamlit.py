@@ -244,214 +244,238 @@ elif function == "GALLOP":
             with open(os.path.join(os.getcwd(),settings_file), "w") as f:
                 json.dump(all_settings, f, indent=4)
             f.close()
+            nruns = all_settings["n_GALLOP_runs"]
+            for run in range(nruns):
+                if run > 0:
+                    # New swarm and starting positions
+                    swarm = optim.swarm.Swarm(
+                        Structure = struct,
+                        n_particles=int(n_particles),
+                        n_swarms = int(all_settings["n_swarms"]),
+                        global_update = all_settings["global_update"],
+                        global_update_freq = all_settings["global_update_freq"],
+                        inertia_bounds = all_settings["inertia_bounds"],
+                        inertia = inertia,
+                        c1 = all_settings["c1"],
+                        c2 = all_settings["c2"],
+                        limit_velocity = all_settings["limit_velocity"],
+                        vmax = all_settings["vmax"])
 
-            st.write("")
-            st.write("Solving...")
-            result_info = []
-            start_time = time.time()
-            iter_placeholder = st.empty()
-            progress_bar_placeholder = st.empty()
-            structure_plot_placeholder = st.empty()
-            if struct.source.lower() == "dash":
-                profile_plot_placeholder = st.empty()
-            result_placeholder = st.empty()
+                    external, internal = swarm.get_initial_positions(MDB=dbf)
+                    external = np.array(external)
+                    internal = np.array(internal)
 
-            now = datetime.datetime.now()
-            current_time = str(now.strftime("%H-%M"))
+                st.write("")
 
-            lr = minimiser_settings["learning_rate"]
-            zipname = f'{struct.name}_{current_time}_{all_settings["n_swarms"]}\
-                        _swarms_{all_settings["swarm_size"]}\
-                        _particles_{all_settings["optim"]}.zip'
-            zipname = zipname.replace(" ","")
-            if not os.path.exists("GALLOP_results"):
-                os.mkdir("GALLOP_results")
-
-            date = datetime.date.today().strftime("%Y-%b-%d")
-            if not os.path.exists(os.path.join("GALLOP_results", date)):
-                os.mkdir(os.path.join("GALLOP_results", date))
-            zipname = os.path.join("GALLOP_results",date,zipname)
-
-            GPU_split = all_settings["particle_division"]
-            n_GPUs = torch.cuda.device_count()
-            if (GPU_split is not None and n_GPUs >= len(GPU_split)):
-                import torch.multiprocessing as mp
-                mp.set_start_method('spawn', force=True)# For use with CUDA on
-                                                        # Unix systems
-                pool = mp.Pool(processes = len(GPU_split))
-
-            for i in range(int(all_settings["n_GALLOP_iters"])):
-                itertext = "GALLOP iteration " + str(i+1)
-                if ((i+1)%all_settings["global_update_freq"] == 0 and i != 0 and
-                                                all_settings["global_update"]):
-                    itertext += " Global update after this iter"
-                if ((i+1)==all_settings["shadow_iters"] and
-                                            all_settings["torsion_shadowing"]):
-                    itertext += " Removing torsion shadowing after this iter"
-                if all_settings["randomise_worst"]:
-                    if (i+1) % all_settings["randomise_freq"] == 0:
-                        pcnt = all_settings["randomise_percentage"]
-                        itertext += f" Randomising worst {pcnt} % of particles"
-
-                iter_placeholder.text(itertext)
-                with progress_bar_placeholder:
-                    try:
-                        if (GPU_split is not None and n_GPUs >= len(GPU_split)):
-                            result = multiGPU.minimise(i, struct, swarm,
-                                external, internal, GPU_split,
-                                minimiser_settings, pool, start_time=start_time)
-
-                        else:
-                            result = optim.local.minimise(struct,
-                                                external=external,
-                                                internal=internal,
-                                                run=i, start_time=start_time,
-                                                **minimiser_settings)
-                    except RuntimeError as e:
-                        if "memory" in str(e):
-                            st.error("GPU memory error! Reset GALLOP, then:")
-                            st.write("Try reducing number of particles, the "
-                                    "number of reflections or use the Reduce "
-                                    "performance option in Local optimiser "
-                                    "settings.")
-                            st.write("Error code below:")
-                            st.write("")
-                            st.text(str(e))
-                        else:
-                            st.error("An unknown error occurred:")
-                            st.text(str(e))
-                        break
-                chi_2 = result["chi_2"]
-
-                result_info.append([chi_2.min().item(),
-                                (time.time() - start_time)/60])
-                result_info_df = pd.DataFrame(result_info, columns=["best chi2",
-                                                                "time / min"])
-                result_info_df.index = np.arange(1, len(result_info_df) + 1)
-                with structure_plot_placeholder:
-                    hide_H = True
-                    with st.expander(label="Show structure", expanded=False):
-                        html = gsu.show_structure(result, struct, all_settings,
-                                                            hide_H=hide_H)
-                        #st.components.v1.html(open(
-                        ##    f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
-                        #                        width=600, height=400)
-                        st.components.v1.html(html, width=600, height=400)
-                        if hide_H:
-                            st.write(f"Iteration {i+1}. H hidden for clarity")
-                        else:
-                            st.write(f"Iteration {i+1}")
-
+                result_info = []
+                start_time = time.time()
+                run_placeholder = st.empty()
+                iter_placeholder = st.empty()
+                progress_bar_placeholder = st.empty()
+                structure_plot_placeholder = st.empty()
                 if struct.source.lower() == "dash":
-                    with profile_plot_placeholder:
-                        with st.expander(label="Show profile",
-                                                                expanded=False):
-                            if struct.ignore_H_atoms:
-                                st.write("Stats with H-atoms included:")
-                            st.write("$\\chi^{2}_{int}$ = "+str(
-                                    np.around(result["best_chi_2_with_H"], 3)))
-                            st.write("$\\chi^{2}_{prof}$ = "+str(
+                    profile_plot_placeholder = st.empty()
+                result_placeholder = st.empty()
+
+                now = datetime.datetime.now()
+                current_time = str(now.strftime("%H-%M"))
+
+                lr = minimiser_settings["learning_rate"]
+                GPU_split = all_settings["particle_division"]
+                n_GPUs = torch.cuda.device_count()
+                if (GPU_split is not None and n_GPUs >= len(GPU_split)):
+                    import torch.multiprocessing as mp
+                    mp.set_start_method('spawn', force=True)# For use with CUDA on
+                                                            # Unix systems
+                    pool = mp.Pool(processes = len(GPU_split))
+
+                with run_placeholder:
+                    st.write(f"Run {run+1} of {nruns}...")
+                zipname = f'{struct.name}_run_{run+1}_{current_time}_\
+                        {all_settings["n_swarms"]}_swarms_\
+                        {all_settings["swarm_size"]}_particles_\
+                        {all_settings["optim"]}.zip'
+                zipname = zipname.replace(" ","")
+                if not os.path.exists("GALLOP_results"):
+                    os.mkdir("GALLOP_results")
+
+                date = datetime.date.today().strftime("%Y-%b-%d")
+                if not os.path.exists(os.path.join("GALLOP_results", date)):
+                    os.mkdir(os.path.join("GALLOP_results", date))
+                zipname = os.path.join("GALLOP_results",date,zipname)
+
+
+                for i in range(int(all_settings["n_GALLOP_iters"])):
+                    itertext = "GALLOP iteration " + str(i+1)
+                    if ((i+1)%all_settings["global_update_freq"] == 0
+                            and i != 0 and all_settings["global_update"]):
+                        itertext += " Global update after this iter"
+                    if ((i+1)==all_settings["shadow_iters"] and
+                                                all_settings["torsion_shadowing"]):
+                        itertext += " Removing torsion shadowing after this iter"
+                    if all_settings["randomise_worst"]:
+                        if (i+1) % all_settings["randomise_freq"] == 0:
+                            pcnt = all_settings["randomise_percentage"]
+                            itertext += f" Randomising worst {pcnt} % of particles"
+
+                    iter_placeholder.text(itertext)
+                    with progress_bar_placeholder:
+                        try:
+                            if (GPU_split is not None and n_GPUs >= len(GPU_split)):
+                                result = multiGPU.minimise(i, struct, swarm,
+                                    external, internal, GPU_split,
+                                    minimiser_settings, pool, start_time=start_time)
+
+                            else:
+                                result = optim.local.minimise(struct,
+                                                    external=external,
+                                                    internal=internal,
+                                                    run=i, start_time=start_time,
+                                                    **minimiser_settings)
+                        except RuntimeError as e:
+                            if "memory" in str(e):
+                                st.error("GPU memory error! Reset GALLOP, then:")
+                                st.write("Try reducing number of particles, the "
+                                        "number of reflections or use the Reduce "
+                                        "performance option in Local optimiser "
+                                        "settings.")
+                                st.write("Error code below:")
+                                st.write("")
+                                st.text(str(e))
+                            else:
+                                st.error("An unknown error occurred:")
+                                st.text(str(e))
+                            break
+                    chi_2 = result["chi_2"]
+
+                    result_info.append([chi_2.min().item(),
+                                    (time.time() - start_time)/60])
+                    result_info_df = pd.DataFrame(result_info, columns=["best chi2",
+                                                                    "time / min"])
+                    result_info_df.index = np.arange(1, len(result_info_df) + 1)
+                    with structure_plot_placeholder:
+                        hide_H = True
+                        with st.expander(label="Show structure", expanded=False):
+                            html = gsu.show_structure(result, struct, all_settings,
+                                                                hide_H=hide_H)
+                            #st.components.v1.html(open(
+                            ##    f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
+                            #                        width=600, height=400)
+                            st.components.v1.html(html, width=600, height=400)
+                            if hide_H:
+                                st.write(f"Iteration {i+1}. H hidden for clarity")
+                            else:
+                                st.write(f"Iteration {i+1}")
+
+                    if struct.source.lower() == "dash":
+                        with profile_plot_placeholder:
+                            with st.expander(label="Show profile", expanded=False):
+                                if struct.ignore_H_atoms:
+                                    st.write("Stats with H-atoms included:")
+                                st.write("$\\chi^{2}_{int}$ = "+str(
+                                        np.around(result["best_chi_2_with_H"], 3)))
+                                st.write("$\\chi^{2}_{prof}$ = "+str(
+                                                np.around(result["prof_chi_2"], 3)))
+                                ratio = np.around(
+                                    result["prof_chi_2"] / struct.PawleyChiSq, 3)
+                                st.write("$\\frac{\\chi^{2}_{prof}}"
+                                        + "{\\chi^{2}_{Pawley}}$ ="
+                                        + " " + str(ratio))
+
+                                fig, ax = plt.subplots(2, 1, gridspec_kw={
+                                                        'height_ratios': [4, 1]},
+                                                        figsize=(10,8))
+                                ax[0].plot(struct.profile[:,0], struct.profile[:,1])
+                                ax[0].plot(struct.profile[:,0], result["calc_profile"])
+                                ax[1].plot(struct.profile[:,0], (struct.profile[:,1]
+                                    - result["calc_profile"])/struct.profile[:,2])
+                                #ax[0].set_xlabel('2$\\theta$')
+                                ax[0].title.set_text(f"Iteration {i+1}, "
+                                            +"$\\chi^{2}_{prof}$ = "+str(
                                             np.around(result["prof_chi_2"], 3)))
-                            ratio = np.around(
-                                result["prof_chi_2"] / struct.PawleyChiSq, 3)
-                            st.write("$\\frac{\\chi^{2}_{prof}}"
-                                    + "{\\chi^{2}_{Pawley}}$ ="
-                                    + " " + str(ratio))
+                                ax[0].set_ylabel('Intensity')
+                                ax[0].legend(["Obs", "Calc"])
+                                ax[1].set_xlabel('2$\\theta$')
+                                ax[1].set_ylabel('$\\Delta(I)/\\sigma(I_{obs})$')
+                                st.pyplot(fig)
 
-                            fig, ax = plt.subplots(2, 1, gridspec_kw={
-                                                    'height_ratios': [4, 1]},
-                                                    figsize=(10,8))
-                            ax[0].plot(struct.profile[:,0], struct.profile[:,1])
-                            ax[0].plot(struct.profile[:,0], result["calc_profile"])
-                            ax[1].plot(struct.profile[:,0], (struct.profile[:,1]
-                                - result["calc_profile"])/struct.profile[:,2])
-                            #ax[0].set_xlabel('2$\\theta$')
-                            ax[0].title.set_text(f"Iteration {i+1}, "
-                                        +"$\\chi^{2}_{prof}$ = "+str(
-                                        np.around(result["prof_chi_2"], 3)))
-                            ax[0].set_ylabel('Intensity')
-                            ax[0].legend(["Obs", "Calc"])
-                            ax[1].set_xlabel('2$\\theta$')
-                            ax[1].set_ylabel('$\\Delta(I)/\\sigma(I_{obs})$')
-                            st.pyplot(fig)
+                    col1, col2 = result_placeholder.columns([2,2])
+                    with col1:
+                        # Zip and then delete the cifs, then download the zip
+                        if i == 0 and run == 0:
+                            zipObj = ZipFile(zipname, 'w')
+                            settings_file = struct.name+"_GALLOP_Settings.json"
+                            zipObj.write(settings_file)
+                            os.remove(settings_file)
 
-                col1, col2 = result_placeholder.columns([2,2])
-                with col1:
-                    # Zip and then delete the cifs, then download the zip
-                    if i == 0:
-                        zipObj = ZipFile(zipname, 'w')
-                        settings_file = struct.name+"_GALLOP_Settings.json"
-                        zipObj.write(settings_file)
-                        os.remove(settings_file)
+                        else:
+                            zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
+                        if all_settings["animate_structure"]:
+                            html = f'plot_iter_{result["GALLOP Iter"]+1}_both_anim.html'
+                            zipObj.write(html)
+                            os.remove(html)
+                            #html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
+                            #zipObj.write(html)
+                            #os.remove(html)
+                        for fn in glob.iglob("*_chisqd_*"):
+                            zipObj.write(fn)
+                            os.remove(fn)
+                        zipObj.close()
+                        filename = zipname.split(date)[1].strip("\\").strip("_")
+                        with open(os.path.join(os.getcwd(), zipname), "rb") as f:
+                            file_bytes = f.read()
+                            b64 = base64.b64encode(file_bytes).decode()
+                            href = f'<a href="data:file/zip;base64,{b64}\
+                                    " download=\'{filename}\'>\
+                                    CIFs for run {run+1}</a>'
+                            st.markdown(href, unsafe_allow_html=True)
+                        f.close()
 
-                    else:
-                        zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
-                    if all_settings["animate_structure"]:
-                        html = f'plot_iter_{result["GALLOP Iter"]+1}_both_anim.html'
-                        zipObj.write(html)
-                        os.remove(html)
-                        #html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
-                        #zipObj.write(html)
-                        #os.remove(html)
-                    for fn in glob.iglob("*_chisqd_*"):
-                        zipObj.write(fn)
-                        os.remove(fn)
-                    zipObj.close()
-                    filename = zipname.split(date)[1].strip("\\").strip("_")
-                    with open(os.path.join(os.getcwd(), zipname), "rb") as f:
-                        file_bytes = f.read()
-                        b64 = base64.b64encode(file_bytes).decode()
-                        href = f'<a href="data:file/zip;base64,{b64}\
-                                " download=\'{filename}\'>\
-                                Click for CIFs</a>'
-                        st.markdown(href, unsafe_allow_html=True)
-                    f.close()
+                        st.table(result_info_df.iloc[::-1])
+                    with col2:
+                        st.write("")
+                        st.write("")
+                        labels = np.ones_like(chi_2)
+                        for j in range(all_settings["n_swarms"]):
+                            begin = j*all_settings["swarm_size"]
+                            end = (j+1)*all_settings["swarm_size"]
+                            labels[begin:end] *= j
+                            labels[begin:end] += 1
+                        chi2_info = pd.DataFrame({
+                            "chi2" : chi_2,
+                            "swarm" : labels
+                        })
+                        alt.data_transformers.disable_max_rows()
 
-                    st.table(result_info_df.iloc[::-1])
-                with col2:
-                    st.write("")
-                    st.write("")
-                    labels = np.ones_like(chi_2)
-                    for j in range(all_settings["n_swarms"]):
-                        begin = j*all_settings["swarm_size"]
-                        end = (j+1)*all_settings["swarm_size"]
-                        labels[begin:end] *= j
-                        labels[begin:end] += 1
-                    chi2_info = pd.DataFrame({
-                        "chi2" : chi_2,
-                        "swarm" : labels
-                    })
-                    alt.data_transformers.disable_max_rows()
+                        chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
+                            x='chi2:Q',
+                            y='swarm:O'
+                        )).interactive()
 
-                    chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
-                        x='chi2:Q',
-                        y='swarm:O'
-                    )).interactive()
+                        st.altair_chart(chart)
+                    external, internal = swarm.update_position(result=result,
+                                                                verbose=False)
 
-                    st.altair_chart(chart)
-                external, internal = swarm.update_position(result=result,
-                                                            verbose=False)
+                    if all_settings["randomise_worst"]:
+                        if (i+1) % all_settings["randomise_freq"] == 0:
+                            pcnt = all_settings["randomise_percentage"] / 100.
+                            to_randomise = swarm.best_chi_2 >= np.percentile(
+                                                        swarm.best_chi_2, 100.-pcnt)
+                            external[to_randomise] = np.random.uniform(-1, 1,
+                                            size=external[to_randomise].shape)
+                            internal[to_randomise] = np.random.uniform(-np.pi,
+                                        np.pi,size=internal[to_randomise].shape)
+                            swarm.best_chi_2[to_randomise] = np.inf
+                            swarm.velocity[to_randomise] *= 0
 
-                if all_settings["randomise_worst"]:
-                    if (i+1) % all_settings["randomise_freq"] == 0:
-                        pcnt = all_settings["randomise_percentage"] / 100.
-                        to_randomise = swarm.best_chi_2 >= np.percentile(
-                                                    swarm.best_chi_2, 100.-pcnt)
-                        external[to_randomise] = np.random.uniform(-1, 1,
-                                        size=external[to_randomise].shape)
-                        internal[to_randomise] = np.random.uniform(-np.pi,
-                                    np.pi,size=internal[to_randomise].shape)
-                        swarm.best_chi_2[to_randomise] = np.inf
-                        swarm.velocity[to_randomise] *= 0
+                    if ((i+1)==all_settings["shadow_iters"] and
+                                                all_settings["torsion_shadowing"]):
+                        minimiser_settings["torsion_shadowing"] = False
+                        # Add a little random noise to the internal DoF as they will
+                        # all be the same. This is roughly +/- 10 deg
+                        internal += np.random.uniform(-0.157,0.157,
+                                        size=internal.shape)
 
-                if ((i+1)==all_settings["shadow_iters"] and
-                                            all_settings["torsion_shadowing"]):
-                    minimiser_settings["torsion_shadowing"] = False
-                    # Add a little random noise to the internal DoF as they will
-                    # all be the same. This is roughly +/- 10 deg
-                    internal += np.random.uniform(-0.157,0.157,
-                                    size=internal.shape)
-
-            if (GPU_split is not None and n_GPUs >= len(GPU_split)):
-                pool.close()
-                pool.join()
+                if (GPU_split is not None and n_GPUs >= len(GPU_split)):
+                    pool.close()
+                    pool.join()
