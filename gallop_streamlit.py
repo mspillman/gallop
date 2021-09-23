@@ -264,9 +264,7 @@ elif function == "GALLOP":
                     external, internal = swarm.get_initial_positions(MDB=dbf)
                     external = np.array(external)
                     internal = np.array(internal)
-
                 st.write("")
-
                 result_info = []
                 start_time = time.time()
                 run_placeholder = st.empty()
@@ -281,6 +279,7 @@ elif function == "GALLOP":
                 current_time = str(now.strftime("%H-%M"))
 
                 lr = minimiser_settings["learning_rate"]
+
                 GPU_split = all_settings["particle_division"]
                 n_GPUs = torch.cuda.device_count()
                 if (GPU_split is not None and n_GPUs >= len(GPU_split)):
