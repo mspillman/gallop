@@ -244,8 +244,8 @@ elif function == "GALLOP":
             with open(os.path.join(os.getcwd(),settings_file), "w") as f:
                 json.dump(all_settings, f, indent=4)
             f.close()
-            nruns = all_settings["n_GALLOP_runs"]
-            for run in range(int(nruns)):
+            nruns = int(all_settings["n_GALLOP_runs"])
+            for run in range(nruns):
                 if run > 0:
                     # New swarm and starting positions
                     swarm = optim.swarm.Swarm(
