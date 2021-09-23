@@ -125,41 +125,44 @@ def get_all_settings(loaded_values):
     # for general, local optimiser and particle swarm optimiser respectively.
     all_settings = {}
     with st.sidebar.expander(label="General", expanded=False):
-        with st.form(key="general"):
-            structure_name = st.text_input("Structure name (optional)",
-                        value=loaded_values["structure_name"], max_chars=None,
-                        key=None, type='default')
-            all_settings["structure_name"] = structure_name.replace(" ", "_")
-            all_settings["n_GALLOP_iters"] = st.number_input(
-                                        "Total number of GALLOP iterations",
-                                        min_value=1, max_value=None,
-                                        value=loaded_values["n_GALLOP_iters"],
-                                        step=1, format=None, key=None)
+        structure_name = st.text_input("Structure name (optional)",
+                    value=loaded_values["structure_name"], max_chars=None,
+                    key=None, type='default')
+        all_settings["structure_name"] = structure_name.replace(" ", "_")
+        all_settings["n_GALLOP_runs"] = st.number_input(
+                                    "Total number of GALLOP runs",
+                                    min_value=1, max_value=None,
+                                    value=int(loaded_values["n_GALLOP_runs"]),
+                                    step=1, format=None, key=None)
+        all_settings["n_GALLOP_iters"] = st.number_input(
+                                    "Total number of GALLOP iterations",
+                                    min_value=1, max_value=None,
+                                    value=loaded_values["n_GALLOP_iters"],
+                                    step=1, format=None, key=None)
 
-            all_settings["seed"] = int(st.number_input(
-                    "Set random seed (integer >= 0), or use -1 to randomise",
-                    min_value=-1, max_value=None, value=loaded_values["seed"],
-                    step=1, format=None, key=None))
-            if all_settings["seed"] != -1:
-                st.write("Note that setting the seed does not guarantee "
-                        "reproducibility due to some CUDA algorithms being "
-                        "non-deterministic. See link for more information: "
-                        "https://pytorch.org/docs/stable/notes/randomness.html")
-                optim.seed_everything(seed=all_settings["seed"],
-                                                        change_backend=False)
-            all_settings["animate_structure"] = st.checkbox("Save animation of "
-                                    "trajectory of best particle during LO",
-                                    value=loaded_values["animate_structure"])
-            if all_settings["animate_structure"]:
-                st.write("Note: animation will slow down the local optimisation"
-                    " and web app significantly.")
-            all_settings["temperature"] = st.number_input(
-                                            "Data collection temperature / K",
-                                            min_value=0.0, max_value=None,
-                                            value=loaded_values["temperature"],
-                                            step=100.0, format=None, key=None)
-            st.caption("(If > 0.0, temp will be added to CIF)")
-            st.form_submit_button(label="Apply")
+        all_settings["seed"] = int(st.number_input(
+                "Set random seed (integer >= 0), or use -1 to randomise",
+                min_value=-1, max_value=None, value=loaded_values["seed"],
+                step=1, format=None, key=None))
+        if all_settings["seed"] != -1:
+            st.write("Note that setting the seed does not guarantee "
+                    "reproducibility due to some CUDA algorithms being "
+                    "non-deterministic. See link for more information: "
+                    "https://pytorch.org/docs/stable/notes/randomness.html")
+            optim.seed_everything(seed=all_settings["seed"],
+                                                    change_backend=False)
+        all_settings["animate_structure"] = st.checkbox("Save animation of "
+                                "trajectory of best particle during LO",
+                                value=loaded_values["animate_structure"])
+        if all_settings["animate_structure"]:
+            st.write("Note: animation will slow down the local optimisation"
+                " and web app significantly.")
+        all_settings["temperature"] = st.number_input(
+                                        "Data collection temperature / K",
+                                        min_value=0.0, max_value=None,
+                                        value=loaded_values["temperature"],
+                                        step=100.0, format=None, key=None)
+        st.caption("(If > 0.0, temp will be added to CIF)")
 
     # Local optimiser settings
     with st.sidebar.expander(label="Local Optimiser", expanded=False):
