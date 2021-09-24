@@ -376,6 +376,32 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if streamlit:
         import streamlit as st
 
+    if torsion_shadowing:
+        # Only pay attention to the first block of torsions accounting for Z'>1.
+        # This assumes that all of the fragments have similar torsion angles.
+        # This can significantly speed up solving Z'>1 structures where this
+        # assumption is valid.
+        # To use this, the ZMs supplied must be in blocks that correspond to the
+        # unique fragments in Z', for example, a structure with two flexible
+        # fragments and two ions would need to be entered into the structure as
+        # ion1 fragment1 ion2 fragment2
+        # This is different to the way DASH converts ZMs by default, where ions
+        # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
+        if internal is not None:
+            t_permutations = np.ones((internal.shape[0],Z_prime))
+        else:
+            raise RuntimeError ("You must supply the internal coordinates if "
+                                "using torsion shadowing")
+
+        for i in range(Z_prime-1):
+            for j in range(2**i):
+                t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
+
+        t_permutations = torch.from_numpy(t_permutations).type(dtype).to(device)
+        internal = internal[:,:int(internal.shape[1] / Z_prime)]
+
+
+
     # Load the tensors and other parameters needed
     tensors = tensor_prep.get_all_required_tensors(
                                 Structure, external=external, internal=internal,
@@ -385,27 +411,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     trajectories = []
     gradients = []
     losses = []
-    if torsion_shadowing:
-        torsion_tweaks = torch.zeros((internal.shape[0], 1), device=device,
-                                            dtype=dtype, requires_grad=False)
-        torsion_tweaks[1::6] += np.pi
-        torsion_tweaks[2::6] += 2*np.pi/3
-        torsion_tweaks[3::6] -= 2*np.pi/3
-        torsion_tweaks[4::6] += np.pi/2
-        torsion_tweaks[5::6] -= np.pi/2
-    #    # Only pay attention to the first block of torsions accounting for Z'>1.
-    #    # This assumes that all of the fragments have similar torsion angles.
-    #    # This can significantly speed up solving Z'>1 structures where this
-    #    # assumption is valid.
-    #    # To use this, the ZMs supplied must be in blocks that correspond to the
-    #    # unique fragments in Z', for example, a structure with two flexible
-    #    # fragments and two ions would need to be entered into the structure as
-    #    # ion1 fragment1 ion2 fragment2
-    #    # This is different to the way DASH converts ZMs by default, where ions
-    #    # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
-    #    n_torsion_fragments = len(tensors["zm"]["torsion"])
-    #    first_frag = int(n_torsion_fragments / Z_prime)
-    #    tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
+
 
     if use_restraints:
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
@@ -518,11 +524,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         if use_restraints or include_PO or torsion_shadowing:
             if torsion_shadowing:
                 internal = tensors["zm"]["internal"]
-                first_frag = int(internal.shape[1] / Z_prime)
-                first_frag_tors = internal[:,:first_frag]
-                all_tors = torch.cat((first_frag_tors,
-                        torsion_tweaks+first_frag_tors.repeat(1,Z_prime-1)),-1)
-
+                all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
+                        ).reshape(internal.shape[0], internal.shape[1]*Z_prime)
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                     tensors["zm"]["external"],
                     all_tors,

@@ -258,21 +258,7 @@ def get_all_settings(loaded_values):
                                     step=1, format=None, key=None))
             else:
                 n_cooldown = loaded_values["n_cooldown"]
-            torsion_shadowing = st.checkbox("Use torsion shadowing",
-                                    value=loaded_values["torsion_shadowing"])
-            if torsion_shadowing:
-                Z_prime = int(st.number_input("Enter Z' of structure",
-                                min_value=1, max_value=None,
-                                value=int(loaded_values["Z_prime"]), step=1,
-                                format=None, key=None))
-                shadow_iters = int(st.number_input("Number of shadowing iterations",
-                                min_value=0,
-                                max_value=int(all_settings["n_GALLOP_iters"]),
-                                value=int(loaded_values["shadow_iters"]),
-                                step=1, format=None, key=None))
-            else:
-                Z_prime = False
-                shadow_iters = 0
+
             options = get_options(loaded_values["loss"],
                                 ["sum", "xlogx", "sse"])
             loss = st.selectbox("Loss function to minimise",
@@ -294,6 +280,21 @@ def get_all_settings(loaded_values):
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
                             value=loaded_values["memory_opt"], key=None)
+            torsion_shadowing = st.checkbox("Use torsion shadowing",
+                                    value=loaded_values["torsion_shadowing"])
+            if torsion_shadowing:
+                Z_prime = int(st.number_input("Enter Z' of structure",
+                                min_value=1, max_value=None,
+                                value=int(loaded_values["Z_prime"]), step=1,
+                                format=None, key=None))
+                shadow_iters = int(st.number_input("Number of shadowing iterations",
+                                min_value=0,
+                                max_value=int(all_settings["n_GALLOP_iters"]),
+                                value=int(loaded_values["shadow_iters"]),
+                                step=1, format=None, key=None))
+            else:
+                Z_prime = False
+                shadow_iters = 0
             use_distance_restraints = st.checkbox("Use distance restraints",
                                     value=loaded_values["use_distance_restraints"])
             if use_distance_restraints:
