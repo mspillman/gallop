@@ -524,7 +524,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         if use_restraints or include_PO or torsion_shadowing:
             if torsion_shadowing:
                 internal = tensors["zm"]["internal"]
-                all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
+                if Structure.centrosymmetric:
+                    all_tors = internal.repeat(1,Z_prime)
+                else:
+                    all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
                         ).reshape(internal.shape[0], internal.shape[1]*Z_prime)
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                     tensors["zm"]["external"],
