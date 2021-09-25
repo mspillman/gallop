@@ -183,10 +183,14 @@ def get_all_settings(loaded_values):
             GPUs.append(str(i)+" = "+torch.cuda.get_device_name(i))
         if len(GPUs) > 1:
             GPUs.append("Multiple GPUs")
-        options = get_options(loaded_values["device"], ["Auto","CPU"]+GPUs)
+        if torch.cuda.is_available():
+            options = get_options(loaded_values["device"], ["Auto","CPU"]+GPUs)
+        else:
+            options = ["CPU"]
         all_settings["device"] = st.selectbox("Device to perform LO",
                                 options)
         if all_settings["device"] == "Multiple GPUs":
+            st.write("Note: no progress bars in multi-GPU mode")
             GPUs = st.multiselect("Select GPUs to use",GPUs[:-1],
                                                 default=GPUs[:-1])
             all_settings["particle_division"] = []
