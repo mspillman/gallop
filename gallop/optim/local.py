@@ -408,7 +408,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             t_scalers = torch.rand(internal.shape[0],
                         internal.shape[1]*(Z_prime-1)).type(dtype).to(device)
             t_scalers -= 0.5
-            t_scalers /= 5
+            t_scalers /= 500
         else:
             t_scalers = torch.from_numpy(t_scalers).type(dtype).to(device)
         t_scalers.requires_grad = True
