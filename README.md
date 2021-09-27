@@ -11,7 +11,9 @@ Contents:
 
 ## **Introduction**
 
-An article describing the approach taken by this code is available from [CrystEngComm](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H). If you find _GALLOP_ useful in your work, please consider citing this article.
+An article describing the approach taken by this code is available from [CrystEngComm](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H). If you find _GALLOP_ useful in your work, please consider citing this article:
+
+[_CrystEngComm_, 2021, **23**, 6481 - 6485](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H)
 
 _GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
 
@@ -354,7 +356,7 @@ Regardless of platform, if C++ build tools are not available, attempting install
 
 ## **References and resources**
 If you make use of _GALLOP_ in your work, please consider citing the following article:
-- [CrystEngComm, 2021, DOI: 10.1039/D1CE00978H](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H)
+- [_CrystEngComm_, 2021, **23**, 6481 - 6485](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H)
 
 ### **Other Relevant articles**
 [Internal to Cartesian](https://pubmed.ncbi.nlm.nih.gov/15898109/) - _GALLOP_ uses the Natural Extension Reference Frame method for converting internal to Cartesian coordinates.
