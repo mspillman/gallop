@@ -14,9 +14,9 @@ requirements:
     - python>=3.8*
     - streamlit=0.89.0
     - pytorch=1.9.1
-    - py3dmol=1.7.0
-    - torch-optimizer=0.1.0
-    - tqdm=4.62.3
+    - py3dmol
+    - torch-optimizer
+    - tqdm
     - pymatgen=2021.2.8.1
     
     
