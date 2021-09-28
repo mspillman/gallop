@@ -184,7 +184,12 @@ def get_all_settings(loaded_values):
         if len(GPUs) > 1:
             GPUs.append("Multiple GPUs")
         if torch.cuda.is_available():
-            options = get_options(loaded_values["device"], ["Auto","CPU"]+GPUs)
+            try:
+                options = get_options(loaded_values["device"], 
+                                                    ["Auto","CPU"]+GPUs)
+            except ValueError:
+                st.error("Problem with GPU config. Setting device to CPU")
+                options = ["CPU"]
         else:
             options = ["CPU"]
         all_settings["device"] = st.selectbox("Device to perform LO",
