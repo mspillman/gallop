@@ -1,0 +1,30 @@
+package:
+  name: "gallop"
+  version: "0.1.0"
+
+source:
+  path: .
+
+requirements:
+  host:
+    - python
+  build:
+    - python
+  run:
+    - python 3.8*
+    - streamlit=0.89.0
+    - pytorch=1.9.1
+    - py3dmol=1.7.0
+    - torch-optimizer=0.1.0
+    - tqdm=4.62.3
+    - pymatgen=2021.2.8.1
+    - pyDOE=0.3.8
+    
+    
+
+about:
+  home: https://github.com/mspillman/gallop
+  license: GPLv3
+  license_familY: GPL
+  license_file: LICENSE
+  summary: "Fast crystal structure determination from powder diffraction data"
