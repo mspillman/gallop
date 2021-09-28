@@ -19,12 +19,11 @@ setup(
                         'torch',
                         'scipy',
                         'matplotlib',
-                        'torch_optimizer',
+                        'torch-optimizer',
                         'streamlit',
                         'pandas',
                         'altair',
                         'py3Dmol',
-                        'pyDOE',
                         ],
 
 )

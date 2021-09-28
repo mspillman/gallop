@@ -7,9 +7,9 @@ Provides a class for particle swarm.
 
 import time
 import tqdm
-import pyDOE
 import numpy as np
 from scipy.stats import gaussian_kde
+from scipy.stats import qmc
 
 from gallop import files
 
@@ -93,8 +93,7 @@ class Swarm(object):
         self.global_update_freq = global_update_freq
         self.vmax = vmax
 
-    def get_initial_positions(self, method="latin", latin_criterion=None,
-                                MDB=None):
+    def get_initial_positions(self, method="latin", MDB=None):
         """
         Generate the initial starting points for a GALLOP attempt. The
         recommended method uses latin hypercube sampling which provides a
@@ -104,10 +103,6 @@ class Swarm(object):
         Args:
             method (str, optional): The sampling method to use. Can be one of
                 "latin" or "uniform". Defaults to "latin".
-            latin_criterion (str, optional): The criterion to be used with the
-                latin hypercube method. See pyDOE documentation here:
-                https://pythonhosted.org/pyDOE/randomized.html#latin-hypercube
-                Defaults to None.
             MDB (str, optional): Supply a DASH .dbf containing the Mogul
                 Distribution Bias information for the Z-matrices used. They
                 must have been entered into DASH in the same order used for
@@ -136,9 +131,8 @@ class Swarm(object):
         # Separate hypercube for each subswarm
         for _ in tqdm.tqdm(range(int(self.n_swarms))):
             if method == "latin":
-                all_dof = np.array(pyDOE.lhs(
-                            int(total_pos + total_rot + total_tors),
-                            samples=subswarm, criterion=latin_criterion))
+                lhc = qmc.LatinHypercube(int(total_pos+total_rot+total_tors))
+                all_dof = lhc.random(subswarm)
                 external = all_dof[:,:total_pos+total_rot]
                 pos = external[:,:total_pos]
                 rot = external[:,total_pos:]
