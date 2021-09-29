@@ -179,7 +179,10 @@ class Swarm(object):
                 kde = gaussian_kde(np.hstack(samples), bw_method=None)
                 kdes.append(kde)
             if init_internal.shape[1] != len(kdes):
-                print("Not enough MDBs for the number of torsions.")
+                if len(kdes) < init_internal.shape[1]:
+                    print("Not enough MDBs for the number of torsions.")
+                else:
+                    print("Too many MDBs for the number of torsions.")
             else:
                 new_internal = []
                 for k in kdes:
