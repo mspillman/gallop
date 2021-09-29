@@ -155,6 +155,7 @@ class Swarm(object):
         init_internal = np.vstack(init_internal)
 
         if MDB is not None or self.distributions is not None:
+            print("Using MDBs for initial torsion angles")
             if MDB is not None:
                 distributions = []
                 with open(MDB) as dbf:
