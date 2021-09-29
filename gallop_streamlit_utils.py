@@ -41,7 +41,10 @@ settings = ["structure_name", "n_GALLOP_iters", "seed",
             "lr"]
 
 def get_options(value, options):
-    options.remove(value)
+    if value in options:
+        options.remove(value)
+    else:
+        st.warning("Unknown option loaded from settings file:", value)
     return [value] + options
 
 def improve_GPU_memory_use(struct, minimiser_settings):
