@@ -15,16 +15,16 @@ requirements:
     - streamlit=0.89.0
     - pytorch=1.9.1
     - scipy>=1.7*
-    - py3dmol
-    - torch-optimizer
-    - tqdm
+    - py3dmol=1.7*
+    - torch-optimizer=0.1.0
     - pymatgen=2021.2.8.1
+    - cudatoolkit 11.1*
     
     
 
 about:
   home: https://github.com/mspillman/gallop
   license: GPLv3
-  license_familY: GPL
+  license_family: GPL
   license_file: LICENSE
   summary: "Fast crystal structure determination from powder diffraction data"
