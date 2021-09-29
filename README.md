@@ -1,7 +1,7 @@
 # **_GALLOP_**
 **GPU Accelerated Local Optimisation and Particle Swarm: fast crystal structure determination from powder diffraction data.**
 
-This code should be viewed as "pre-alpha" stage. It is under active development, and likely to have many bugs. If you have comments, suggestions, bugs to report or ideas for improvement, please feel free to submit an issue, contact me directly (markspillman _at_ gmail _dot_ com) or submit a pull request.
+This code should be viewed as "pre-alpha" stage. It is under active development, and likely to have many bugs. If you have comments, suggestions, bugs to report or ideas for improvement or new features, please feel free to submit an issue, contact me directly (markspillman _at_ gmail _dot_ com) or submit a pull request.
 
 Contents:
 1. [Introduction](#introduction)
@@ -32,8 +32,10 @@ You will need a Google account to run the notebooks linked below. These notebook
 
 | Notebook | Description |
 |---------|--------|
-|[Browser interface](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ browser interface *|
-|[Python mode](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing) | Try _GALLOP_ as part of a Python program |
+|[Colab - Browser interface](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ browser interface *|
+|[Kaggle - Browser interface](https://www.kaggle.com/mspillman/gallop-browser-interface-example) | Try the _GALLOP_ browser interface *|
+|[Colab - Python mode](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing) | Try _GALLOP_ as part of a Python program |
+|[Kaggle - Python mode](https://www.kaggle.com/mspillman/gallop-python-mode-example) | Try _GALLOP_ as part of a Python program |
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 ### **PXRD Data preparation**
