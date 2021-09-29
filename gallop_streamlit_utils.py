@@ -188,7 +188,7 @@ def get_all_settings(loaded_values):
             GPUs.append("Multiple GPUs")
         if torch.cuda.is_available():
             try:
-                options = get_options(loaded_values["device"], 
+                options = get_options(loaded_values["device"],
                                                     ["Auto","CPU"]+GPUs)
             except ValueError:
                 st.error("Problem with GPU config. Setting device to CPU")

@@ -217,21 +217,9 @@ elif function == "GALLOP":
             nruns = int(all_settings["n_GALLOP_runs"])
             for run in range(nruns):
                 if run > 0:
-                    # New swarm and starting positions
-                    swarm = optim.swarm.Swarm(
-                        Structure = struct,
-                        n_particles=int(n_particles),
-                        n_swarms = int(all_settings["n_swarms"]),
-                        global_update = all_settings["global_update"],
-                        global_update_freq = all_settings["global_update_freq"],
-                        inertia_bounds = all_settings["inertia_bounds"],
-                        inertia = inertia,
-                        c1 = all_settings["c1"],
-                        c2 = all_settings["c2"],
-                        limit_velocity = all_settings["limit_velocity"],
-                        vmax = all_settings["vmax"])
-
-                    external, internal = swarm.get_initial_positions(MDB=dbf)
+                    # Reset swarm and get new starting positions
+                    swarm.reset_position_and_velocity()
+                    external, internal = swarm.get_initial_positions()
                     external = np.array(external)
                     internal = np.array(internal)
                 st.write("")
@@ -354,10 +342,13 @@ elif function == "GALLOP":
                                 fig, ax = plt.subplots(2, 1, gridspec_kw={
                                                         'height_ratios': [4, 1]},
                                                         figsize=(10,8))
-                                ax[0].plot(struct.profile[:,0], struct.profile[:,1])
-                                ax[0].plot(struct.profile[:,0], result["calc_profile"])
-                                ax[1].plot(struct.profile[:,0], (struct.profile[:,1]
-                                    - result["calc_profile"])/struct.profile[:,2])
+                                tt = struct.profile[:,0]
+                                obs = struct.profile[:,1]
+                                esds = struct.profile[:,2]
+                                calc = result["calc_profile"]
+                                ax[0].plot(tt, obs)
+                                ax[0].plot(tt, calc)
+                                ax[1].plot(tt, (obs - calc)/esds)
                                 #ax[0].set_xlabel('2$\\theta$')
                                 ax[0].title.set_text(f"Iteration {i+1}, "
                                             +"$\\chi^{2}_{prof}$ = "+str(
