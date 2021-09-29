@@ -33,9 +33,9 @@ You will need a Google account to run the notebooks linked below. These notebook
 | Notebook | Description |
 |---------|--------|
 |[Colab - Browser interface](https://colab.research.google.com/drive/1z84w8CMLj9xHhFYrDrL3B0O5aY0QAMRN?usp=sharing) | Try the _GALLOP_ browser interface *|
-|[Kaggle - Browser interface](https://www.kaggle.com/mspillman/gallop-browser-interface-example) | Try the _GALLOP_ browser interface *|
+|[Kaggle - Browser interface](https://www.kaggle.com/mspillman/gallop-browser-interface-example) | Try the _GALLOP_ browser interface * (in general, kaggle offers faster GPUs than colab for free use) |
 |[Colab - Python mode](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing) | Try _GALLOP_ as part of a Python program |
-|[Kaggle - Python mode](https://www.kaggle.com/mspillman/gallop-python-mode-example) | Try _GALLOP_ as part of a Python program |
+|[Kaggle - Python mode](https://www.kaggle.com/mspillman/gallop-python-mode-example) | Try _GALLOP_ as part of a Python program (in general, kaggle offers faster GPUs than colab for free use) |
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 ### **PXRD Data preparation**
