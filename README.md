@@ -366,7 +366,7 @@ PyTorch should be installed first using the instructions on the [PyTorch website
 
 If the command prints ```True``` then PyTorch has been successfully installed and is able to use the local GPU*. If it prints ```False```, then PyTorch is not able to find the locally installed GPU and installation should be tried again. Note that _GALLOP_ will work using CPU-only PyTorch, but it will be extremely slow except with very small numbers of particles.
 
-* One user has informed us that an old GPU returned True for this test, but was still not suitable. Please ensure that your [GPU compute capability](https://developer.nvidia.com/cuda-gpus) is 3.5 or higher to ensure that it will work with PyTorch.
+\* One user has informed us that an old GPU returned True for this test, but was still not suitable. Please ensure that your [GPU compute capability](https://developer.nvidia.com/cuda-gpus) is 3.5 or higher to ensure that it will work with PyTorch.
 
 Once PyTorch is properly installed, download the _GALLOP_ code either using git:
 ```
