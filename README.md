@@ -300,7 +300,7 @@ Older Nvidia GPUs may not work with PyTorch. Your GPU should have a compute capa
 The simplest way to get started with GALLOP is to use the [Anaconda python distribution](https://www.anaconda.com/products/individual), which comes with a number of useful libraries pre-installed as well as the excellent conda package manager. You do not need to download and install CUDA separately.
 
 1. Download and install the Anaconda python distribution.
-2. Once Anaconda is downloaded and installed, we will first create a new _conda environment_ which keeps the _GALLOP_ installation isolated from other python packages, ensuring a stable environment. Open the Anaconda prompt, then run the following command:
+2. Once Anaconda is downloaded and installed, we will first create a new [_conda environment_](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) which keeps the _GALLOP_ installation isolated from other python packages, ensuring a stable environment. Open the Anaconda prompt, then run the following command:
 
     ```(base) C:\> conda create --name gallop ```
 
