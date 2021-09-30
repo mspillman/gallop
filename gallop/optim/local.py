@@ -399,14 +399,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         t_permutations = torch.from_numpy(t_permutations).type(dtype).to(device)
         internal = internal[:,:int(internal.shape[1] / Z_prime)]
-        #if t_scalers is None:
-        #    t_scalers = torch.rand(internal.shape[0],
-        #                internal.shape[1]*(Z_prime-1)).type(dtype).to(device)
-        #    t_scalers -= 0.5
-        #    t_scalers /= 500
-        #else:
-        #    t_scalers = torch.from_numpy(t_scalers).type(dtype).to(device)
-        #t_scalers.requires_grad = True
 
 
 
@@ -552,7 +544,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                     tensors["zm"]["angle_connection"],
                     tensors["zm"]["torsion_connection"],
                     tensors["zm"]["torsion_refinable_indices"],
-                    tensors["zm"]["lattice_inv_matrix"],#
+                    tensors["zm"]["lattice_inv_matrix"],
                     tensors["zm"]["init_cart_coords"]
                     )
             else:
