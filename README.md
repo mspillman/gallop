@@ -304,7 +304,7 @@ The simplest way to get started with GALLOP is to use the [Anaconda python distr
 
     ```(base) C:\> conda create --name gallop ```
 
-3. This makes a new conda environment called "gallop". We will not activate this environment and install _GALLOP_ into it. 
+3. This makes a new conda environment called "gallop". We will now activate this environment and install _GALLOP_ into it.
 
     ``` (base) C:\> conda activate gallop```
 
