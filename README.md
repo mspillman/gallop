@@ -288,8 +288,6 @@ Instructions coming soon
 ## **Local Installation**
 Some users may wish to make use of _GALLOP_ locally. Whilst these instructions are specific to Windows, the libraries used are cross-platform and therefore it *should* be possible to run _GALLOP_ on Linux or Mac OS environments - the colab notebooks linked above run on a Linux virtual machine for example. The below instructions assume a Windows-based system - the only expected major difference with other platforms will be the C++ build tools. Administrator privileges may be required.
 
-Warning - this is not for the faint of heart! You will need to use the command line. It may brick your GPU (though this is expected to be rare, and limited to older, heavily used cards). More detailed instructions and a video installation guide are coming soon.
-
 **Hardware requirements:**
 For optimal performance, an Nvidia GPU is recommended. However, it may be possible to use some AMD GPUs, provided that [ROCm](https://pytorch.org/blog/pytorch-for-amd-rocm-platform-now-available-as-python-package/) is compatible with the GPU. This has not been tested - if using ROCm, please get in touch regarding any installation issues and the performance of the code.
 
@@ -297,11 +295,47 @@ Older Nvidia GPUs may not work with PyTorch. Your GPU should have a compute capa
 
 <br />
 
+**Windows (64-bit) + CUDA 11 compatible GPU:**
+
+The simplest way to get started with GALLOP is to use the [Anaconda python distribution](https://www.anaconda.com/products/individual), which comes with a number of useful libraries pre-installed as well as the excellent conda package manager. You do not need to download and install CUDA separately.
+
+1. Download and install the Anaconda python distribution.
+2. Once Anaconda is downloaded and installed, we will first create a new _conda environment_ which keeps the _GALLOP_ installation isolated from other python packages, ensuring a stable environment. Open the Anaconda prompt, then run the following command:
+
+    ```(base) C:\> conda create --name gallop ```
+
+3. This makes a new conda environment called "gallop". We will not activate this environment and install _GALLOP_ into it. 
+
+    ``` (base) C:\> conda activate gallop```
+
+4. Once activated, the command prompt should change and look like this:
+
+    ``` (gallop) C:\> ```
+
+5. Now we will install _GALLOP_ by running the following command. Note that this will download a large number of dependencies, including CUDA and Pytorch, which are both > 1 GB in size. This may take a while depending on your connection speed.
+
+    ``` (gallop) C:\> conda install gallop -c mspillman -c conda-forge -c pytorch ```
+
+6. Once the installation is complete, you can start gallop by running the following command from the Anaconda prompt:
+
+    ``` (gallop) C:\> gallop ```
+
+Once it has been installed, every time you wish to use _GALLOP_, open the Anaconda prompt and run the following two commands:
+
+```
+(base) C:\> conda activate gallop
+(gallop) C:\> gallop
+```
+
+**Other environments:**
+
+Warning - this is not for the faint of heart! More detailed instructions and a video installation guide are coming soon.
+
 **_GALLOP_ software prerequisites:**
 
 | Dependency | Version |Comments|
 |------------|---------|--------|
-| [Python](https://www.anaconda.com/products/individual) | 3.8 | Other versions of Python 3 may also work. Anaconda distribution **strongly** recommended.|
+| [Python](https://www.anaconda.com/products/individual) | >=3.8 | Other versions of Python 3 may also work. Anaconda distribution **strongly** recommended.|
 | [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs |
 | [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with installed CUDA | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
 | [Visual C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools (e.g. gcc) if not already installed.|
