@@ -219,11 +219,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_reflections=None, learning_rate_schedule="1cycle",
     b_bounds_1_cycle=None, check_min=1, optimizer="Adam", verbose=False,
     print_every=10, learning_rate=3e-2, betas=None, eps=1e-8, loss="sum",
-    start_time=None, run=1, torsion_shadowing=False, Z_prime=1, t_scalers=None,
-    tanh_factor=1.0, save_trajectories=False, save_grad=False,
-    save_loss=False, include_dw_factors=True, chi2_solved=None,
-    use_progress_bar=True, save_CIF=True, streamlit=False, use_restraints=False,
-    include_PO=False, PO_axis=(0, 0, 1), notebook=False):
+    start_time=None, run=1, torsion_shadowing=False, Z_prime=1,
+    save_trajectories=False, save_grad=False, save_loss=False,
+    include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
+    save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
+    PO_axis=(0, 0, 1), notebook=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -326,11 +326,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             Defaults to False
         Z_prime (int, optional): If using torsion_shadowing, this is the Z' for
             the current unit cell. Defaults to 1.
-        t_scalers (numpy.ndarray, optional): If using torsion_shadowing, this
-            is a learned +1/-1 scaling factor (via tanh) applied to the torsion
-            angles for the shadowed fragments. Defaults to None
-        tanh_factor (float, optional): If using torsion shadowing with t_scalers
-            this scales the input to the tanh function. Defaults to 1.
         save_trajectories (bool, optional): Store the DoF, chi_2 and loss value
             after every iteration. This will be slow, as it requires transfer
             from the GPU to CPU. Defaults to False.
@@ -397,21 +392,21 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         else:
             raise RuntimeError ("You must supply the internal coordinates if "
                                 "using torsion shadowing")
-
-        for i in range(Z_prime-1):
-            for j in range(2**i):
-                t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
+        if not Structure.centrosymmetric:
+            for i in range(Z_prime-1):
+                for j in range(2**i):
+                    t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
 
         t_permutations = torch.from_numpy(t_permutations).type(dtype).to(device)
         internal = internal[:,:int(internal.shape[1] / Z_prime)]
-        if t_scalers is None:
-            t_scalers = torch.rand(internal.shape[0],
-                        internal.shape[1]*(Z_prime-1)).type(dtype).to(device)
-            t_scalers -= 0.5
-            t_scalers /= 500
-        else:
-            t_scalers = torch.from_numpy(t_scalers).type(dtype).to(device)
-        t_scalers.requires_grad = True
+        #if t_scalers is None:
+        #    t_scalers = torch.rand(internal.shape[0],
+        #                internal.shape[1]*(Z_prime-1)).type(dtype).to(device)
+        #    t_scalers -= 0.5
+        #    t_scalers /= 500
+        #else:
+        #    t_scalers = torch.from_numpy(t_scalers).type(dtype).to(device)
+        #t_scalers.requires_grad = True
 
 
 
@@ -440,8 +435,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         if optimizer.lower() == "adam":
             if torsion_shadowing:
                 optimizer = torch.optim.Adam([tensors["zm"]["external"],
-                                        tensors["zm"]["internal"],
-                                        t_scalers],
+                                        tensors["zm"]["internal"]],
                                         lr=init_lr, betas=betas, eps=eps)
             else:
                 optimizer = torch.optim.Adam([tensors["zm"]["external"],
@@ -543,9 +537,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         if use_restraints or include_PO or torsion_shadowing:
             if torsion_shadowing:
                 internal = tensors["zm"]["internal"]
-                other_tors = torch.tanh(tanh_factor*t_scalers)*internal.repeat(
-                                                                    1,Z_prime-1)
-                all_tors = torch.cat([internal, other_tors], dim=1)
+                all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
+                        ).reshape(internal.shape[0], internal.shape[1]*Z_prime)
 
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                     tensors["zm"]["external"],
@@ -756,9 +749,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
         del factor
-
-    if torsion_shadowing:
-        result["t_scalers"] = t_scalers.detach().cpu().numpy()
 
     if save_CIF:
         files.save_CIF_of_best_result(Structure, result, start_time,
