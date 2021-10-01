@@ -127,13 +127,13 @@ Use this [Colab Notebook to try the _GALLOP_ browser interface for free](https:/
 You will need a Google account to run the notebook, and an ngrok authentication key, which can be obtained for free at https://ngrok.com/
 Save a copy of the notebook to your own Google drive for easy access in the future.
 #### **Local operation:**
-Once _GALLOP_ has been installed successfully, in the folder containing _GALLOP_ code, open a command prompt and run the following command:
+Once _GALLOP_ has been installed successfully, Windows users with Python added to their PATH environment variable can simply double click on the supplied ```gallop.bat``` file to automatically run the below command, which runs in the folder containing _GALLOP_ code:
 ```
 streamlit run .\gallop_streamlit.py
 ```
-Windows users with Python added to their PATH environment variable can simply double click on the supplied ```gallop.bat``` file to automatically run the above command. Alternatively, those using Anaconda can navigate to located the ```gallop.bat``` file in an Anaconda prompt, then run the batch file by typing:
+ Alternatively, those using Anaconda should open the Anaconda prompt, then run the batch file by typing:
 ```
-gallop.bat
+gallop
 ```
 
 A browser window will be opened displaying the _GALLOP_ interface:
