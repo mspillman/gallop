@@ -262,6 +262,18 @@ for i in range(gallop_iters):
     # Swarm update step
     external, internal = swarm.update_position(result=result, verbose=False)
 ```
+The local optimiser can be replaced with any pytorch-compatible optimiser. _GALLOP_ includes as a dependency [_torch-optimizer_](https://github.com/jettify/pytorch-optimizer), which provides a wide variety of recently developed optimisers for use in machine learning applications. To try a different algorithm, simply replace the definition of optimizer. For example, to use the DiffGrad optimiser, add an import for torch-optimizer:
+```python
+import torch_optimizer
+```
+And then define the optimizer:
+
+```python
+optimizer = torch_optimizer.DiffGrad([tensors["zm"]["external"],
+                                  tensors["zm"]["internal"]],
+                                  lr=minimiser_settings["learning_rate"],
+                                  betas=[0.9,0.9]) 
+```
 Swarm behaviour can also be modified by creating a new swarm class which inherits from the _GALLOP_ Swarm. Then replace the relevant methods to obtain the behaviour desired. Most likely to be of interest is ```PSO_velocity_update(...)```. See Swarm code and comments for more information.
 
 It is also trivial to replace the swarm element of GALLOP with another optimiser which can return numpy arrays for the external and internal degrees of freedom. For example, the [ask-and-tell interface](http://cma.gforge.inria.fr/apidocs-pycma/cma.evolution_strategy.CMAEvolutionStrategy.html) of the [_pycma_](https://github.com/CMA-ES/pycma) implementation of CMA-ES could be used as an alternative to the particle swarm:
