@@ -219,7 +219,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_reflections=None, learning_rate_schedule="1cycle",
     b_bounds_1_cycle=None, check_min=1, optimizer="Adam", verbose=False,
     print_every=10, learning_rate=3e-2, betas=None, eps=1e-8, loss="sum",
-    start_time=None, run=1, torsion_shadowing=False, Z_prime=1,
+    start_time=None, run=1, torsion_shadowing=False, Z_prime=1, mapping=False,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
     save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
@@ -392,7 +392,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         else:
             raise RuntimeError ("You must supply the internal coordinates if "
                                 "using torsion shadowing")
-        if not Structure.centrosymmetric:
+        if not Structure.centrosymmetric or mapping:
             for i in range(Z_prime-1):
                 for j in range(2**i):
                     t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
