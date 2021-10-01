@@ -35,6 +35,7 @@
     "use_torsion_restraints": false,
     "n_torsion_restraints" : 1,
     "torsion_restraints": null,
+    "restraint_constant_weight": false,
     "n_swarms": 10,
     "swarm_size": 1000,
     "global_update": false,

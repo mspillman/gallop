@@ -361,7 +361,9 @@ def get_all_settings(loaded_values):
             else:
                 torsion_restraints = None
                 n_torsion_restraints = 0
-
+            restraint_constant_weight = st.checkbox(
+                                    "Use constant weight for restraints",
+                                    value=loaded_values["restraint_constant_weight"])
         else:
             find_lr = loaded_values["find_lr"]
             find_lr_auto_mult = loaded_values["find_lr_auto_mult"]
@@ -386,6 +388,7 @@ def get_all_settings(loaded_values):
             use_torsion_restraints = loaded_values["use_torsion_restraints"]
             n_torsion_restraints = loaded_values["n_torsion_restraints"]
             torsion_restraints = loaded_values["torsion_restraints"]
+            restraint_constant_weight = loaded_values["restraint_constant_weight"]
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -410,6 +413,7 @@ def get_all_settings(loaded_values):
     all_settings["use_torsion_restraints"] = use_torsion_restraints
     all_settings["n_torsion_restraints"] = n_torsion_restraints
     all_settings["torsion_restraints"] = torsion_restraints
+    all_settings["restraint_constant_weight"] = restraint_constant_weight
 
     # Particle Swarm settings
     with st.sidebar.expander(label="Particle Swarm", expanded=False):

@@ -222,8 +222,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     start_time=None, run=1, torsion_shadowing=False, Z_prime=1, mapping=False,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
-    save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
-    PO_axis=(0, 0, 1), notebook=False):
+    save_CIF=True, streamlit=False, use_restraints=False,
+    restraint_constant_weight=False, include_PO=False, PO_axis=(0, 0, 1),
+    notebook=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -326,6 +327,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             Defaults to False
         Z_prime (int, optional): If using torsion_shadowing, this is the Z' for
             the current unit cell. Defaults to 1.
+        mapping (bool, optional): If using torsion shadowing, this will toggle
+            permuting the mapped torsions by factors of + and -1 for all of the
+            different fragments. This is automatically used for structures in
+            non-centrosymmetric space groups.
         save_trajectories (bool, optional): Store the DoF, chi_2 and loss value
             after every iteration. This will be slow, as it requires transfer
             from the GPU to CPU. Defaults to False.
@@ -350,6 +355,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             additional penalty term in the loss function. Must be added to the
             Structure object via Structure.add_restraint() before use. Defaults
             to False.
+        restraint_constant_weight (bool, optional): If set, then then instead
+            of weighting the restraints relative to the chi2 value, the weights
+            supplied are used as constant weighting factors. Defaults to False.
         include_PO (bool, optional): Include a preferred orientation correction
             to the intensities during optimization. Defaults to False.
         PO_axis (tuple, optional): The axis along which to apply the
@@ -415,7 +423,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
     if use_restraints:
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
-                                                                dtype, device)
+                                    dtype, device, restraint_constant_weight)
 
 
     # Initialize the optimizer
@@ -574,15 +582,27 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # Need a function to convert all of the chi_2 values into a scalar
         if isinstance(loss, str):
             if loss.lower() == "sse":
-                L = ((chi_2*(1.0 + restraint_penalty))**2).sum()
+                if restraint_constant_weight:
+                    L = ((chi_2 + restraint_penalty)**2).sum()
+                else:
+                    L = ((chi_2*(1.0 + restraint_penalty))**2).sum()
             elif loss.lower() == "sum":
-                L = (chi_2*(1.0 + restraint_penalty)).sum()
+                if restraint_constant_weight:
+                    L = (chi_2 + restraint_penalty).sum()
+                else:
+                    L = (chi_2*(1.0 + restraint_penalty)).sum()
             elif loss.lower() == "xlogx":
-                L = (torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty))).sum()
+                if restraint_constant_weight:
+                    L = ((torch.log(chi_2)*chi_2) + restraint_penalty).sum()
+                else:
+                    L = (torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty))).sum()
         else:
             if loss is None:
                 # Default to the sum operation if loss is None
-                L = (chi_2*(1.0 + restraint_penalty)).sum()
+                if restraint_constant_weight:
+                    L = (chi_2 + restraint_penalty).sum()
+                else:
+                    L = (chi_2*(1.0 + restraint_penalty)).sum()
             else:
                 try:
                     L = loss(chi_2, restraint_penalty)

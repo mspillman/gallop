@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import altair as alt
+from gallop.optim.local import minimise
 import gallop_streamlit_utils as gsu
 from gallop import z_matrix
 from gallop import optim
@@ -181,6 +182,8 @@ elif function == "GALLOP":
                                             "value" : float(r[4]),
                                             "weight" : float(r[5])})
             minimiser_settings["use_restraints"] = True
+
+        minimiser_settings["restraint_constant_weight"] = all_settings["restraint_constant_weight"]
 
         if all_settings["animate_structure"]:
             minimiser_settings["save_trajectories"] = True
