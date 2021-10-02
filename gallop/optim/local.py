@@ -152,44 +152,36 @@ def get_loss(chi_2, restraint_penalty, loss, restraint_weight_type):
     # PyTorch expects a single value for backwards pass.
     # Need a function to convert all of the chi_2 values into a scalar
     if isinstance(loss, str):
+        if "chi2" in restraint_weight_type.lower():
+            if "min" in restraint_weight_type.lower():
+                with torch.no_grad():
+                    chi2_no_grad = chi_2.min()
+            else:
+                with torch.no_grad():
+                    chi2_no_grad = chi_2.clone().detach()
         if loss.lower() == "sse":
             if restraint_weight_type == "constant":
                 L = ((chi_2 + restraint_penalty)**2).sum()
-            elif restraint_weight_type == "min_chi2":
-                with torch.no_grad():
-                    min_chi2 = chi_2.min()
-                L = ((chi_2 + min_chi2*restraint_penalty)**2).sum()
             else:
-                L = ((chi_2*(1.0 + restraint_penalty))**2).sum()
+                L = ((chi_2 + chi2_no_grad*restraint_penalty)**2).sum()
         elif loss.lower() == "sum":
             if restraint_weight_type == "constant":
                 L = (chi_2 + restraint_penalty).sum()
-            elif restraint_weight_type == "min_chi2":
-                with torch.no_grad():
-                    min_chi2 = chi_2.min()
-                L = (chi_2 + min_chi2*restraint_penalty).sum()
             else:
-                L = (chi_2*(1.0 + restraint_penalty)).sum()
+                L = (chi_2 + chi2_no_grad*restraint_penalty).sum()
         elif loss.lower() == "xlogx":
             if restraint_weight_type == "constant":
                 L = ((torch.log(chi_2)*chi_2) + restraint_penalty).sum()
-            elif restraint_weight_type == "min_chi2":
-                with torch.no_grad():
-                    min_chi2 = chi_2.min()
-                L = ((torch.log(chi_2)*chi_2) + min_chi2*restraint_penalty).sum()
             else:
-                L = (torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty))).sum()
+                L = ((torch.log(chi_2)*chi_2) + chi2_no_grad*restraint_penalty).sum()
+
     else:
         if loss is None:
             # Default to the sum operation if loss is None
             if restraint_weight_type == "constant":
                 L = (chi_2 + restraint_penalty).sum()
-            elif restraint_weight_type == "min_chi2":
-                with torch.no_grad():
-                    min_chi2 = chi_2.min()
-                L = (chi_2 + min_chi2*restraint_penalty).sum()
             else:
-                L = (chi_2*(1.0 + restraint_penalty)).sum()
+                L = (chi_2 + chi2_no_grad*restraint_penalty).sum()
         else:
             try:
                 L = loss(chi_2, restraint_penalty)
