@@ -151,14 +151,14 @@ def get_loss(chi_2, restraint_penalty, loss, restraint_weight_type):
     """
     # PyTorch expects a single value for backwards pass.
     # Need a function to convert all of the chi_2 values into a scalar
+    if "chi2" in restraint_weight_type.lower():
+        if "min" in restraint_weight_type.lower():
+            with torch.no_grad():
+                chi2_no_grad = chi_2.min()
+        else:
+            with torch.no_grad():
+                chi2_no_grad = chi_2.clone().detach()
     if isinstance(loss, str):
-        if "chi2" in restraint_weight_type.lower():
-            if "min" in restraint_weight_type.lower():
-                with torch.no_grad():
-                    chi2_no_grad = chi_2.min()
-            else:
-                with torch.no_grad():
-                    chi2_no_grad = chi_2.clone().detach()
         if loss.lower() == "sse":
             if restraint_weight_type == "constant":
                 L = ((chi_2 + restraint_penalty)**2).sum()
