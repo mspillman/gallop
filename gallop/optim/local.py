@@ -135,6 +135,71 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
         param_group["momentum"] = b1
     return lr
 
+
+def get_loss(chi_2, restraint_penalty, loss, restraint_weight_type):
+    """Calculate the loss function - what is actually optimised by pytorch
+
+    Args:
+        chi_2 (Tensor): The chi2 for the current crystal structures
+        restraint_penalty (Tensor): The penalty for restraints (if used) or 0
+        loss (str): How to combine the chi2s and restraints to get a single
+            scalar
+        restraint_weight_type (str): How to weight the restraint penalties
+
+    Returns:
+        [type]: [description]
+    """
+    # PyTorch expects a single value for backwards pass.
+    # Need a function to convert all of the chi_2 values into a scalar
+    if isinstance(loss, str):
+        if loss.lower() == "sse":
+            if restraint_weight_type == "constant":
+                L = ((chi_2 + restraint_penalty)**2).sum()
+            elif restraint_weight_type == "min_chi2":
+                with torch.no_grad():
+                    min_chi2 = chi_2.min()
+                L = ((chi_2 + min_chi2*restraint_penalty)**2).sum()
+            else:
+                L = ((chi_2*(1.0 + restraint_penalty))**2).sum()
+        elif loss.lower() == "sum":
+            if restraint_weight_type == "constant":
+                L = (chi_2 + restraint_penalty).sum()
+            elif restraint_weight_type == "min_chi2":
+                with torch.no_grad():
+                    min_chi2 = chi_2.min()
+                L = (chi_2 + min_chi2*restraint_penalty).sum()
+            else:
+                L = (chi_2*(1.0 + restraint_penalty)).sum()
+        elif loss.lower() == "xlogx":
+            if restraint_weight_type == "constant":
+                L = ((torch.log(chi_2)*chi_2) + restraint_penalty).sum()
+            elif restraint_weight_type == "min_chi2":
+                with torch.no_grad():
+                    min_chi2 = chi_2.min()
+                L = ((torch.log(chi_2)*chi_2) + min_chi2*restraint_penalty).sum()
+            else:
+                L = (torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty))).sum()
+    else:
+        if loss is None:
+            # Default to the sum operation if loss is None
+            if restraint_weight_type == "constant":
+                L = (chi_2 + restraint_penalty).sum()
+            elif restraint_weight_type == "min_chi2":
+                with torch.no_grad():
+                    min_chi2 = chi_2.min()
+                L = (chi_2 + min_chi2*restraint_penalty).sum()
+            else:
+                L = (chi_2*(1.0 + restraint_penalty)).sum()
+        else:
+            try:
+                L = loss(chi_2, restraint_penalty)
+            except TypeError:
+                try:
+                    L = loss(chi_2)
+                except RuntimeError:
+                    print("Unknown / incompatible loss function",loss)
+    return L
+
 def find_learning_rate(Structure, external=None, internal=None,
     min_lr=-4, max_lr=np.log10(0.15), n_trials=200, minimiser_settings=None,
     plot=False, multiplication_factor=0.75, logplot=True, figsize=(10,6)):
@@ -223,7 +288,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
     save_CIF=True, streamlit=False, use_restraints=False,
-    restraint_constant_weight=False, include_PO=False, PO_axis=(0, 0, 1),
+    restraint_weight_type="min_chi2", include_PO=False, PO_axis=(0, 0, 1),
     notebook=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
@@ -355,9 +420,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             additional penalty term in the loss function. Must be added to the
             Structure object via Structure.add_restraint() before use. Defaults
             to False.
-        restraint_constant_weight (bool, optional): If set, then then instead
-            of weighting the restraints relative to the chi2 value, the weights
-            supplied are used as constant weighting factors. Defaults to False.
+        restraint_weight_type (str, optional): One of chi2, min_chi2, constant.
+            If constant, then then instead of weighting the restraints relative
+            to the chi2 value (or minimum of all chi2 values), the weights
+            supplied are used as constant weighting factors. Defaults to min_chi2.
         include_PO (bool, optional): Include a preferred orientation correction
             to the intensities during optimization. Defaults to False.
         PO_axis (tuple, optional): The axis along which to apply the
@@ -423,7 +489,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
     if use_restraints:
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
-                                    dtype, device, restraint_constant_weight)
+                                    dtype, device, restraint_weight_type)
 
 
     # Initialize the optimizer
@@ -578,39 +644,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                                 asymmetric_frac_coords, **restraint_tensors)
         else:
             restraint_penalty = 0
-        # PyTorch expects a single value for backwards pass.
-        # Need a function to convert all of the chi_2 values into a scalar
-        if isinstance(loss, str):
-            if loss.lower() == "sse":
-                if restraint_constant_weight:
-                    L = ((chi_2 + restraint_penalty)**2).sum()
-                else:
-                    L = ((chi_2*(1.0 + restraint_penalty))**2).sum()
-            elif loss.lower() == "sum":
-                if restraint_constant_weight:
-                    L = (chi_2 + restraint_penalty).sum()
-                else:
-                    L = (chi_2*(1.0 + restraint_penalty)).sum()
-            elif loss.lower() == "xlogx":
-                if restraint_constant_weight:
-                    L = ((torch.log(chi_2)*chi_2) + restraint_penalty).sum()
-                else:
-                    L = (torch.log(chi_2)*(chi_2*(1.0 + restraint_penalty))).sum()
-        else:
-            if loss is None:
-                # Default to the sum operation if loss is None
-                if restraint_constant_weight:
-                    L = (chi_2 + restraint_penalty).sum()
-                else:
-                    L = (chi_2*(1.0 + restraint_penalty)).sum()
-            else:
-                try:
-                    L = loss(chi_2, restraint_penalty)
-                except TypeError:
-                    try:
-                        L = loss(chi_2)
-                    except RuntimeError:
-                        print("Unknown / incompatible loss function",loss)
+
+        L = get_loss(chi_2, restraint_penalty, loss, restraint_weight_type)
 
         # Backward pass to calculate gradients
         L.backward()

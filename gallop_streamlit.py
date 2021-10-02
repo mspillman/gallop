@@ -183,7 +183,7 @@ elif function == "GALLOP":
                                             "weight" : float(r[5])})
             minimiser_settings["use_restraints"] = True
 
-        minimiser_settings["restraint_constant_weight"] = all_settings["restraint_constant_weight"]
+        minimiser_settings["restraint_weight_type"] = all_settings["restraint_weight_type"]
 
         if all_settings["animate_structure"]:
             minimiser_settings["save_trajectories"] = True
