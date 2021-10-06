@@ -328,7 +328,7 @@ The simplest way to get started with _GALLOP_ is to use the [Anaconda python dis
 
     ``` (gallop) C:\> conda install gallop -c mspillman -c conda-forge -c pytorch ```
 
-6. Once the installation is complete, you can start gallop by running the following command from the Anaconda prompt:
+6. Once the installation is complete, you can start _GALLOP_ by running the following command from the Anaconda prompt:
 
     ``` (gallop) C:\> gallop ```
 
