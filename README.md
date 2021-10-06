@@ -266,7 +266,7 @@ The local optimiser can be replaced with any pytorch-compatible optimiser. _GALL
 ```python
 import torch_optimizer
 ```
-And then define the optimizer:
+And then define the optimiser:
 
 ```python
 optimizer = torch_optimizer.DiffGrad([tensors["zm"]["external"],
