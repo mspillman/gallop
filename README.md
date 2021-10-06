@@ -362,8 +362,8 @@ Once the above are installed, several Python Libraries must also be installed. T
 |---------|--------|
 | [PyTorch](https://pytorch.org/get-started/locally/) | Must be compatible with the version of CUDA installed. Installation via conda package manager recommended. |
 | [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
+| [SciPy](https://www.scipy.org/) | Numerical processing routines, including Latin Hypercube quasi-random sampling. Version >1.7 needed |
 | [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Provides additional local optimisers not available natively in PyTorch |
-| [pyDOE](https://pythonhosted.org/pyDOE/) | Provides [Latin hypercube](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) sampling for initial points, which gives a more even coverage of the hypersurface than uniform random sampling. |
 | [Streamlit](https://streamlit.io/) | Provides the browser interface - not needed for Python mode use|
 | [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
