@@ -426,7 +426,7 @@ _GALLOP_ makes use of a number of libraries, without which its development would
 - [Streamlit](https://streamlit.io/) - this allowed the browser-based GUI to be written entirely in python, which made it easier to integrate with the existing code.
 
 ### **Free and cheap GPU/TPU Resources**
-[Google Colaboratory](https://colab.research.google.com) offers free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which gives priority access to more powerful GPU resources amongst other benefits. A number of other services also allow free or cheap GPU access, for example:
+- [Google Colaboratory](https://colab.research.google.com) offers free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which gives priority access to more powerful GPU resources amongst other benefits.
 
 - [Kaggle](https://www.kaggle.com/) - free access to GPUs and TPUs, run time capped at 30 hours / week. GPUs = Nvidia Tesla P100 (better than most of the free tier on colab)
 
