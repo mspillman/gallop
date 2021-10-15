@@ -81,21 +81,21 @@ def get_data_from_cif(filename):
     with open(filename) as cif:
         for line in cif:
             line = list(filter(None,line.strip().split(" ")))
-            if line[0] == "_cell_length_a":
+            if "length_a" in line[0]:
                 a = float(line[1].split("(")[0])
-            if line[0] == "_cell_length_b":
+            if "length_b" in line[0]:
                 b = float(line[1].split("(")[0])
-            if line[0] == "_cell_length_c":
+            if "length_c" in line[0]:
                 c = float(line[1].split("(")[0])
-            if line[0] == "_cell_angle_alpha":
+            if "angle_alpha" in line[0]:
                 al = float(line[1].split("(")[0])
-            if line[0] == "_cell_angle_beta":
+            if "angle_beta" in line[0]:
                 be = float(line[1].split("(")[0])
-            if line[0] == "_cell_angle_gamma":
+            if "angle_gamma" in line[0]:
                 ga = float(line[1].split("(")[0])
-            if line[0] == "_symmetry_Int_Tables_number":
+            if "Int_Tables_number" in line[0]:
                 space_group_number = int(line[1])
-            if "wavelength.wavelength" in line[0]:
+            if "wavelength.wavelength" in line[0] or "wavelength_wavelength" in line[0]:
                 wavelength = float(line[1])
 
     cif.close()
