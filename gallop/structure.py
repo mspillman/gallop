@@ -200,7 +200,7 @@ class Structure(object):
         d = self.wavelength / (2*np.sin(np.deg2rad(twotheta/2)))
         return (np.around(d, decimal_places))
 
-    def add_data(self, filename, source="DASH",
+    def add_data(self, filename, hklfile=None, source="DASH",
                 percentage_cutoff=20):
         """
         Add PXRD data to the Structure object
@@ -238,6 +238,11 @@ class Structure(object):
             for k, v in data.items():
                 setattr(self, k, v)
             self.source = "topas"
+        elif "shelx" == source.lower():
+            data = files.shelx.get_shelx_data(filename, hklfile)
+            for k, v in data.items():
+                setattr(self, k, v)
+            self.source = "shelx"
         else:
             print("This program is not yet supported.")
             print("Currently supported programs:")

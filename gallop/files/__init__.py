@@ -22,6 +22,7 @@ import py3Dmol
 from . import dash
 from . import gsas
 from . import topas
+from . import shelx
 
 import gallop.zm_to_cart as zm_to_cart
 
