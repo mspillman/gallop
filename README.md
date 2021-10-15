@@ -348,7 +348,7 @@ Warning - this is not for the faint of heart! More detailed instructions and a v
 | Dependency | Version |Comments|
 |------------|---------|--------|
 | [Python](https://www.anaconda.com/products/individual) | >=3.8 | Other versions of Python 3 may also work. Anaconda distribution **strongly** recommended.|
-| [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 10.2 or 11.x | CUDA 11 recommended for Ampere GPUs |
+| [CUDA](https://developer.nvidia.com/cuda-toolkit-archive)   | 11.1 or 10.2 | CUDA 11 essential for Nvidia Ampere GPUs |
 | [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive)  | Compatible with installed CUDA | Login required. Not strictly necessary for _GALLOP_, but will allow pytorch to be used with more flexibility |
 | [Visual C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) | 14.0 | Needed for installation of some of the Python libraries. Linux or Mac users should install appropriate C++ build tools (e.g. gcc) if not already installed.|
 
