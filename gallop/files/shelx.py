@@ -95,7 +95,7 @@ def get_data_from_cif(filename):
                 ga = float(line[1].split("(")[0])
             if line[0] == "_symmetry_Int_Tables_number":
                 space_group_number = int(line[1])
-            if "wavelength" in line[0]:
+            if "wavelength.wavelength" in line[0]:
                 wavelength = float(line[1])
 
     cif.close()
