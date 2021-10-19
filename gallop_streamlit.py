@@ -49,9 +49,8 @@ elif function == "GALLOP":
     all_settings = gsu.sidebar()
 
     # Now we upload the files needed for GALLOP - DASH fit files and Z-matrices
-    uploaded_files, sdi, gpx, out, json_settings, zms, dbf, load_settings, \
-                                pawley_program, clear_files = gsu.get_files()
-
+    uploaded_files, sdi, gpx, out, hkl, ins, cif, json_settings, zms, \
+            dbf, load_settings, pawley_program, clear_files = gsu.get_files()
 
     st.text("")
     st.text("")
@@ -76,8 +75,15 @@ elif function == "GALLOP":
                 structure_name = os.path.split(sdi)[-1].split(".sdi")[0]
             elif pawley_program == "GSAS-II":
                 structure_name = os.path.split(gpx)[-1].split(".gpx")[0]
-            else:
+            elif pawley_program == "TOPAS (experimental)":
                 structure_name = os.path.split(out)[-1].split(".out")[0]
+            else:
+                assert (cif is not None or ins is not None), "You must supply \
+                                cell and space group info via a cif or ins file"
+                if cif is not None:
+                    structure_name = os.path.split(cif)[-1].split(".cif")[0]
+                else:
+                    structure_name = os.path.split(ins)[-1].split(".ins")[0]
             all_settings["structure_name"] = structure_name
         struct = structure.Structure(
                                 name=all_settings["structure_name"],
@@ -88,9 +94,14 @@ elif function == "GALLOP":
         elif pawley_program == "GSAS-II":
             struct.add_data(gpx, source="GSAS",
                         percentage_cutoff=all_settings["percentage_cutoff"])
-        else:
+        elif pawley_program == "TOPAS (experimental)":
             struct.add_data(out, source="TOPAS",
                         percentage_cutoff=all_settings["percentage_cutoff"])
+        else:
+            if cif is not None:
+                struct.add_data(cif, hklfile=hkl, source="SHELX")
+            else:
+                struct.add_data(ins, hklfile=hkl, source="SHELX")
         for z in sorted(zms):
             check = z_matrix.Z_matrix(z)
             if all_settings["ignore_H_atoms"] and not check.H_atom_torsion_defs:

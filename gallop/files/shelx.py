@@ -66,37 +66,41 @@ def get_shelx_data(filename, hklfile):
 
 
 def get_data_from_ins(filename):
+    wavelength = None
     with open(filename) as insfile:
         for line in insfile:
             line = list(filter(None,line.strip().split(" ")))
-            if line[0] == "TITL":
-                space_group = line[-1]
-            if line[0] == "CELL":
-                cell = np.array(line[1:]).astype(float)
-                wavelength = float(line[1])
+            if len(line) > 0:
+                if line[0] == "TITL":
+                    space_group = line[-1]
+                if line[0] == "CELL":
+                    cell = np.array(line[1:]).astype(float)
+                    wavelength = float(line[1])
 
     return space_group, cell, wavelength
 
 def get_data_from_cif(filename):
+    wavelength = None
     with open(filename) as cif:
         for line in cif:
             line = list(filter(None,line.strip().split(" ")))
-            if "length_a" in line[0]:
-                a = float(line[1].split("(")[0])
-            if "length_b" in line[0]:
-                b = float(line[1].split("(")[0])
-            if "length_c" in line[0]:
-                c = float(line[1].split("(")[0])
-            if "angle_alpha" in line[0]:
-                al = float(line[1].split("(")[0])
-            if "angle_beta" in line[0]:
-                be = float(line[1].split("(")[0])
-            if "angle_gamma" in line[0]:
-                ga = float(line[1].split("(")[0])
-            if "Int_Tables_number" in line[0]:
-                space_group_number = int(line[1])
-            if "wavelength.wavelength" in line[0] or "wavelength_wavelength" in line[0]:
-                wavelength = float(line[1])
+            if len(line) > 0:
+                if "length_a" in line[0]:
+                    a = float(line[1].split("(")[0])
+                if "length_b" in line[0]:
+                    b = float(line[1].split("(")[0])
+                if "length_c" in line[0]:
+                    c = float(line[1].split("(")[0])
+                if "angle_alpha" in line[0]:
+                    al = float(line[1].split("(")[0])
+                if "angle_beta" in line[0]:
+                    be = float(line[1].split("(")[0])
+                if "angle_gamma" in line[0]:
+                    ga = float(line[1].split("(")[0])
+                if "Int_Tables_number" in line[0]:
+                    space_group_number = int(line[1])
+                if "wavelength.wavelength" in line[0] or "wavelength_wavelength" in line[0]:
+                    wavelength = float(line[1])
 
     cif.close()
     cell = np.array([a,b,c,al,be,ga])

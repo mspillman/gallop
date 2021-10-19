@@ -583,7 +583,8 @@ def get_files():
     else:
         with col2:
             pawley_program = st.radio("Choose Pawley refinement program",
-                                    ["DASH","GSAS-II", "TOPAS (experimental)"])
+                                    ["DASH","GSAS-II", "TOPAS (experimental)",
+                                    "SHELX (experimental)"])
         if pawley_program == "DASH":
             uploaded_files = st.file_uploader("Upload DASH Pawley files and \
                                     Z-matrices",
@@ -597,11 +598,18 @@ def get_files():
                                     accept_multiple_files=True,
                                     type=["zmatrix", "gpx", "json"],
                                     key=None)
-        else:
+        elif pawley_program == "TOPAS (experimental)":
             uploaded_files = st.file_uploader("Upload TOPAS .out file and\
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "out", "json"],
+                                    key=None)
+        else:
+            uploaded_files = st.file_uploader("Upload SHELX .hkl file and\
+                                    Z-matrices, plus either .ins or .cif\
+                                        containing cell and space group info",
+                                    accept_multiple_files=True,
+                                    type=["zmatrix","ins","hkl","cif","json"],
                                     key=None)
         col1, col2 = st.columns([2,2])
         with col1:
@@ -620,6 +628,9 @@ def get_files():
     gpx  = None
     out = None
     dbf = None
+    hkl = None
+    ins = None
+    cif = None
     json_settings = None
     zms = []
     if file_source == "Upload files":
@@ -648,6 +659,12 @@ def get_files():
                     json_settings = name
                 if ".dbf" in name:
                     dbf = name
+                if ".hkl" in name:
+                    hkl = name
+                if ".ins" in name:
+                    ins = name
+                if ".cif" in name:
+                    cif = name
 
     else:
         filedir = os.path.dirname(gallop.__file__)
@@ -668,8 +685,8 @@ def get_files():
             if s not in selection:
                 json_settings.pop(s, None)
 
-    return uploaded_files, sdi, gpx, out, json_settings, zms, dbf, \
-            load_settings, pawley_program,clear_files
+    return uploaded_files, sdi, gpx, out, hkl, ins, cif, json_settings, zms, \
+            dbf, load_settings, pawley_program,clear_files
 
 
 
