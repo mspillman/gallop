@@ -605,9 +605,9 @@ def get_files():
                                     type=["zmatrix", "out", "json"],
                                     key=None)
         else:
-            uploaded_files = st.file_uploader("Upload SHELX .hkl file and\
-                                    Z-matrices, plus either .ins or .cif\
-                                        containing cell and space group info",
+            uploaded_files = st.file_uploader("Upload SHELX .hkl file in HKLF 4\
+                                    format and Z-matrices, plus either .ins or \
+                                    .cif containing cell and space group info",
                                     accept_multiple_files=True,
                                     type=["zmatrix","ins","hkl","cif","json"],
                                     key=None)
