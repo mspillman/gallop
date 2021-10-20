@@ -222,6 +222,8 @@ def read_DASH_sdi(filename):
                 sg_setting = line[2].split(":")[-1]
             if line[0] == "PawleyChiSq":
                 PawleyChiSq = float(line[1])
+            if line[0] == "Single":
+                PawleyChiSq = "Single Crystal"
     in_sdi.close()
     return hcv, pik, tic, dsl, unit_cell, sg, sg_setting, PawleyChiSq
 

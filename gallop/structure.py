@@ -224,7 +224,10 @@ class Structure(object):
                 setattr(self, k, v)
             self.dspacing = self.get_resolution(self.twotheta)
             self.data_resolution = self.get_resolution(self.twotheta[-1])
-            self.source = "dash"
+            if self.PawleyChiSq == "Single Crystal":
+                self.source = "dash single crystal"
+            else:
+                self.source = "dash"
         elif "gsas" in source.lower():
             data = files.gsas.get_data_from_GSAS_gpx(filename,
                             percentage_cutoff_inv_cov=percentage_cutoff)
