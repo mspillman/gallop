@@ -517,9 +517,9 @@ def get_restraint_tensors(Structure, dtype, device, restraint_weight_type):
 
     if len(angle_restraints) != 0:
         restrain_a = True
-        a_atoms   = angle_restraints[:,:3]
-        cos_angles = np.cos(np.deg2rad(angle_restraints[:,3]))
-        a_weights = angle_restraints[:,4]
+        a_atoms   = angle_restraints[:,:4]
+        cos_angles = np.cos(np.deg2rad(angle_restraints[:,4]))
+        a_weights = angle_restraints[:,5]
         if restraint_weight_type != "constant":
             a_weights /= 100.
     else:

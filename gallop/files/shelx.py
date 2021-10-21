@@ -59,8 +59,9 @@ def get_shelx_data(filename, hklfile):
     data["intensities"] = I[d_hkl_sort]
     data["dspacing"] = d_hkl[d_hkl_sort]
 
-    cov = np.diag(sigma) @ np.eye(sigma.shape[0]) @ np.diag(sigma)
-    inv_cov = np.linalg.inv(cov)
+    #cov = np.diag(sigma) @ np.eye(sigma.shape[0]) @ np.diag(sigma)
+    #inv_cov = np.linalg.inv(cov)
+    inv_cov = np.diag(1/(sigma**2))
     data["inverse_covariance_matrix"] = inv_cov
     return data
 
@@ -114,10 +115,11 @@ def get_data_from_hkl(filename):
     with open(filename) as hklfile:
         for line in hklfile:
             line = list(filter(None,line.strip().split(" ")))
-            if len(line) > 0:
-                hkl.append(line[0:3])
-                I.append(line[3])
-                sigma.append(line[4])
+            if len(line) > 3:
+                if line[0:3] not in [["0","0","0"],["99","99","99"]]:
+                    hkl.append(line[0:3])
+                    I.append(line[3])
+                    sigma.append(line[4])
     hklfile.close()
     hkl = np.array(hkl).astype(int)
     I = np.array(I).astype(float)

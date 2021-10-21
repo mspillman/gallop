@@ -328,8 +328,9 @@ def get_all_settings(loaded_values):
                                         value=loaded_values["n_angle_restraints"],
                                         step=1, format=None, key=None))
                 angle_restraints = loaded_values["angle_restraints"]
-                st.write("Enter the atom labels, bond angle and \
-                        % weight (separated by commas, e.g. C1,C2,C3,121.1,50)")
+                st.write("Enter the atom labels (3 or 4), angle and \
+                        % weight (separated by commas, e.g. C1,C2,C3,121.1,50 \
+                        or C1,C2,C3,C4,121.1,50)")
                 if angle_restraints is None:
                     angle_restraints = defaultdict(str)
                 for i in range(n_angle_restraints):

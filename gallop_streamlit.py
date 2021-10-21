@@ -171,14 +171,23 @@ elif function == "GALLOP":
                 for r in all_settings["angle_restraints"].keys():
                     r = all_settings["angle_restraints"][r]
                     r = r.replace(" ","").split(",")
-                    struct.add_restraint({"type" : "angle",
+                    if len(r) == 5:
+                        struct.add_restraint({"type" : "angle",
+                                            "atom1" : r[0],
+                                            "atom2" : r[1],
+                                            "atom3" : r[1],
+                                            "atom4" : r[2],
+                                            "value" : float(r[3]),
+                                            "weight" : float(r[4])})
+                    else:
+                        struct.add_restraint({"type" : "angle",
                                             "atom1" : r[0],
                                             "atom2" : r[1],
                                             "atom3" : r[2],
-                                            "value" : float(r[3]),
-                                            "weight" : float(r[4])})
+                                            "atom4" : r[3],
+                                            "value" : float(r[4]),
+                                            "weight" : float(r[5])})
             minimiser_settings["use_restraints"] = True
-
 
         if all_settings["use_torsion_restraints"]:
             if all_settings["torsion_restraints"] is not None:

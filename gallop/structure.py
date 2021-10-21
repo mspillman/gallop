@@ -584,7 +584,7 @@ class Structure(object):
                 the value of the restraint - if distance, should be in Angstroms,
                 if angle or torsion, should be in degrees, and the weight to
                 apply to this restraint, expressed as a percentage.
-                Required keys:    
+                Required keys:
                     "type" - can be one of distance, angle or torsion
                     "value" - the numerical value of the expected restraint
                     "weight" - the weight to assign to this restraint
@@ -592,7 +592,7 @@ class Structure(object):
                     "atom2" - the second atom involved
                 Other keys that may be needed:
                     "atom3" - if specifying an angle or torsion restraint
-                    "atom4" - if specifying a torsion
+                    "atom4" - if specifying an angle or torsion restraint
                     "zm1" to "zm4" - if specifying the zmatrices to index the
                                         atoms involved.
             indexing (int, optional): Use python 0-indexing (i.e. first atom in
@@ -607,7 +607,7 @@ class Structure(object):
         restraint_type = restraint["type"]
         restraint_value = restraint["value"]
         restraint_weight = restraint["weight"]
-        n_atoms = {"distance" : 2, "angle" : 3,
+        n_atoms = {"distance" : 2, "angle" : 4,
                     "torsion" : 4}[restraint_type.lower()]
         # Now check to see if the ZMs have been specified or if we should use
         # the atom labels to work out which atoms the restraint should be
