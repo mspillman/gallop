@@ -173,8 +173,8 @@ elif function == "GALLOP":
                     r = r.replace(" ","").split(",")
                     if len(r) == 5:
                         struct.add_restraint({"type" : "angle",
-                                            "atom1" : r[0],
-                                            "atom2" : r[1],
+                                            "atom1" : r[1],
+                                            "atom2" : r[0],
                                             "atom3" : r[1],
                                             "atom4" : r[2],
                                             "value" : float(r[3]),

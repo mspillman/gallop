@@ -51,7 +51,7 @@ def get_restraint_penalties(asymmetric_frac_coords, lattice_matrix, d_atoms,
     if restrain_d:
         # Distances
         atomic_distances = torch.sqrt((
-                (cart[:,d_atoms,:][:,:,0,:] - cart[:,d_atoms,:][:,:,1,:])**2
+                (cart[:,d_atoms,:][:,:,1,:] - cart[:,d_atoms,:][:,:,0,:])**2
                     ).sum(dim=-1))
         distance_penalty = (d_weights.view(1,d_weights.shape[0])*(
                                                 distances-atomic_distances)**2)
@@ -59,7 +59,7 @@ def get_restraint_penalties(asymmetric_frac_coords, lattice_matrix, d_atoms,
 
     if restrain_a:
         # Angles
-        u = cart[:,a_atoms,:][:,:,0,:] - cart[:,a_atoms,:][:,:,1,:]
+        u = cart[:,a_atoms,:][:,:,1,:] - cart[:,a_atoms,:][:,:,0,:]
         v = cart[:,a_atoms,:][:,:,3,:] - cart[:,a_atoms,:][:,:,2,:]
         atomic_cos_angles = torch.einsum('bij,bij->bi', u, v).div(
                                 u.norm(p=2, dim=-1)*v.norm(p=2, dim=-1))
