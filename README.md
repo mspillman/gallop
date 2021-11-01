@@ -3,6 +3,8 @@
 
 This code should be viewed as "pre-alpha" stage. It is under active development, and likely to have many bugs. If you have comments, suggestions, bugs to report or ideas for improvement or new features, please feel free to submit an issue, contact me directly (markspillman _at_ gmail _dot_ com) or submit a pull request.
 
+I will be posting on [Twitter](https://twitter.com/gallop_sdpd) when I make updates to the repository. I will also be posting blog posts and tutorials [here](https://mspillman.github.io/blog).
+
 Contents:
 1. [Introduction](#introduction)
 2. [Try _GALLOP_ on a free cloud GPU](#try-gallop-on-a-free-cloud-gpu)
