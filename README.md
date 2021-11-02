@@ -41,7 +41,7 @@ You will need a Google/Kaggle account to run the notebooks linked below. These n
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 
-An overview of using the browser interface can be found in [this}(https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html) blog post.
+An overview of using the browser interface can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html) blog post.
 ### **PXRD Data preparation**
 _GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS. 
 
