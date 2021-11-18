@@ -254,7 +254,9 @@ def find_learning_rate(Structure, external=None, internal=None,
         if multiplication_factor is None:
             minpoint = np.argmin(losses)
             final_1 = (trial_values[minpoint:]
-                        - trial_values[minpoint:].min())[-1]
+                        - trial_values[minpoint:].min())
+            final_1 /= final_1.max()
+            final_1 = final_1[-1]
             final_0pt5 = 0.5 * final_1
             final_0pt25 = 0.25 * final_1
             if losses[-1] < final_0pt25:

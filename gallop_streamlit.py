@@ -97,11 +97,13 @@ elif function == "GALLOP":
         elif pawley_program == "TOPAS (experimental)":
             struct.add_data(out, source="TOPAS",
                         percentage_cutoff=all_settings["percentage_cutoff"])
+
         else:
             if cif is not None:
                 struct.add_data(cif, hklfile=hkl, source="SHELX")
             else:
                 struct.add_data(ins, hklfile=hkl, source="SHELX")
+
         for z in sorted(zms):
             check = z_matrix.Z_matrix(z)
             if all_settings["ignore_H_atoms"] and not check.H_atom_torsion_defs:
@@ -272,6 +274,7 @@ elif function == "GALLOP":
             nruns = int(all_settings["n_GALLOP_runs"])
             for run in range(nruns):
                 if run > 0:
+
                     # New swarm and starting positions
                     swarm = optim.swarm.Swarm(
                         Structure = struct,
@@ -409,10 +412,12 @@ elif function == "GALLOP":
                                 fig, ax = plt.subplots(2, 1, gridspec_kw={
                                                         'height_ratios': [4, 1]},
                                                         figsize=(10,8))
+
                                 ax[0].plot(struct.profile[:,0], struct.profile[:,1])
                                 ax[0].plot(struct.profile[:,0], result["calc_profile"])
                                 ax[1].plot(struct.profile[:,0], (struct.profile[:,1]
                                     - result["calc_profile"])/struct.profile[:,2])
+
                                 #ax[0].set_xlabel('2$\\theta$')
                                 ax[0].title.set_text(f"Iteration {i+1}, "
                                             +"$\\chi^{2}_{prof}$ = "+str(
@@ -435,12 +440,14 @@ elif function == "GALLOP":
                         else:
                             zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
                         if all_settings["animate_structure"]:
+
                             html = f'plot_iter_{result["GALLOP Iter"]+1}_both_anim.html'
                             zipObj.write(html)
                             os.remove(html)
                             #html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
                             #zipObj.write(html)
                             #os.remove(html)
+
                         for fn in glob.iglob("*_chisqd_*"):
                             zipObj.write(fn)
                             os.remove(fn)

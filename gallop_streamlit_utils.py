@@ -41,7 +41,10 @@ settings = ["structure_name", "n_GALLOP_iters", "seed",
             "lr"]
 
 def get_options(value, options):
-    options.remove(value)
+    if value in options:
+        options.remove(value)
+    else:
+        st.warning("Unknown option loaded from settings file:", value)
     return [value] + options
 
 def improve_GPU_memory_use(struct, minimiser_settings):
@@ -184,7 +187,12 @@ def get_all_settings(loaded_values):
         if len(GPUs) > 1:
             GPUs.append("Multiple GPUs")
         if torch.cuda.is_available():
-            options = get_options(loaded_values["device"], ["Auto","CPU"]+GPUs)
+            try:
+                options = get_options(loaded_values["device"],
+                                                    ["Auto","CPU"]+GPUs)
+            except ValueError:
+                st.error("Problem with GPU config. Setting device to CPU")
+                options = ["CPU"]
         else:
             options = ["CPU"]
         all_settings["device"] = st.selectbox("Device to perform LO",
@@ -451,13 +459,14 @@ def get_all_settings(loaded_values):
             all_settings["randomise_percentage"] = st.number_input(
                         "Percentage of worst performing particles to randomise",
                         min_value=0.0, max_value=100.0,
-                        value=loaded_values["randomise_percentage"],
+                        value=float(loaded_values["randomise_percentage"]),
                         step=10.0, format=None, key=None)
             all_settings["randomise_freq"] = int(st.number_input(
                         "Randomisation frequency",
                         min_value=1, max_value=int(all_settings["n_GALLOP_iters"]),
                         value=int(loaded_values["randomise_freq"]),
                         step=1, format=None, key=None))
+
         else:
             all_settings["randomise_percentage"] = 0
             all_settings["randomise_freq"] = all_settings["n_GALLOP_iters"]+1
@@ -791,7 +800,8 @@ def find_learning_rate(all_settings, minimiser_settings, struct,
                                 plot=False,
                                 logplot=False,
                                 minimiser_settings = minimiser_settings)
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         lrs = lr[0].copy()
         losses = lr[1].copy()
         lrs -= lrs.min()

@@ -92,6 +92,7 @@ class Swarm(object):
         self.global_update = global_update
         self.global_update_freq = global_update_freq
         self.vmax = vmax
+        self.distributions = None
 
     def get_initial_positions(self, method="latin", MDB=None):
         """
@@ -153,20 +154,23 @@ class Swarm(object):
         init_external = np.vstack(init_external)
         init_internal = np.vstack(init_internal)
 
-        if MDB is not None:
-            distributions = []
-            with open(MDB) as dbf:
-                for line in dbf:
-                    line = line.strip().split(" ")
-                    if line[1] == "MDB":
-                        distributions.append([int(x) for x in line[-19:]])
-                    elif line[1] == "LBUB" and line[2] == "-180.00000":
-                        distributions.append([10]*19)
-            dbf.close()
-            distributions = np.array(distributions)
-            bins = np.linspace(0, np.pi, distributions.shape[1])
+        if MDB is not None or self.distributions is not None:
+            print("Using MDBs for initial torsion angles")
+            if MDB is not None:
+                distributions = []
+                with open(MDB) as dbf:
+                    for line in dbf:
+                        line = line.strip().split(" ")
+                        if line[1] == "MDB":
+                            distributions.append([int(x) for x in line[-19:]])
+                        elif line[1] == "LBUB" and line[2] == "-180.00000":
+                            distributions.append([10]*19)
+                dbf.close()
+                distributions = np.array(distributions)
+                self.distributions = distributions
+            bins = np.linspace(0, np.pi, self.distributions.shape[1])
             kdes = []
-            for torsion in distributions:
+            for torsion in self.distributions:
                 samples = []
                 for i, t in enumerate(torsion):
                     if t > 0:
@@ -176,7 +180,10 @@ class Swarm(object):
                 kde = gaussian_kde(np.hstack(samples), bw_method=None)
                 kdes.append(kde)
             if init_internal.shape[1] != len(kdes):
-                print("Not enough MDBs for the number of torsions.")
+                if len(kdes) < init_internal.shape[1]:
+                    print("Not enough MDBs for the number of torsions.")
+                else:
+                    print("Too many MDBs for the number of torsions.")
             else:
                 new_internal = []
                 for k in kdes:
@@ -585,5 +592,6 @@ class Swarm(object):
         Reset the Particle swarm
         """
         self.particle_best_position = None
-        self.n_particles = None
         self.velocity = None
+        self.swarm_progress = []
+        self.best_subswarm_chi2 = []
