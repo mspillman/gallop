@@ -10,15 +10,15 @@ import gallop.tensor_prep as tensor_prep
 
 
 @torch.jit.script
-def modify_D2(tors, D2, refineable_torsion_indices):
+def modify_D2(tors, D2, refinable_torsion_indices):
     """
     Modify a base "D2" matrix for use in the NERF approach for
     internal -> Cartesian. See function zm_to_cart for more details.
 
     Args:
-        tors (Tensor): The values of the refineable torsion angles
+        tors (Tensor): The values of the refinable torsion angles
         D2 (Tensor): The base D2 matrix
-        refineable_torsion_indices (Tensor): The indices of the refineable
+        refinable_torsion_indices (Tensor): The indices of the refinable
             torsion angles
 
     Returns:
@@ -27,28 +27,28 @@ def modify_D2(tors, D2, refineable_torsion_indices):
     cos_phi = torch.cos(tors)
     sin_phi = torch.sin(tors)
     new_D2 = D2.clone()
-    new_D2[:,:,1][:,refineable_torsion_indices] = \
-        torch.mul(D2[:,:,1][:,refineable_torsion_indices], cos_phi)
-    new_D2[:,:,2][:,refineable_torsion_indices] = \
-        torch.mul(D2[:,:,2][:,refineable_torsion_indices], sin_phi)
+    new_D2[:,:,1][:,refinable_torsion_indices] = \
+        torch.mul(D2[:,:,1][:,refinable_torsion_indices], cos_phi)
+    new_D2[:,:,2][:,refinable_torsion_indices] = \
+        torch.mul(D2[:,:,2][:,refinable_torsion_indices], sin_phi)
     return new_D2
 
 @torch.jit.script
 def zm_to_cart(torsions, init_D2, bond_connect, angle_connect, torsion_connect,
-    refineable_torsion_indices):
+    refinable_torsion_indices):
     """
     This function uses the Natural Extension Reference Frame method to convert
     from internal (Z-matrix) to Cartesian coordinates.
     See https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.20237 for details.
     The names of the variables used are roughly in line with paper.
 
-    It currently accepts only torsion angles as refineable parameters.
+    It currently accepts only torsion angles as refinable parameters.
 
     Args:
-        torsions (Tensor): Tensor of refineable torsion angle values
+        torsions (Tensor): Tensor of refinable torsion angle values
             (generally, this is what is being optimised)
         init_D2 (Tensor): Generated from the original z-matrix. This is
-            modified by the refineable torsion angles. D2 is a term used in the
+            modified by the refinable torsion angles. D2 is a term used in the
             NeRF ZM->Cart paper.
         bond_connect (Tensor): Tensor containing the indices of directly bonded
             atoms
@@ -56,14 +56,14 @@ def zm_to_cart(torsions, init_D2, bond_connect, angle_connect, torsion_connect,
             in angles
         torsion_connect (Tensor): Tensor containing the indices of atoms
             involved in torsions
-        refineable_torsion_indices (Tensor): Tensor containing the indices of
-            refineable torsion angles.
+        refinable_torsion_indices (Tensor): Tensor containing the indices of
+            refinable torsion angles.
 
     Returns:
         cart (Tensor): Cartesian coordinates of the atoms given by a Z-matrix
                         description. Shape (n_samples, n_atoms, 3)
     """
-    D2 = modify_D2(torsions, init_D2, refineable_torsion_indices)
+    D2 = modify_D2(torsions, init_D2, refinable_torsion_indices)
     cart_list = [torch.clone(D2[:,0,:]),
                 torch.clone(D2[:,1,:]),
                 torch.clone(D2[:,2,:])]
@@ -136,7 +136,7 @@ def rotate_and_translate(cart_coords, R, translation, lattice_inv_matrix):
         cart_coords (Tensor): Cartesian coordinates of the atoms, usually
             obtained by a ZM->Cart conversion.
         R (Tensor): Rotation matrices (generally obtained from quaternions
-            which are the refineable parameters)
+            which are the refinable parameters)
         translation (Tensor): Describes the translation of molecues/fragments
         lattice_inv_matrix (Tensor): Inverse lattice matrix to convert from
             Cartesian to fractional coords
@@ -157,7 +157,7 @@ def rotate_and_translate(cart_coords, R, translation, lattice_inv_matrix):
 
 def get_asymmetric_coords(external, internal, position, rotation, torsion,
     initial_D2, zmatrices_degrees_of_freedom, bond_connection, angle_connection,
-    torsion_connection, torsion_refineable_indices, lattice_inv_matrix,
+    torsion_connection, torsion_refinable_indices, lattice_inv_matrix,
     init_cart_coords):
     """
     Take in a set of external and internal degrees of freedom and generate the
@@ -192,8 +192,8 @@ def get_asymmetric_coords(external, internal, position, rotation, torsion,
             for each flexible zmatrix. Needed for internal -> Cartesian
         torsion_connection (List): List of tensors of shape (n_samples, n_atoms)
             for each flexible zmatrix. Needed for internal -> Cartesian
-        torsion_refineable_indices (List): List of tensors that contain the
-            indices of the refineable torsions for each zmatrix
+        torsion_refinable_indices (List): List of tensors that contain the
+            indices of the refinable torsions for each zmatrix
         lattice_inv_matrix (Tensor): Inverse of the matrix representation of the
             lattice. Needed to for Cartesian -> fractional
         init_cart_coords (List): List of Tensors, with the Cartesian coordinates
@@ -218,7 +218,7 @@ def get_asymmetric_coords(external, internal, position, rotation, torsion,
                 cart_coords = zm_to_cart(internal[:,torsion[i]], initial_D2[i],
                                         bond_connection[i], angle_connection[i],
                                         torsion_connection[i],
-                                        torsion_refineable_indices[i])
+                                        torsion_refinable_indices[i])
             else:
                 # Rigid body
                 cart_coords = init_cart_coords[i]

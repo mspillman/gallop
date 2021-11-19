@@ -198,6 +198,7 @@ def get_all_settings(loaded_values):
         all_settings["device"] = st.selectbox("Device to perform LO",
                                 options)
         if all_settings["device"] == "Multiple GPUs":
+            st.write("Note: no progress bars in multi-GPU mode")
             GPUs = st.multiselect("Select GPUs to use",GPUs[:-1],
                                                 default=GPUs[:-1])
             all_settings["particle_division"] = []
@@ -269,21 +270,7 @@ def get_all_settings(loaded_values):
                                     step=1, format=None, key=None))
             else:
                 n_cooldown = loaded_values["n_cooldown"]
-            torsion_shadowing = st.checkbox("Use torsion shadowing",
-                                    value=loaded_values["torsion_shadowing"])
-            if torsion_shadowing:
-                Z_prime = int(st.number_input("Enter Z' of structure",
-                                min_value=1, max_value=None,
-                                value=int(loaded_values["Z_prime"]), step=1,
-                                format=None, key=None))
-                shadow_iters = int(st.number_input("Number of shadowing iterations",
-                                min_value=0,
-                                max_value=int(all_settings["n_GALLOP_iters"]),
-                                value=int(loaded_values["shadow_iters"]),
-                                step=1, format=None, key=None))
-            else:
-                Z_prime = False
-                shadow_iters = 0
+
             options = get_options(loaded_values["loss"],
                                 ["sum", "xlogx", "sse"])
             loss = st.selectbox("Loss function to minimise",
@@ -305,26 +292,88 @@ def get_all_settings(loaded_values):
             memory_opt = st.checkbox(
                             "Reduce local opt speed to improve GPU memory use",
                             value=loaded_values["memory_opt"], key=None)
-            use_restraints = st.checkbox("Use distance restraints",
-                                        value=loaded_values["use_restraints"])
-            if use_restraints:
-                n_restraints = st.number_input("Enter number of restraints to use",
+            torsion_shadowing = st.checkbox("Use torsion shadowing",
+                                    value=loaded_values["torsion_shadowing"])
+            if torsion_shadowing:
+                Z_prime = int(st.number_input("Enter Z' of structure",
+                                min_value=1, max_value=None,
+                                value=int(loaded_values["Z_prime"]), step=1,
+                                format=None, key=None))
+                shadow_iters = int(st.number_input("Number of shadowing iterations",
+                                min_value=0,
+                                max_value=int(all_settings["n_GALLOP_iters"]),
+                                value=int(loaded_values["shadow_iters"]),
+                                step=1, format=None, key=None))
+            else:
+                Z_prime = False
+                shadow_iters = 0
+            use_distance_restraints = st.checkbox("Use distance restraints",
+                                    value=loaded_values["use_distance_restraints"])
+            if use_distance_restraints:
+                n_distance_restraints = int(st.number_input("Enter number of distance restraints to use",
                                         min_value=0, max_value=None,
-                                        value=loaded_values["n_restraints"],
-                                        step=1, format=None, key=None)
-                restraints = loaded_values["restraints"]
+                                        value=loaded_values["n_distance_restraints"],
+                                        step=1, format=None, key=None))
+                distance_restraints = loaded_values["distance_restraints"]
                 st.write("Enter the atom labels, distance and \
                         % weight (separated by commas, e.g. C1,C2,1.54,50)")
-                if restraints is None:
-                    restraints = defaultdict(str)
-                for i in range(n_restraints):
+                if distance_restraints is None:
+                    distance_restraints = defaultdict(str)
+                for i in range(n_distance_restraints):
                     #st.write()
-                    r = st.text_input(f"Restraint {i+1}:",key=f"r_{i+1}",
-                                        value=restraints[str(i)])
-                    restraints[str(i)] = r
+                    r = st.text_input(f"Distance restraint {i+1}:",key=f"dr_{i+1}",
+                                        value=distance_restraints[str(i)])
+                    distance_restraints[str(i)] = r
             else:
-                restraints = None
-                n_restraints = 0
+                distance_restraints = None
+                n_distance_restraints = 0
+
+            use_angle_restraints = st.checkbox("Use angle restraints",
+                                    value=loaded_values["use_angle_restraints"])
+            if use_angle_restraints:
+                n_angle_restraints = int(st.number_input("Enter number of angle restraints to use",
+                                        min_value=0, max_value=None,
+                                        value=loaded_values["n_angle_restraints"],
+                                        step=1, format=None, key=None))
+                angle_restraints = loaded_values["angle_restraints"]
+                st.write("Enter the atom labels (3 or 4), angle and \
+                        % weight (separated by commas, e.g. C1,C2,C3,121.1,50 \
+                        or C1,C2,C3,C4,121.1,50)")
+                if angle_restraints is None:
+                    angle_restraints = defaultdict(str)
+                for i in range(n_angle_restraints):
+                    #st.write()
+                    r = st.text_input(f"Angle restraint {i+1}:",key=f"ar_{i+1}",
+                                        value=angle_restraints[str(i)])
+                    angle_restraints[str(i)] = r
+            else:
+                angle_restraints = None
+                n_angle_restraints = 0
+
+            use_torsion_restraints = st.checkbox("Use torsion restraints",
+                                    value=loaded_values["use_torsion_restraints"])
+            if use_torsion_restraints:
+                n_torsion_restraints = int(st.number_input("Enter number of torsion restraints to use",
+                                        min_value=0, max_value=None,
+                                        value=loaded_values["n_torsion_restraints"],
+                                        step=1, format=None, key=None))
+                torsion_restraints = loaded_values["torsion_restraints"]
+                st.write("Enter the atom labels, torsion angle and \
+                        % weight (separated by commas, e.g. C1,C2,C3,C4,121.1,50)")
+                if torsion_restraints is None:
+                    torsion_restraints = defaultdict(str)
+                for i in range(n_torsion_restraints):
+                    #st.write()
+                    r = st.text_input(f"Torsion restraint {i+1}:",key=f"tr_{i+1}",
+                                        value=torsion_restraints[str(i)])
+                    torsion_restraints[str(i)] = r
+            else:
+                torsion_restraints = None
+                n_torsion_restraints = 0
+            options = get_options(loaded_values["restraint_weight_type"],
+                            ["min_chi2", "chi2", "constant"])
+            restraint_weight_type = st.selectbox("Restraint weight type", options)
+
         else:
             find_lr = loaded_values["find_lr"]
             find_lr_auto_mult = loaded_values["find_lr_auto_mult"]
@@ -340,9 +389,16 @@ def get_all_settings(loaded_values):
             torsion_shadowing = loaded_values["torsion_shadowing"]
             Z_prime = int(loaded_values["Z_prime"])
             shadow_iters = int(loaded_values["shadow_iters"])
-            use_restraints = loaded_values["use_restraints"]
-            n_restraints = loaded_values["n_restraints"]
-            restraints = loaded_values["restraints"]
+            use_distance_restraints = loaded_values["use_distance_restraints"]
+            n_distance_restraints = loaded_values["n_distance_restraints"]
+            distance_restraints = loaded_values["distance_restraints"]
+            use_angle_restraints = loaded_values["use_angle_restraints"]
+            n_angle_restraints = loaded_values["n_angle_restraints"]
+            angle_restraints = loaded_values["angle_restraints"]
+            use_torsion_restraints = loaded_values["use_torsion_restraints"]
+            n_torsion_restraints = loaded_values["n_torsion_restraints"]
+            torsion_restraints = loaded_values["torsion_restraints"]
+            restraint_weight_type = loaded_values["restraint_weight_type"]
 
     all_settings["find_lr"] = find_lr
     all_settings["find_lr_auto_mult"] = find_lr_auto_mult
@@ -358,9 +414,16 @@ def get_all_settings(loaded_values):
     all_settings["torsion_shadowing"] = torsion_shadowing
     all_settings["Z_prime"] = Z_prime
     all_settings["shadow_iters"] = shadow_iters
-    all_settings["use_restraints"] = use_restraints
-    all_settings["n_restraints"] = n_restraints
-    all_settings["restraints"] = restraints
+    all_settings["use_distance_restraints"] = use_distance_restraints
+    all_settings["n_distance_restraints"] = n_distance_restraints
+    all_settings["distance_restraints"] = distance_restraints
+    all_settings["use_angle_restraints"] = use_angle_restraints
+    all_settings["n_angle_restraints"] = n_angle_restraints
+    all_settings["angle_restraints"] = angle_restraints
+    all_settings["use_torsion_restraints"] = use_torsion_restraints
+    all_settings["n_torsion_restraints"] = n_torsion_restraints
+    all_settings["torsion_restraints"] = torsion_restraints
+    all_settings["restraint_weight_type"] = restraint_weight_type
 
     # Particle Swarm settings
     with st.sidebar.expander(label="Particle Swarm", expanded=False):
@@ -398,11 +461,12 @@ def get_all_settings(loaded_values):
                         min_value=0.0, max_value=100.0,
                         value=float(loaded_values["randomise_percentage"]),
                         step=10.0, format=None, key=None)
-            all_settings["randomise_freq"] = st.number_input(
+            all_settings["randomise_freq"] = int(st.number_input(
                         "Randomisation frequency",
                         min_value=1, max_value=int(all_settings["n_GALLOP_iters"]),
                         value=int(loaded_values["randomise_freq"]),
-                        step=1, format=None, key=None)
+                        step=1, format=None, key=None))
+
         else:
             all_settings["randomise_percentage"] = 0
             all_settings["randomise_freq"] = all_settings["n_GALLOP_iters"]+1
@@ -529,7 +593,8 @@ def get_files():
     else:
         with col2:
             pawley_program = st.radio("Choose Pawley refinement program",
-                                    ["DASH","GSAS-II", "TOPAS (experimental)"])
+                                    ["DASH","GSAS-II", "TOPAS (experimental)",
+                                    "SHELX (experimental)"])
         if pawley_program == "DASH":
             uploaded_files = st.file_uploader("Upload DASH Pawley files and \
                                     Z-matrices",
@@ -543,11 +608,18 @@ def get_files():
                                     accept_multiple_files=True,
                                     type=["zmatrix", "gpx", "json"],
                                     key=None)
-        else:
+        elif pawley_program == "TOPAS (experimental)":
             uploaded_files = st.file_uploader("Upload TOPAS .out file and\
                                     Z-matrices",
                                     accept_multiple_files=True,
                                     type=["zmatrix", "out", "json"],
+                                    key=None)
+        else:
+            uploaded_files = st.file_uploader("Upload SHELX .hkl file in HKLF 4\
+                                    format and Z-matrices, plus either .ins or \
+                                    .cif containing cell and space group info",
+                                    accept_multiple_files=True,
+                                    type=["zmatrix","ins","hkl","cif","json"],
                                     key=None)
         col1, col2 = st.columns([2,2])
         with col1:
@@ -566,6 +638,9 @@ def get_files():
     gpx  = None
     out = None
     dbf = None
+    hkl = None
+    ins = None
+    cif = None
     json_settings = None
     zms = []
     if file_source == "Upload files":
@@ -594,6 +669,12 @@ def get_files():
                     json_settings = name
                 if ".dbf" in name:
                     dbf = name
+                if ".hkl" in name:
+                    hkl = name
+                if ".ins" in name:
+                    ins = name
+                if ".cif" in name:
+                    cif = name
 
     else:
         filedir = os.path.dirname(gallop.__file__)
@@ -614,8 +695,8 @@ def get_files():
             if s not in selection:
                 json_settings.pop(s, None)
 
-    return uploaded_files, sdi, gpx, out, json_settings, zms, dbf, \
-            load_settings, pawley_program,clear_files
+    return uploaded_files, sdi, gpx, out, hkl, ins, cif, json_settings, zms, \
+            dbf, load_settings, pawley_program,clear_files
 
 
 

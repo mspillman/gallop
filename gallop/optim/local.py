@@ -16,6 +16,7 @@ from gallop import tensor_prep
 from gallop import files
 from gallop import intensities
 from gallop import zm_to_cart
+from gallop.optim import restraints
 
 
 
@@ -134,6 +135,63 @@ def adjust_lr_1_cycle(optimizer, iteration, low, high, final, num_iterations,
         param_group["momentum"] = b1
     return lr
 
+
+def get_loss(chi_2, restraint_penalty, loss, restraint_weight_type):
+    """Calculate the loss function - what is actually optimised by pytorch
+
+    Args:
+        chi_2 (Tensor): The chi2 for the current crystal structures
+        restraint_penalty (Tensor): The penalty for restraints (if used) or 0
+        loss (str): How to combine the chi2s and restraints to get a single
+            scalar
+        restraint_weight_type (str): How to weight the restraint penalties
+
+    Returns:
+        [type]: [description]
+    """
+    # PyTorch expects a single value for backwards pass.
+    # Need a function to convert all of the chi_2 values into a scalar
+    if "chi2" in restraint_weight_type.lower():
+        if "min" in restraint_weight_type.lower():
+            with torch.no_grad():
+                chi2_no_grad = chi_2.min()
+        else:
+            with torch.no_grad():
+                chi2_no_grad = chi_2.clone().detach()
+    if isinstance(loss, str):
+        if loss.lower() == "sse":
+            if restraint_weight_type == "constant":
+                L = ((chi_2 + restraint_penalty)**2).sum()
+            else:
+                L = ((chi_2 + chi2_no_grad*restraint_penalty)**2).sum()
+        elif loss.lower() == "sum":
+            if restraint_weight_type == "constant":
+                L = (chi_2 + restraint_penalty).sum()
+            else:
+                L = (chi_2 + chi2_no_grad*restraint_penalty).sum()
+        elif loss.lower() == "xlogx":
+            if restraint_weight_type == "constant":
+                L = ((torch.log(chi_2)*chi_2) + restraint_penalty).sum()
+            else:
+                L = ((torch.log(chi_2)*chi_2) + chi2_no_grad*restraint_penalty).sum()
+
+    else:
+        if loss is None:
+            # Default to the sum operation if loss is None
+            if restraint_weight_type == "constant":
+                L = (chi_2 + restraint_penalty).sum()
+            else:
+                L = (chi_2 + chi2_no_grad*restraint_penalty).sum()
+        else:
+            try:
+                L = loss(chi_2, restraint_penalty)
+            except TypeError:
+                try:
+                    L = loss(chi_2)
+                except RuntimeError:
+                    print("Unknown / incompatible loss function",loss)
+    return L
+
 def find_learning_rate(Structure, external=None, internal=None,
     min_lr=-4, max_lr=np.log10(0.15), n_trials=200, minimiser_settings=None,
     plot=False, multiplication_factor=0.75, logplot=True, figsize=(10,6)):
@@ -215,17 +273,17 @@ def find_learning_rate(Structure, external=None, internal=None,
         print("ERROR! Minimiser Settings are needed!")
         return None
 
-
 def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
     n_reflections=None, learning_rate_schedule="1cycle",
     b_bounds_1_cycle=None, check_min=1, optimizer="Adam", verbose=False,
     print_every=10, learning_rate=3e-2, betas=None, eps=1e-8, loss="sum",
-    start_time=None, run=1, torsion_shadowing=False, Z_prime=1,
+    start_time=None, run=1, torsion_shadowing=False, Z_prime=1, mapping=False,
     save_trajectories=False, save_grad=False, save_loss=False,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
-    save_CIF=True, streamlit=False, use_restraints=False, include_PO=False,
-    PO_axis=(0, 0, 1), notebook=False):
+    save_CIF=True, streamlit=False, use_restraints=False,
+    restraint_weight_type="min_chi2", include_PO=False, PO_axis=(0, 0, 1),
+    notebook=False):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -328,6 +386,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             Defaults to False
         Z_prime (int, optional): If using torsion_shadowing, this is the Z' for
             the current unit cell. Defaults to 1.
+        mapping (bool, optional): If using torsion shadowing, this will toggle
+            permuting the mapped torsions by factors of + and -1 for all of the
+            different fragments. This is automatically used for structures in
+            non-centrosymmetric space groups.
         save_trajectories (bool, optional): Store the DoF, chi_2 and loss value
             after every iteration. This will be slow, as it requires transfer
             from the GPU to CPU. Defaults to False.
@@ -352,6 +414,10 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             additional penalty term in the loss function. Must be added to the
             Structure object via Structure.add_restraint() before use. Defaults
             to False.
+        restraint_weight_type (str, optional): One of chi2, min_chi2, constant.
+            If constant, then then instead of weighting the restraints relative
+            to the chi2 value (or minimum of all chi2 values), the weights
+            supplied are used as constant weighting factors. Defaults to min_chi2.
         include_PO (bool, optional): Include a preferred orientation correction
             to the intensities during optimization. Defaults to False.
         PO_axis (tuple, optional): The axis along which to apply the
@@ -378,15 +444,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if streamlit:
         import streamlit as st
 
-    # Load the tensors and other parameters needed
-    tensors = tensor_prep.get_all_required_tensors(
-                                Structure, external=external, internal=internal,
-                                n_samples=n_samples, device=device, dtype=dtype,
-                                n_reflections=n_reflections, verbose=verbose,
-                                include_dw_factors=include_dw_factors)
-    trajectories = []
-    gradients = []
-    losses = []
     if torsion_shadowing:
         # Only pay attention to the first block of torsions accounting for Z'>1.
         # This assumes that all of the fragments have similar torsion angles.
@@ -398,24 +455,35 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # ion1 fragment1 ion2 fragment2
         # This is different to the way DASH converts ZMs by default, where ions
         # tend to come as zm1 and zm2, then the flex fragments as zm3 and zm4.
-        n_torsion_fragments = len(tensors["zm"]["torsion"])
-        first_frag = int(n_torsion_fragments / Z_prime)
-        tensors["zm"]["torsion"] = tensors["zm"]["torsion"][:first_frag]*Z_prime
+        if internal is not None:
+            t_permutations = np.ones((internal.shape[0],Z_prime))
+        else:
+            raise RuntimeError ("You must supply the internal coordinates if "
+                                "using torsion shadowing")
+        if not Structure.centrosymmetric or mapping:
+            for i in range(Z_prime-1):
+                for j in range(2**i):
+                    t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
+
+        t_permutations = torch.from_numpy(t_permutations).type(dtype).to(device)
+        internal = internal[:,:int(internal.shape[1] / Z_prime)]
+
+
+
+    # Load the tensors and other parameters needed
+    tensors = tensor_prep.get_all_required_tensors(
+                                Structure, external=external, internal=internal,
+                                n_samples=n_samples, device=device, dtype=dtype,
+                                n_reflections=n_reflections, verbose=verbose,
+                                include_dw_factors=include_dw_factors)
+    trajectories = []
+    gradients = []
+    losses = []
+
 
     if use_restraints:
-        if Structure.ignore_H_atoms:
-            restraints = np.array(Structure.restraints_no_H)
-        else:
-            restraints = np.array(Structure.restraints)
-        atoms = restraints[:,:2]
-        distances = restraints[:,2]
-        percentages = restraints[:,3] / 100.
-
-        atoms = torch.from_numpy(atoms).type(torch.long).to(device)
-        distances = torch.from_numpy(distances).type(dtype).to(device)
-        percentages = torch.from_numpy(percentages).type(dtype).to(device)
-        lattice_matrix = torch.from_numpy(
-                    np.copy(Structure.lattice.matrix)).type(dtype).to(device)
+        restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
+                                    dtype, device, restraint_weight_type)
 
 
     # Initialize the optimizer
@@ -425,7 +493,12 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         else:
             init_lr = learning_rate
         if optimizer.lower() == "adam":
-            optimizer = torch.optim.Adam([tensors["zm"]["external"],
+            if torsion_shadowing:
+                optimizer = torch.optim.Adam([tensors["zm"]["external"],
+                                        tensors["zm"]["internal"]],
+                                        lr=init_lr, betas=betas, eps=eps)
+            else:
+                optimizer = torch.optim.Adam([tensors["zm"]["external"],
                                         tensors["zm"]["internal"]],
                                         lr=init_lr, betas=betas, eps=eps)
         elif optimizer.lower() == "yogi":
@@ -521,8 +594,29 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
-        if use_restraints or include_PO:
-            asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+        if use_restraints or include_PO or torsion_shadowing:
+            if torsion_shadowing:
+                internal = tensors["zm"]["internal"]
+                all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
+                        ).reshape(internal.shape[0], internal.shape[1]*Z_prime)
+
+                asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
+                    tensors["zm"]["external"],
+                    all_tors,
+                    tensors["zm"]["position"],
+                    tensors["zm"]["rotation"],
+                    tensors["zm"]["torsion"],
+                    tensors["zm"]["initial_D2"],
+                    tensors["zm"]["zmatrices_degrees_of_freedom"],
+                    tensors["zm"]["bond_connection"],
+                    tensors["zm"]["angle_connection"],
+                    tensors["zm"]["torsion_connection"],
+                    tensors["zm"]["torsion_refinable_indices"],
+                    tensors["zm"]["lattice_inv_matrix"],
+                    tensors["zm"]["init_cart_coords"]
+                    )
+            else:
+                asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                                                             **tensors["zm"])
 
             calculated_intensities = intensities.calculate_intensities(
@@ -540,37 +634,12 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             chi_2 = chi2.get_chi_2(**tensors)
 
         if use_restraints:
-            with torch.no_grad():
-                min_chi_2 = chi_2.min()
-            cart = torch.einsum("jk,bilj->bilk",
-                            lattice_matrix,asymmetric_frac_coords[:,atoms,:])
-            atomic_distances = torch.sqrt(
-                            ((cart[:,:,0,:] - cart[:,:,1,:])**2).sum(dim=-1))
-            distance_penalty = (min_chi_2*percentages*(
-                                            distances-atomic_distances)**2).sum()
+            restraint_penalty = restraints.get_restraint_penalties(
+                                asymmetric_frac_coords, **restraint_tensors)
         else:
-            distance_penalty = 0
-        # PyTorch expects a single value for backwards pass.
-        # Need a function to convert all of the chi_2 values into a scalar
-        if isinstance(loss, str):
-            if loss.lower() == "sse":
-                L = ((chi_2 + distance_penalty)**2).sum()
-            elif loss.lower() == "sum":
-                L = chi_2.sum() + distance_penalty
-            elif loss.lower() == "xlogx":
-                L = torch.sum(torch.log(chi_2)*(chi_2 + distance_penalty))
-        else:
-            if loss is None:
-                # Default to the sum operation if loss is None
-                L = chi_2.sum() + distance_penalty
-            else:
-                try:
-                    L = loss(chi_2, distance_penalty)
-                except TypeError:
-                    try:
-                        L = loss(chi_2)
-                    except RuntimeError:
-                        print("Unknown / incompatible loss function",loss)
+            restraint_penalty = 0
+
+        L = get_loss(chi_2, restraint_penalty, loss, restraint_weight_type)
 
         # Backward pass to calculate gradients
         L.backward()
@@ -646,10 +715,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             }
 
     if torsion_shadowing:
-        torsions = result["internal"]
-        torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
-        torsions = np.tile(torsions, (1,Z_prime))
-        result["internal"] = torsions
+        ##torsions = result["internal"]
+        #torsions = torsions[:,:int(torsions.shape[1] / Z_prime)]
+        #torsions = np.tile(torsions, (1,Z_prime))
+        #result["internal"] = torsions
+        result["internal"] = all_tors.detach().cpu().numpy()
 
     # Now calculate the intensities with H-atoms included and use them to get a
     # profile chi2 estimate. If Structure.ignore_H_atoms is True, also calculate
@@ -660,10 +730,16 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     Structure.ignore_H_atoms = False
     best = result["chi_2"] == result["chi_2"].min()
     # Create tensors on CPU as it will be faster for a single data point.
-    best_tensors = tensor_prep.get_all_required_tensors(Structure,
-        external=result["external"][best][0].reshape(1,-1),
-        internal=result["internal"][best][0].reshape(1,-1),
-        requires_grad=False, device=torch.device("cpu"), verbose=False)
+    if best.sum() > 1:
+        best_tensors = tensor_prep.get_all_required_tensors(Structure,
+            external=result["external"][best][0].reshape(1,-1),
+            internal=result["internal"][best][0].reshape(1,-1),
+            requires_grad=False, device=torch.device("cpu"), verbose=False)
+    else:
+        best_tensors = tensor_prep.get_all_required_tensors(Structure,
+            external=result["external"][best].reshape(1,-1),
+            internal=result["internal"][best].reshape(1,-1),
+            requires_grad=False, device=torch.device("cpu"), verbose=False)
     # Restore the Structure.ignore_H_atoms setting
     Structure.ignore_H_atoms = ignore_H_setting
 

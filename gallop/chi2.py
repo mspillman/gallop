@@ -91,8 +91,8 @@ def get_chi_2(zm, int_tensors, chisqd_tensors):
             torsion_connection (list): List of tensors with the indices of the
                 torsion atoms obtained from the ZMs. Only for ZMs with > 0
                 torsions. (dtype=torch.long)
-            torsion_refineable_indices (list): List of tensors with the indices
-                of the refineable torsion angles obtained from the ZMs. Only for
+            torsion_refinable_indices (list): List of tensors with the indices
+                of the refinable torsion angles obtained from the ZMs. Only for
                 ZMs with > 0 torsions. (dtype=torch.long)
         int_tensors (dict) : A dictionary containing the following tensors:
             lattice_inv_matrix (Tensor): Inverse of the lattice matrix
