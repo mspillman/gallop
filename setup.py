@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='gallop',
-    version='0.1.0',
+    version='0.1.1',
     description='Fast crystal structure determination from powder diffraction data',
     url='https://github.com/mspillman/gallop',
     author='Mark Spillman',
