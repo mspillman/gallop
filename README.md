@@ -3,7 +3,7 @@
 
 This code should be viewed as "pre-alpha" stage. It is under active development, and likely to have many bugs. If you have comments, suggestions, bugs to report or ideas for improvement or new features, please feel free to submit an issue, contact me directly (markspillman _at_ gmail _dot_ com) or submit a pull request.
 
-Updates to the code will be alerted on [Twitter](https://twitter.com/gallop_sdpd). Blog posts and tutorials can be found [here](https://mspillman.github.io/blog).
+Updates to the code will be alerted on [Twitter](https://twitter.com/mspillman). Blog posts and tutorials can be found [here](https://mspillman.github.io/blog).
 
 Contents:
 1. [Introduction](#introduction)
