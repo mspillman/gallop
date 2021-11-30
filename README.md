@@ -53,7 +53,7 @@ _GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II
 
 - TOPAS (experimental): Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refined parameters in the ```.inp``` (i.e. peak shape, unit cell, background etc should all be fixed), and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp``` file. _GALLOP_ will read in the resultant ```.out``` file.
 
-- SHELX (experimental): as well as a ```.hkl``` file conforming to the HKLF4 format, GALLOP also expects a ```.ins``` or ```.cif``` file to supply the unit cell and space group information. If using a ```.ins``` file, then the space group should be included as the last item via the TITL keyword, for example:
+- SHELX (experimental): as well as a ```.hkl``` file conforming to the HKLF4 format, GALLOP also expects a ```.ins``` or ```.cif``` file to supply the unit cell and space group information. If using a ```.ins``` file, then the space group should be included as the last item that follows the TITL keyword. For example:
 ```TITL Famotidine in P121/c1```
 
 ### **Z-matrices**
