@@ -19,7 +19,7 @@ An article describing the approach taken by this code is available from [CrystEn
 
 _GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. An introduction to the algorithm can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/10/30/Introduction-to-GALLOP.html) blog post. This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
 
-Other software is required for PXRD data indexing and intensity extraction via Pawley refinement. _GALLOP_ currently accepts as input files produced by [_DASH_](https://www.ccdc.cam.ac.uk/solutions/csd-materials/components/dash/), [_GSAS-II_](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [_TOPAS_](http://www.topas-academic.net/) (experimental). Z-matrices of the molecular fragments of interest are also required.
+Other software is required for PXRD data indexing and intensity extraction via Pawley refinement. _GALLOP_ currently accepts as input files produced by [_DASH_](https://github.com/ccdc-opensource/dash), [_GSAS-II_](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [_TOPAS_](http://www.topas-academic.net/) (experimental). Z-matrices of the molecular fragments of interest are also required, which can be automatically generated in the correct format using _DASH_.
 
 Once all data is prepared, _GALLOP_ can be used via a convenient browser-based GUI or as part of a Python program.
 
