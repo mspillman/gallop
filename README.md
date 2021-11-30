@@ -42,8 +42,8 @@ You will need a Google/Kaggle account to run the notebooks linked below. These n
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 
 An overview of using the browser interface can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html) blog post.
-### **PXRD Data preparation**
-_GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS. 
+### **Data preparation**
+_GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II and TOPAS. It can also read SHELX HKLF4 format single crystal data. 
 
 **Space groups _must_ be in their standard setting.**
 
@@ -52,6 +52,9 @@ _GALLOP_ is able to read Pawley fitting output files produced by _DASH_, GSAS-II
 - GSAS-II: Pawley fit the data as normal. Once satisfied with the fit, unflag **all** parameters apart from the intensities (i.e. peak shape, unit cell, background etc should all be fixed). Reset the intensity values (via Pawley create), then ensure that for this final refinement, the optimisation algorithm is set to ```analytic Jacobian```. This is _essential_, as the default ```analytic Hessian``` optimiser modifies the covariance matrix in ways that produce errors in _GALLOP_. After saving, _GALLOP_ will read in the ```.gpx``` file.
 
 - TOPAS (experimental): Pawley fit the data as normal. Once satisfied with the fit, unflag **all** refined parameters in the ```.inp``` (i.e. peak shape, unit cell, background etc should all be fixed), and delete the intensities (if present). Add the key word ```do_errors``` before the ```hkl_Is``` term, and add the key word ```C_matrix``` to the end of the ```.inp``` file. _GALLOP_ will read in the resultant ```.out``` file.
+
+- SHELX (experimental): as well as a ```.hkl``` file conforming to the HKLF4 format, GALLOP also expects a ```.ins``` or ```.cif``` file to supply the unit cell and space group information. If using a ```.ins``` file, then the space group should be included as the last item via the TITL keyword, for example:
+```TITL Famotidine in P121/c1```
 
 ### **Z-matrices**
 _GALLOP_ is able to read Z-matrices that have been produced by the ```MakeZmatrix.exe``` program that is bundled with _DASH_.
