@@ -149,6 +149,7 @@ A browser window will be opened displaying the _GALLOP_ interface:
 ![alt text](screenshot.png "GALLOP browser interface")
 
 ### **Run _GALLOP_ via Python scripts / Jupyter notebooks**
+An overview of how to use the Python interface can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/03/Solving-structures-with-GALLOP-Python-API.html) blog post.
 #### **Cloud operation:**
 Use this [Colab Notebook to try _GALLOP_ in Python mode for free](https://colab.research.google.com/drive/1P4VHNtDGuxNztYP17CiIyhgwEHBHHbrL?usp=sharing).
 You will need a Google account to run the notebook.
