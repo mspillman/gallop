@@ -351,6 +351,13 @@ Once it has been installed, every time you wish to use _GALLOP_, open the Anacon
 (gallop) C:\> gallop
 ```
 
+If you are upgrading _GALLOP_ from a previously installed version, please use the following commands:
+
+```
+(base) C:\> conda activate gallop
+(gallop) C:\> conda update gallop -c mspillman -c conda-forge -c pytorch
+```
+
 **Other environments:**
 
 Warning - this is not for the faint of heart! More detailed instructions and a video installation guide are coming soon.
