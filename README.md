@@ -449,6 +449,8 @@ _GALLOP_ makes use of a number of libraries, without which its development would
 
 - [Kaggle](https://www.kaggle.com/) - free access to GPUs and TPUs, run time capped at 30 hours / week. GPUs = Nvidia Tesla P100 (better than most of the free tier on colab)
 
+- [Amazon SageMaker](https://studiolab.sagemaker.aws/) - free access to GPUs. Session time limited to 4 hours. GPUs = Nvidia Tesla T4 (slightly faster than T4 for some workloads, but with a slightly lower memory of ~15 GB)
+
 - [Paperspace](https://www.paperspace.com/) - free access to some GPUs, plus various paid options for more powerful GPUs
 
 - [Vast.ai](https://vast.ai/) - cheap access to a wide variety of GPUs not offered by other services. Free trial credit is available to new users.
