@@ -445,11 +445,11 @@ _GALLOP_ makes use of a number of libraries, without which its development would
 - [Streamlit](https://streamlit.io/) - this allowed the browser-based GUI to be written entirely in python, which made it easier to integrate with the existing code.
 
 ### **Free and cheap GPU/TPU Resources**
-- [Google Colaboratory](https://colab.research.google.com) offers free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which gives priority access to more powerful GPU resources amongst other benefits.
-
 - [Kaggle](https://www.kaggle.com/) - free access to GPUs and TPUs, run time capped at 30 hours / week. GPUs = Nvidia Tesla P100 (better than most of the free tier on colab)
 
-- [Amazon SageMaker](https://studiolab.sagemaker.aws/) - free access to GPUs. Session time limited to 4 hours. GPUs = Nvidia Tesla T4 (slightly faster than T4 for some workloads, but with a slightly lower memory of ~15 GB)
+- [Google Colaboratory](https://colab.research.google.com) offers free/cheap access to GPUs and TPUs. Colab Pro is ~$10 per month which gives priority access to more powerful GPU resources amongst other benefits.
+
+- [Amazon SageMaker](https://studiolab.sagemaker.aws/) - free access to GPUs. Session time limited to 4 hours, but as far as I can see at the moment, there isn't a cap on the number of sessions you can run in a week. GPUs = Nvidia Tesla T4 (slightly faster than T4 for some workloads, but with a slightly lower memory of ~15 GB)
 
 - [Paperspace](https://www.paperspace.com/) - free access to some GPUs, plus various paid options for more powerful GPUs
 
