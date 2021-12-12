@@ -17,7 +17,7 @@ An article describing the approach taken by this code is available from [CrystEn
 
 [_CrystEngComm_, 2021, **23**, 6481 - 6485](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H)
 
-_GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. An introduction to the algorithm can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/10/30/Introduction-to-GALLOP.html) blog post. This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
+_GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. An introduction to the algorithm can be found in [this blog post](https://mspillman.github.io/blog/gallop/pxrd/python/2021/10/30/Introduction-to-GALLOP.html). This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
 
 Other software is required for PXRD data indexing and intensity extraction via Pawley refinement. _GALLOP_ currently accepts as input files produced by [_DASH_](https://github.com/ccdc-opensource/dash), [_GSAS-II_](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [_TOPAS_](http://www.topas-academic.net/) (experimental). Z-matrices of the molecular fragments of interest are also required, which can be automatically generated in the correct format using _DASH_.
 
@@ -41,9 +41,9 @@ You will need a Google/Kaggle account to run the notebooks linked below. These n
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 
-An overview of using the browser interface can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html) blog post.
+An overview of using the browser interface can be found in [this blog post](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html).
 
-An overview of how to use the Python interface can be found in [this](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/03/Solving-structures-with-GALLOP-Python-API.html) blog post.
+An overview of how to use the Python interface can be found in [this blog post](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/03/Solving-structures-with-GALLOP-Python-API.html).
 
 
 ### **Data preparation**
