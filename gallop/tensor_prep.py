@@ -485,7 +485,7 @@ def get_PO_tensors(Structure, PO_axis, n_reflections, n_samples, device, dtype):
     return cosP, sinP, factor
 
 
-def get_restraint_tensors(Structure, dtype, device, restraint_weight_type):
+def get_restraint_tensors(Structure, dtype, device):
     if Structure.ignore_H_atoms:
         distance_restraints = np.array(Structure.distance_restraints_no_H)
         angle_restraints = np.array(Structure.angle_restraints_no_H)
@@ -503,8 +503,7 @@ def get_restraint_tensors(Structure, dtype, device, restraint_weight_type):
         d_atoms = distance_restraints[:,:2]
         distances = distance_restraints[:,2]
         d_weights = distance_restraints[:,3]
-        if restraint_weight_type != "constant":
-            d_weights /= 100.
+
     else:
         restrain_d = False
         d_atoms = np.array([])
@@ -520,8 +519,7 @@ def get_restraint_tensors(Structure, dtype, device, restraint_weight_type):
         a_atoms   = angle_restraints[:,:4]
         cos_angles = np.cos(np.deg2rad(angle_restraints[:,4]))
         a_weights = angle_restraints[:,5]
-        if restraint_weight_type != "constant":
-            a_weights /= 100.
+
     else:
         restrain_a = False
         a_atoms = np.array([])
@@ -538,8 +536,7 @@ def get_restraint_tensors(Structure, dtype, device, restraint_weight_type):
         costorsions = np.cos(np.deg2rad(torsion_restraints[:,4]))
         sintorsions = np.sin(np.deg2rad(torsion_restraints[:,4]))
         t_weights = torsion_restraints[:,5]
-        if restraint_weight_type != "constant":
-            t_weights /= 100.
+
     else:
         restrain_t = False
         t_atoms = np.array([])
