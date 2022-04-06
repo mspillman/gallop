@@ -177,7 +177,9 @@ class Swarm(object):
                         observed = np.linspace(bins[i]-(np.pi/36),
                                                 bins[i]+np.pi/36, t)
                         samples.append(np.hstack([observed, -1*observed]))
-                kde = gaussian_kde(np.hstack(samples), bw_method=None)
+                samples = np.hstack(samples)
+                samples = np.vstack((np.sin(samples, np.cos(samples))))
+                kde = gaussian_kde(samples, bw_method=None)
                 kdes.append(kde)
             if init_internal.shape[1] != len(kdes):
                 if len(kdes) < init_internal.shape[1]:
@@ -187,7 +189,8 @@ class Swarm(object):
             else:
                 new_internal = []
                 for k in kdes:
-                    new_internal.append(k.resample(init_internal.shape[0]))
+                    resampled = k.resample(init_internal.shape[0])
+                    new_internal.append(np.arctan2(resampled[0], resampled[1]))
                 new_internal = np.vstack(new_internal).T
                 init_internal = new_internal
         return init_external, init_internal
