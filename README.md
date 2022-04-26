@@ -453,6 +453,8 @@ _GALLOP_ makes use of a number of libraries, without which its development would
 
 - [Paperspace](https://www.paperspace.com/) - free access to some GPUs, plus various paid options for more powerful GPUs
 
+- [Runpod.io](https://runpod.io/) - cheap access to high-end GPUs, with both community and data-centre cloud options available.
+
 - [Vast.ai](https://vast.ai/) - cheap access to a wide variety of GPUs not offered by other services. Free trial credit is available to new users.
 
 A wide variety of bigger commercial providers (e.g. AWS, GCP, Azure, Lambda Labs) are also available.
