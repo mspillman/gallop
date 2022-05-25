@@ -316,7 +316,7 @@ def get_all_settings(loaded_values):
                                         step=1, format=None, key=None))
                 distance_restraints = loaded_values["distance_restraints"]
                 st.write("Enter the atom labels, distance and \
-                        % weight (separated by commas, e.g. C1,C2,1.54,50)")
+                        weight (separated by commas, e.g. C1,C2,1.54,0.5)")
                 if distance_restraints is None:
                     distance_restraints = defaultdict(str)
                 for i in range(n_distance_restraints):
@@ -337,8 +337,8 @@ def get_all_settings(loaded_values):
                                         step=1, format=None, key=None))
                 angle_restraints = loaded_values["angle_restraints"]
                 st.write("Enter the atom labels (3 or 4), angle and \
-                        % weight (separated by commas, e.g. C1,C2,C3,121.1,50 \
-                        or C1,C2,C3,C4,121.1,50)")
+                        weight (separated by commas, e.g. C1,C2,C3,121.1,0.5 \
+                        or C1,C2,C3,C4,121.1,0.5)")
                 if angle_restraints is None:
                     angle_restraints = defaultdict(str)
                 for i in range(n_angle_restraints):
@@ -359,7 +359,7 @@ def get_all_settings(loaded_values):
                                         step=1, format=None, key=None))
                 torsion_restraints = loaded_values["torsion_restraints"]
                 st.write("Enter the atom labels, torsion angle and \
-                        % weight (separated by commas, e.g. C1,C2,C3,C4,121.1,50)")
+                        weight (separated by commas, e.g. C1,C2,C3,C4,121.1,0.5)")
                 if torsion_restraints is None:
                     torsion_restraints = defaultdict(str)
                 for i in range(n_torsion_restraints):

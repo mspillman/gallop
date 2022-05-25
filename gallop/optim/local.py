@@ -483,7 +483,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
 
     if use_restraints:
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
-                                    dtype, device, restraint_weight_type)
+                                                            dtype, device)
 
 
     # Initialize the optimizer
