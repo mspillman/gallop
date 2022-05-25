@@ -555,24 +555,24 @@ class Structure(object):
         labels, then the zmatrix labels are not needed.
 
         e.g. a distance restraint for atom4 in zmatrix_1.zmatrix and atom8 in
-            zmatrix_3.zmatrix, with a distance of 3.0 A and weight of 50 % can
-            be added via:
+            zmatrix_3.zmatrix, with a distance of 3.0 A and weighting of 50 %
+            (i.e. 0.5) can be added via:
                 Structure.add_restraint({"type" : "distance",
                                         "zm1":"zmatrix_1.zmatrix", "atom1":4,
                                         "zm2":"zmatrix_2.zmatrix", "atom2":8,
-                                        "value":3, "weight":50})
+                                        "value":3, "weight":0.5})
             Or, assuming that the zmatrices were added sequentially starting
             with zmatrix_1.zmatrix:
                 Structure.add_restraint({"type":"distance", "zm1":1, "atom1":4,
                                         "zm2":3, "atom2":8,"value":3.0,
-                                        "weight":50})
+                                        "weight":0.5})
 
         Alternative and recommended method:
 
             If all of the atoms have unique labels, and assuming atom1 = N1 and
             atom2 = Cl1, then the following is sufficient:
                 Structure.add_restraint("type":"distance", "atom1":"N1",
-                                        "atom2":"Cl1", "value":3.0, "weight":50)
+                                        "atom2":"Cl1", "value":3.0, "weight":0.5)
 
         Users can change between 0- and 1-indexing. Default is 1-index to match
         the indexing given in the z-matrices.
