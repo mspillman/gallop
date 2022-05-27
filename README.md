@@ -221,7 +221,7 @@ from gallop import intensities
 from gallop import chi2
 from gallop import files
 ```
-Add in ```minimiser_settings["learning_rate_schedule"] = "constant"``` before calling the learning rate finder, then replace the main GALLOP loop with something like:
+Then replace the main GALLOP loop with something like:
 
 ```python
 # The main GALLOP loop
