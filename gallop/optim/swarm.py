@@ -178,7 +178,7 @@ class Swarm(object):
                                                 bins[i]+np.pi/36, t)
                         samples.append(np.hstack([observed, -1*observed]))
                 samples = np.hstack(samples)
-                samples = np.vstack((np.sin(samples, np.cos(samples))))
+                samples = np.vstack((np.sin(samples), np.cos(samples)))
                 kde = gaussian_kde(samples, bw_method=None)
                 kdes.append(kde)
             if init_internal.shape[1] != len(kdes):
