@@ -427,6 +427,9 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
                 + chk*torch.cos(pi*(hmk*xpy-l2))*torch.cos(pi*hpk*xmy)*torch.cos(2*pi*lz))
         B = -4*(torch.sin(pi*hpk*xpy)*torch.sin(pi*(hmk*xmy-l2))*torch.sin(2*pi*(lz+l4))
                 - chk*torch.sin(pi*(hmk*xpy-l2))*torch.sin(pi*hpk*xmy)*torch.sin(2*pi*lz))
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
+        intensities = Asqd + Bsqd
 
     elif space_group_number == 148:
         # R-3
