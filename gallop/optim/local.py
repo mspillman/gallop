@@ -706,7 +706,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             #with col2:
             if i % print_every == 0 or i == 1:
                 with chi2_result:
-                    st.write(str(np.around(chi_2.min().item(), 3)))
+                    st.write(str(chi_2.min().item())[:6])
     result = {
             "external"     : tensors["zm"]["external"].detach().cpu().numpy(),
             "internal"     : tensors["zm"]["internal"].detach().cpu().numpy(),
