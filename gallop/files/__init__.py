@@ -310,7 +310,7 @@ def save_CIF_of_best_result(Structure, result, start_time=None,
     else:
         site_labels = None
 
-    output_structure = pmg.Structure(lattice=Structure.lattice,
+    output_structure = pmg.core.Structure(lattice=Structure.lattice,
                                     species=species_and_occus,
                                     coords=best_frac_coords[0][:len(species)])
     ext_comment = "# GALLOP External Coords = " + ",".join(list(
