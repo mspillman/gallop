@@ -8,5 +8,5 @@ from . import zm_to_cart
 from . import structure
 from . import files
 
-__version__ = "0.1.1"
+__version__ = "0.1.3"
 __author__ = 'Mark Spillman'
