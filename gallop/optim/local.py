@@ -639,9 +639,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                                         **tensors["chisqd_tensors"])
             else:
                 if profile:
-                    chi_2 = chi2.calc_prof_chisqd(corrected_intensities, **profile_tensors)
+                    chi_2 = chi2.calc_prof_chisqd(calculated_intensities, **profile_tensors)
                 else:
-                    chi_2 = chi2.calc_int_chisqd(corrected_intensities,
+                    chi_2 = chi2.calc_int_chisqd(calculated_intensities,
                                         **tensors["chisqd_tensors"])
         else:
             if profile:
