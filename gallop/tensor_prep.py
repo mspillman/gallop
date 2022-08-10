@@ -566,3 +566,18 @@ def get_restraint_tensors(Structure, dtype, device):
     restraints["restrain_t"] = restrain_t
 
     return restraints
+
+
+def get_profile_tensors(Structure, step, dtype, device):
+    # Get the Torch tensors we'll need for calculating the profile chisquared
+    subset = Structure.n_contributing_peaks > 0
+    baseline_peaks = torch.from_numpy(
+                            Structure.baseline_peaks[:,subset][:,::step]
+                        ).type(dtype).to(device)
+    profile = torch.from_numpy(
+                    Structure.profile[subset][::step]
+                ).type(dtype).to(device)
+    scale_numerator = profile[:,1].sum()
+    weights = profile[:,2]**(-2)
+    return {"baseline_peaks":baseline_peaks, "profile":profile,
+            "scale_numerator":scale_numerator, "weights":weights}

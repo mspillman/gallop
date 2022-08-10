@@ -633,7 +633,16 @@ def get_files():
     if load_settings_from_file:
         with st.expander(label="Choose settings to load", expanded=False):
             selection=st.multiselect("",settings,default=settings,key="upload")
-
+    if pawley_program.lower() == "dash":
+        figure_of_merit = st.radio("Select chisquared figure of merit",
+                                    ["Intensity","Profile"])
+        if figure_of_merit == "Profile":
+            step = st.number_input("Profile step size", min_value=1, value=1)
+        else:
+            step = 1
+    else:
+        figure_of_merit = "Intensity"
+        step = 1
     sdi = None
     gpx  = None
     out = None
@@ -696,7 +705,7 @@ def get_files():
                 json_settings.pop(s, None)
 
     return uploaded_files, sdi, gpx, out, hkl, ins, cif, json_settings, zms, \
-            dbf, load_settings, pawley_program,clear_files
+            dbf, load_settings, pawley_program,clear_files, figure_of_merit, step
 
 
 

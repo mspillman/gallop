@@ -50,7 +50,8 @@ elif function == "GALLOP":
 
     # Now we upload the files needed for GALLOP - DASH fit files and Z-matrices
     uploaded_files, sdi, gpx, out, hkl, ins, cif, json_settings, zms, \
-            dbf, load_settings, pawley_program, clear_files = gsu.get_files()
+        dbf, load_settings, pawley_program, clear_files, \
+        figure_of_merit, step = gsu.get_files()
 
     st.text("")
     st.text("")
@@ -206,6 +207,9 @@ elif function == "GALLOP":
             minimiser_settings["use_restraints"] = True
 
         minimiser_settings["restraint_weight_type"] = all_settings["restraint_weight_type"]
+        if figure_of_merit == "Profile":
+            minimiser_settings["profile"] = True
+            minimiser_settings["step"] = step
 
         if all_settings["animate_structure"]:
             minimiser_settings["save_trajectories"] = True

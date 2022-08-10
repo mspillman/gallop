@@ -283,7 +283,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
     save_CIF=True, streamlit=False, use_restraints=False,
     restraint_weight_type="min_chi2", include_PO=False, PO_axis=(0, 0, 1),
-    notebook=False):
+    notebook=False, profile=False, step=1):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -424,6 +424,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             March-Dollase PO correction. Defaults to (0, 0, 1).
         notebook (bool, optional): If the code is running in a Jupyter notebook,
             use the tqdm notebook progress bars instead. Defaults to False.
+        profile (bool, optional): If set to True, the profile chisquared will be
+            used instead of intensity chisquared. Defaults to False.
+        step (int, optional): If using profile chisquared, step is the step size
+            of points to include in the calculation. 1 uses the full profile, 2
+            would use every other point, 3 every third point etc. Defaults to 1.
 
     Returns:
         dictionary: A dictionary containing the optimised external and internal
@@ -485,7 +490,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
                                                             dtype, device)
 
-
+    if profile:
+        profile_tensors = tensor_prep.get_profile_tensors(Structure, step,
+                                                            dtype, device)
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
@@ -625,13 +632,22 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 corrected_intensities = intensities.apply_MD_PO_correction(
                                                 calculated_intensities,
                                                 cosP, sinP, factor)
-                chi_2 = chi2.calc_chisqd(corrected_intensities,
+                if profile:
+                    chi_2 = chi2.calc_prof_chisqd(corrected_intensities, **profile_tensors)
+                else:
+                    chi_2 = chi2.calc_int_chisqd(corrected_intensities,
                                         **tensors["chisqd_tensors"])
             else:
-                chi_2 = chi2.calc_chisqd(calculated_intensities,
+                if profile:
+                    chi_2 = chi2.calc_prof_chisqd(corrected_intensities, **profile_tensors)
+                else:
+                    chi_2 = chi2.calc_int_chisqd(corrected_intensities,
                                         **tensors["chisqd_tensors"])
         else:
-            chi_2 = chi2.get_chi_2(**tensors)
+            if profile:
+                chi_2 = chi2.get_chi_2(**tensors, profile=profile_tensors)
+            else:
+                chi_2 = chi2.get_chi_2(**tensors)
 
         if use_restraints:
             restraint_penalty = restraints.get_restraint_penalties(
@@ -754,7 +770,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 factor[best][0].cpu().reshape(1,1))
 
     if ignore_H_setting:
-        chi_2_H = chi2.calc_chisqd(best_intensities,
+        chi_2_H = chi2.calc_int_chisqd(best_intensities,
                                             **best_tensors["chisqd_tensors"])
 
         result["best_chi_2_with_H"] = chi_2_H.detach().cpu().numpy()[0]

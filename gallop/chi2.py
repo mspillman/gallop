@@ -14,12 +14,12 @@ import gallop.tensor_prep as tensor_prep
 
 
 @torch.jit.script
-def calc_chisqd(calculated_intensities, inverse_covariance_matrix,
+def calc_int_chisqd(calculated_intensities, inverse_covariance_matrix,
         observed_intensities, chisqd_scale_sum_1_1):
     """
     Given sets of calculated intensities, the Pawley-derived inverse covariance
-    matrix, and the extracted observed intensities, calculate chi2 according to
-    the equation described by David et al.
+    matrix, and the extracted observed intensities, calculate intensity chi2
+    according to the equation described by David et al.
 
     Args:
         calculated_intensities (Tensor): Tensor of shape (n_samples, n_peaks)
@@ -57,9 +57,41 @@ def calc_chisqd(calculated_intensities, inverse_covariance_matrix,
 
     return chi_2 / (calculated_intensities.shape[1] - 2)
 
+@torch.jit.script
+def calc_prof_chisqd(calculated_intensities, baseline_peaks, scale_numerator, weights, profile):
+    """
+    Calculates profile chisquared from a set of calculated intensities, and baseline peaks derived
+    from a DASH Pawley PIK file.
 
+    Args:
+        calculated_intensities (PyTorch Tensor): Intensities calculated during SDPD with GALLOP
+                                                    Shape (n_particles, n_intensities)
+        baseline_peaks (PyTorch Tensor):         Baseline peaks extracted from the DASH PIK file
+                                                    Shape (n_intensities, n_points)
+        scale_numerator (PyTorch Tensor):        Sum of the observed intensities for all points
+                                                    Shape (1,)
+        weights (PyTorch Tensor):                Tensor of (1/esd)**2 values, Precalculated to
+                                                    save time. Shape (n_points,).
+        profile (PyTorch Tensor):                Tensor of the PIK profile, Shape (n_points, 3)
 
-def get_chi_2(zm, int_tensors, chisqd_tensors):
+    Returns:
+        PyTorch Tensor: A tensor with shape (n_particles,) containing the profile
+                        chi-square values
+    """
+    # Calculate the profiles by matrix multiplication
+    calc_profiles = calculated_intensities @ baseline_peaks
+
+    # Calculate the scaling factors for the calculated profiles
+    scale_denominator = calc_profiles.sum(dim=1).unsqueeze(1)
+    scale = scale_numerator / scale_denominator
+
+    # The "-2" in the denominator is because DASH refines two background terms
+    # during the Pawley refinement by default
+    prof_chisquared = ((weights*((scale*calc_profiles - profile[:,1])**2)
+                    ).sum(dim=1).reshape(-1,1) / (profile.shape[0]-2)).squeeze(1)
+    return prof_chisquared
+
+def get_chi_2(zm, int_tensors, chisqd_tensors, profile=None):
     """
     Convenience function to get chi2 directly from external/internal rather
     than performing the three steps required:
@@ -131,7 +163,10 @@ def get_chi_2(zm, int_tensors, chisqd_tensors):
     calculated_intensities = intensities.calculate_intensities(
                             asymmetric_frac_coords, **int_tensors)
 
-    chisqd = calc_chisqd(calculated_intensities, **chisqd_tensors)
+    if profile is not None:
+        chisqd = calc_prof_chisqd(calculated_intensities, **profile)
+    else:
+        chisqd = calc_int_chisqd(calculated_intensities, **chisqd_tensors)
 
     return chisqd
 
@@ -167,7 +202,7 @@ def get_chi2_from_CIF(Structure, n_reflections=None, include_dw_factors=True,
     calculated_intensities = intensities.calculate_intensities(
                                 **tensors["int_tensors"])
 
-    chisqd = calc_chisqd(calculated_intensities, **tensors["chisqd_tensors"])
+    chisqd = calc_int_chisqd(calculated_intensities, **tensors["chisqd_tensors"])
 
     del tensors
 
