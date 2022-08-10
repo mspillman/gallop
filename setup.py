@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='gallop',
-    version='0.1.1',
+    version='0.1.3',
     description='Fast crystal structure determination from powder diffraction data',
     url='https://github.com/mspillman/gallop',
     author='Mark Spillman',
@@ -14,7 +14,7 @@ setup(
                             'gallop/atomic_scattering_params.json']},
     include_package_data=True,
     scripts=['gallop_streamlit.py', 'gallop_streamlit_utils.py', 'gallop.bat'],
-    install_requires=['pymatgen<=2021.2.8.1',
+    install_requires=['pymatgen',
                         'numpy',
                         'torch',
                         'scipy>=1.7.0',
