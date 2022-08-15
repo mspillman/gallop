@@ -162,7 +162,7 @@ class Swarm(object):
                     for line in dbf:
                         line = line.strip().split(" ")
                         if line[1] == "MDB":
-                            distributions.append([int(x) for x in line[-19:]])
+                            distributions.append([int(x) for x in line[-18:]])
                         elif line[1] == "LBUB" and line[2] == "-180.00000":
                             distributions.append([10]*19)
                 dbf.close()

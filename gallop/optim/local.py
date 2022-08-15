@@ -273,6 +273,39 @@ def find_learning_rate(Structure, external=None, internal=None,
         print("ERROR! Minimiser Settings are needed!")
         return None
 
+def update_learning_rate(i,optimizer,learning_rate,learning_rate_schedule,
+                n_iterations,n_cooldown,b_bounds_1_cycle):
+    if learning_rate_schedule.lower() == "1cycle":
+        lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
+                learning_rate, n_iterations-n_cooldown, n_iterations,
+                **b_bounds_1_cycle)
+    elif learning_rate_schedule.lower() == "sqrt":
+        lr = adjust_lr_1_over_sqrt(optimizer, i, learning_rate)
+    elif learning_rate_schedule.lower() == "constant":
+        lr = learning_rate
+    elif learning_rate_schedule.lower() == "array":
+        try:
+            lr = learning_rate[i]
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+        except IndexError:
+            print("Error in learning rate array")
+            if len(learning_rate) < i:
+                print("Insufficient entries in list, using last value")
+                lr = learning_rate[-1]
+            else:
+                print("Check and try again")
+                exit()
+    else:
+        if i == 0:
+            print("Learning rate scheduler unknown, using 1cycle")
+            learning_rate_schedule="1cycle"
+            lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
+                    learning_rate, n_iterations-n_cooldown, n_iterations)
+        else:
+            print("An error has occurred with lr scheduling")
+    return lr
+
 def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
     n_reflections=None, learning_rate_schedule="1cycle",
@@ -448,6 +481,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         betas = [0.9,0.9]
     if streamlit:
         import streamlit as st
+    trajectories = []
+    gradients = []
+    losses = []
 
     if torsion_shadowing:
         # Only pay attention to the first block of torsions accounting for Z'>1.
@@ -469,22 +505,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             for i in range(Z_prime-1):
                 for j in range(2**i):
                     t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
-
         t_permutations = torch.from_numpy(t_permutations).type(dtype).to(device)
         internal = internal[:,:int(internal.shape[1] / Z_prime)]
-
-
-
-    # Load the tensors and other parameters needed
-    tensors = tensor_prep.get_all_required_tensors(
-                                Structure, external=external, internal=internal,
-                                n_samples=n_samples, device=device, dtype=dtype,
-                                n_reflections=n_reflections, verbose=verbose,
-                                include_dw_factors=include_dw_factors)
-    trajectories = []
-    gradients = []
-    losses = []
-
 
     if use_restraints:
         restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
@@ -493,6 +515,18 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if profile:
         profile_tensors = tensor_prep.get_profile_tensors(Structure, step,
                                                             dtype, device)
+    if include_PO:
+        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
+                            n_reflections, tensors["zm"]["external"].shape[0],
+                            device, dtype)
+
+    # Load the tensors and other parameters needed
+    tensors = tensor_prep.get_all_required_tensors(
+                                Structure, external=external, internal=internal,
+                                n_samples=n_samples, device=device, dtype=dtype,
+                                n_reflections=n_reflections, verbose=verbose,
+                                include_dw_factors=include_dw_factors)
+
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
@@ -536,9 +570,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                     param_group['lr'] = learning_rate
 
     if include_PO:
-        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
-                            n_reflections, tensors["zm"]["external"].shape[0],
-                            device, dtype)
         optimizer.add_param_group({"params" : [factor]})
 
     if start_time is None:
@@ -569,35 +600,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # Zero out gradient, else they will accumulate between iterations
         optimizer.zero_grad()
 
-        if learning_rate_schedule.lower() == "1cycle":
-            lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
-                    learning_rate, n_iterations-n_cooldown, n_iterations,
-                    **b_bounds_1_cycle)
-        elif learning_rate_schedule.lower() == "sqrt":
-            lr = adjust_lr_1_over_sqrt(optimizer, i, learning_rate)
-        elif learning_rate_schedule.lower() == "constant":
-            lr = learning_rate
-        elif learning_rate_schedule.lower() == "array":
-            try:
-                lr = learning_rate[i]
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = lr
-            except IndexError:
-                print("Error in learning rate array")
-                if len(learning_rate) < i:
-                    print("Insufficient entries in list, using last value")
-                    lr = learning_rate[-1]
-                else:
-                    print("Check and try again")
-                    exit()
-        else:
-            if i == 0:
-                print("Learning rate scheduler unknown, using 1cycle")
-                learning_rate_schedule="1cycle"
-                lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
-                        learning_rate, n_iterations-n_cooldown, n_iterations)
-            else:
-                print("An error has occurred with lr scheduling")
+        lr = update_learning_rate(i,optimizer,learning_rate,learning_rate_schedule,
+                n_iterations,n_cooldown,b_bounds_1_cycle)
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
@@ -606,22 +610,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 internal = tensors["zm"]["internal"]
                 all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
                         ).reshape(internal.shape[0], internal.shape[1]*Z_prime)
-
+                zm_tensors = {}
+                zm_tensors.update(tensors["zm"])
+                zm_tensors["internal"] = all_tors
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
-                    tensors["zm"]["external"],
-                    all_tors,
-                    tensors["zm"]["position"],
-                    tensors["zm"]["rotation"],
-                    tensors["zm"]["torsion"],
-                    tensors["zm"]["initial_D2"],
-                    tensors["zm"]["zmatrices_degrees_of_freedom"],
-                    tensors["zm"]["bond_connection"],
-                    tensors["zm"]["angle_connection"],
-                    tensors["zm"]["torsion_connection"],
-                    tensors["zm"]["torsion_refinable_indices"],
-                    tensors["zm"]["lattice_inv_matrix"],
-                    tensors["zm"]["init_cart_coords"]
-                    )
+                                                                **zm_tensors)
             else:
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                                                             **tensors["zm"])
@@ -737,6 +730,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         #result["internal"] = torsions
         result["internal"] = all_tors.detach().cpu().numpy()
 
+
     # Now calculate the intensities with H-atoms included and use them to get a
     # profile chi2 estimate. If Structure.ignore_H_atoms is True, also calculate
     # the intensity chi2 with H-atoms included and add to the results dict.
@@ -802,13 +796,25 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if save_grad:
         result["gradients"] = gradients
 
+    if save_CIF:
+        files.save_CIF_of_best_result(Structure, result, start_time,
+                                        n_reflections)
+    # Now delete tensors to clear GPU memory for the next iteration
     if include_PO:
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
         del factor
+        del cosP
+        del sinP
 
-    if save_CIF:
-        files.save_CIF_of_best_result(Structure, result, start_time,
-                                        n_reflections)
+    if torsion_shadowing:
+        del t_permutations
+
+    if use_restraints:
+        del restraint_tensors
+
+    if profile:
+        del profile_tensors
+
     del tensors
     return result

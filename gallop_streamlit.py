@@ -57,7 +57,6 @@ elif function == "GALLOP":
 
         st.text("")
         st.text("")
-
         # All files prepared, now need to construct the GALLOP structure object
         # and get the settings for the GALLOP runs.
 
