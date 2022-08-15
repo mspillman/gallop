@@ -24,6 +24,7 @@ setup(
                         'pandas',
                         'altair',
                         'py3Dmol',
+                        'mpld3',
                         ],
 
 )

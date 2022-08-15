@@ -19,8 +19,8 @@ requirements:
     - torch-optimizer=0.1.0
     - pymatgen
     - cudatoolkit 11.6*
-    
-    
+    - mpld3
+
 
 about:
   home: https://github.com/mspillman/gallop
