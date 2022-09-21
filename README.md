@@ -1,3 +1,4 @@
+![](GALLOP_Banner.png)
 # **_GALLOP_**
 **GPU Accelerated Local Optimisation and Particle Swarm: fast crystal structure determination from powder diffraction data.**
 
