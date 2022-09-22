@@ -15,7 +15,7 @@ Contents:
 
 ## **Introduction**
 
-An article describing the approach taken by this code is available from [CrystEngComm](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H). If you find _GALLOP_ useful in your work, please consider citing this article:
+An article describing the approach taken by this code is available from [CrystEngComm](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H). If you do not have access to RSC journals, you can also download a copy of the accepted manuscript [here](https://raw.githubusercontent.com/mspillman/gallop/main/CEC_Communication_GALLOP.pdf). If you find _GALLOP_ useful in your work, please consider citing this article:
 
 [_CrystEngComm_, 2021, **23**, 6481 - 6485](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H)
 
