@@ -362,7 +362,7 @@ If you are upgrading _GALLOP_ from a previously installed version, please use th
 
 **Other environments:**
 
-Warning - this is not for the faint of heart! More detailed instructions and a video installation guide are coming soon.
+Warning - this is not for the faint of heart, though if you are on a *nix based system, it should be relatively simple provided PyTorch and CUDA are installed.
 
 **_GALLOP_ software prerequisites:**
 
@@ -382,10 +382,10 @@ Once the above are installed, several Python Libraries must also be installed. T
 | Library |Comments|
 |---------|--------|
 | [PyTorch](https://pytorch.org/get-started/locally/) | Must be compatible with the version of CUDA installed. Installation via conda package manager recommended. |
-| [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. Version 2021.2.8.1 needed |
+| [PyMatGen](https://pymatgen.org/) | Needed for various crystallographic symmetry related functions. |
 | [SciPy](https://www.scipy.org/) | Numerical processing routines, including Latin Hypercube pseudo-random sampling. Version >1.7 needed |
 | [Torch Optimizer](https://github.com/jettify/pytorch-optimizer) | Provides additional local optimisers not available natively in PyTorch |
-| [Streamlit](https://streamlit.io/) | Provides the browser interface - not needed for Python mode use|
+| [Streamlit](https://streamlit.io/) | Provides the browser interface - not needed for Python mode use. Version 1.11.1 needed.|
 | [tqdm](https://pypi.org/project/tqdm/) | Lightweight progress bars for use in Python mode |
 
 <br />
