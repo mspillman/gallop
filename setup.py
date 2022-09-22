@@ -20,7 +20,7 @@ setup(
                         'scipy>=1.7.0',
                         'matplotlib',
                         'torch-optimizer',
-                        'streamlit',
+                        'streamlit==1.11.1',
                         'pandas',
                         'altair',
                         'py3Dmol',

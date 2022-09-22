@@ -52,7 +52,7 @@ def intensities_from_full_cell_contents(frac_all, hkl, intensity_calc_prefix_fs,
         centrosymmetric (bool): True if space group is centrosymmetric
 
     Returns:
-        [type]: [description]
+        Tensor: Calculated intensities
     """
     pi = 3.141592653589793
     hxkylz = 2. * pi * torch.einsum("ji,klj->kil", hkl, frac_all)
