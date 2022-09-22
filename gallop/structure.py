@@ -163,7 +163,7 @@ class Structure(object):
                         zmatrices.append(zmat)
                     setattr(self, k, zmatrices)
                 elif k == "lattice":
-                    lattice = pmg.Lattice.from_dict(v)
+                    lattice = pmg.core.Lattice.from_dict(v)
                     setattr(self,k,lattice)
             else:
                 if v[1]:
@@ -422,7 +422,7 @@ class Structure(object):
 
             # Create a pymatgen Structure object using the dummy atom positions
             # created earlier
-            dummy_structure = pmg.Structure(lattice=self.lattice,
+            dummy_structure = pmg.core.Structure(lattice=self.lattice,
                                 species=species_occus_expanded,
                                 coords=fractional_expanded)
             i = 0

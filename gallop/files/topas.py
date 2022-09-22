@@ -129,7 +129,7 @@ def get_data_from_TOPAS_output(filename, percentage_cutoff_inv_cov=20):
     data["hkl"] = hkl.astype(int)
     data["intensities"] = I_mult_corrected
     data["inverse_covariance_matrix"] = np.linalg.inv(C_matrix_mult_corrected)
-    data["lattice"] = pmg.Lattice.from_parameters(cell["a"],
+    data["lattice"] = pmg.core.Lattice.from_parameters(cell["a"],
                                                     cell["b"],
                                                     cell["c"],
                                                     cell["al"],

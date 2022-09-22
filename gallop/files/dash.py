@@ -44,7 +44,7 @@ def get_data_from_DASH_sdi(filename, percentage_cutoff_inv_cov=20):
         data["inverse_covariance_matrix"] = read_DASH_hcv(
             data["hcv"], percentage_cutoff_inv_cov=percentage_cutoff_inv_cov)
     data["twotheta"] = read_DASH_tic(data["tic"])
-    data["lattice"] = pmg.Lattice.from_parameters(data["unit_cell"][0],
+    data["lattice"] = pmg.core.Lattice.from_parameters(data["unit_cell"][0],
                                                     data["unit_cell"][1],
                                                     data["unit_cell"][2],
                                                     data["unit_cell"][3],

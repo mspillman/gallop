@@ -7,28 +7,19 @@ GALLOP web app, built with Streamlit.
 
 import time
 import os
-import glob
-import base64
 import json
-import datetime
-from zipfile import ZipFile, ZIP_DEFLATED
 import torch
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import altair as alt
 from gallop.optim.local import minimise
-import gallop_streamlit_utils as gsu
-from gallop import z_matrix
+from gallop import streamlit_utils as su
 from gallop import optim
 from gallop import structure
 from gallop import multiGPU
 
 st.set_page_config(page_title='GALLOP Web App', page_icon = ":gem:",
                     layout = 'centered', initial_sidebar_state = 'auto')
-
-
 
 # Top section
 st.title("GALLOP")
@@ -39,18 +30,20 @@ function = st.sidebar.radio("Choose function",
 # "Instructions"])
 
 if "View" in function:
-    gsu.browse_solved_zips()
+    su.browse_solved_zips()
 
 #elif "Instructions" in function:
-#    gsu.instructions()
+#    su.instructions()
 
 elif function == "GALLOP":
+    # First get the settings for the runs
     st.sidebar.markdown("**Settings**")
-    all_settings = gsu.sidebar()
+    all_settings = su.sidebar()
 
     # Now we upload the files needed for GALLOP - DASH fit files and Z-matrices
     uploaded_files, sdi, gpx, out, hkl, ins, cif, json_settings, zms, \
-            dbf, load_settings, pawley_program, clear_files = gsu.get_files()
+        dbf, load_settings_from_file, pawley_program, clear_files, \
+        use_profile, step = su.files.get_files()
 
     st.text("")
     st.text("")
@@ -59,7 +52,7 @@ elif function == "GALLOP":
     if all_files and len(zms) == 0:
         st.write("No files uploaded. Upload files or select from examples")
     elif all_files and len(zms) > 0:
-        if load_settings and json_settings is not None:
+        if load_settings_from_file and json_settings is not None:
             all_settings.update(json_settings)
 
         st.text("")
@@ -69,193 +62,45 @@ elif function == "GALLOP":
 
         # If the structure name hasn't been changed, use the Pawley files to
         # give it a meaningful name
-        name = all_settings["structure_name"]
-        if name == "Enter_structure_name" or len(name) == 0:
-            if pawley_program == "DASH":
-                structure_name = os.path.split(sdi)[-1].split(".sdi")[0]
-            elif pawley_program == "GSAS-II":
-                structure_name = os.path.split(gpx)[-1].split(".gpx")[0]
-            elif pawley_program == "TOPAS (experimental)":
-                structure_name = os.path.split(out)[-1].split(".out")[0]
-            else:
-                assert (cif is not None or ins is not None), "You must supply \
-                                cell and space group info via a cif or ins file"
-                if cif is not None:
-                    structure_name = os.path.split(cif)[-1].split(".cif")[0]
-                else:
-                    structure_name = os.path.split(ins)[-1].split(".ins")[0]
-            all_settings["structure_name"] = structure_name
+        all_settings["structure_name"] = su.structure.get_name(all_settings,
+                                            pawley_program, sdi, gpx, out,
+                                            cif, ins)
         struct = structure.Structure(
                                 name=all_settings["structure_name"],
                                 ignore_H_atoms=all_settings["ignore_H_atoms"])
-        if pawley_program == "DASH":
-            struct.add_data(sdi, source="DASH",
-                        percentage_cutoff=all_settings["percentage_cutoff"])
-        elif pawley_program == "GSAS-II":
-            struct.add_data(gpx, source="GSAS",
-                        percentage_cutoff=all_settings["percentage_cutoff"])
-        elif pawley_program == "TOPAS (experimental)":
-            struct.add_data(out, source="TOPAS",
-                        percentage_cutoff=all_settings["percentage_cutoff"])
-
-        else:
-            if cif is not None:
-                struct.add_data(cif, hklfile=hkl, source="SHELX")
-            else:
-                struct.add_data(ins, hklfile=hkl, source="SHELX")
-
-        for z in sorted(zms):
-            check = z_matrix.Z_matrix(z)
-            if all_settings["ignore_H_atoms"] and not check.H_atom_torsion_defs:
-                struct.add_zmatrix(z)
-            elif all_settings["ignore_H_atoms"] and check.H_atom_torsion_defs:
-                st.markdown("**Problem with z-matrix "+z+" - H-atoms used to "
-                    "define refinable torsion angles. Please generate a new ZM "
-                    "to allow H-atoms to be ignored or refresh the page and "
-                    "uncheck the ignore H atoms box.**")
-                st.write("Attempting to continue with H-atoms included")
-                struct.ignore_H_atoms = False
-                struct.add_zmatrix(z)
-            else:
-                struct.add_zmatrix(z)
         if all_settings["temperature"] > 0.0:
             struct.temperature = all_settings["temperature"]
-        minimiser_settings = optim.local.get_minimiser_settings(struct)
-        minimiser_settings["streamlit"] = True
-        minimiser_settings["include_dw_factors"] = \
-                                            all_settings["include_dw_factors"]
-        minimiser_settings["n_iterations"] = all_settings["n_LO_iters"]
-        minimiser_settings["learning_rate_schedule"] = \
-                                        all_settings["learning_rate_schedule"]
-        n_refs = int(np.ceil((all_settings["reflection_percentage"]/100.)
-                    *len(struct.hkl)))
-        if n_refs > len(struct.hkl):
-            n_refs = len(struct.hkl)
-        minimiser_settings["n_reflections"] = n_refs
 
-        if all_settings["learning_rate_schedule"] == "1cycle":
-            minimiser_settings["n_cooldown"] = all_settings["n_cooldown"]
+        su.structure.add_data(struct, all_settings, pawley_program, sdi, gpx, out, cif,
+                    ins, hkl)
 
-        if all_settings["device"] == "CPU":
-            minimiser_settings["device"] = torch.device("cpu")
-        elif all_settings["device"] == "Auto":
-            minimiser_settings["device"] = None
-        elif all_settings["device"] == "Multiple GPUs":
-            minimiser_settings["device"] = torch.device("cuda:" +
-                                all_settings["particle_division"][0][0])
-        else:
-            minimiser_settings["device"] = torch.device("cuda:"+
-                                        all_settings["device"].split(" = ")[0])
-        minimiser_settings["loss"] = all_settings["loss"]
-        minimiser_settings["optimizer"] = all_settings["optim"].lower()
-        minimiser_settings["torsion_shadowing"] = all_settings["torsion_shadowing"]
-        minimiser_settings["Z_prime"] = all_settings["Z_prime"]
-        if all_settings["include_PO"]:
-            minimiser_settings["include_PO"] = True
-            PO_axis_split = all_settings["PO_axis"].replace(" ","").split(",")
-            PO_axis_split = [int(x) for x in PO_axis_split]
-            minimiser_settings["PO_axis"] = PO_axis_split
+        su.structure.add_zmatrices(struct, zms, all_settings)
 
-        if all_settings["use_distance_restraints"]:
-            if all_settings["distance_restraints"] is not None:
-                for r in all_settings["distance_restraints"].keys():
-                    r = all_settings["distance_restraints"][r]
-                    r = r.replace(" ","").split(",")
-                    struct.add_restraint({"type" : "distance",
-                                            "atom1" : r[0],
-                                            "atom2" : r[1],
-                                            "value" : float(r[2]),
-                                            "weight" : float(r[3])})
-            minimiser_settings["use_restraints"] = True
+        minimiser_settings = su.structure.get_minimiser_settings(struct,
+                                            all_settings, use_profile, step)
 
-        if all_settings["use_angle_restraints"]:
-            if all_settings["angle_restraints"] is not None:
-                for r in all_settings["angle_restraints"].keys():
-                    r = all_settings["angle_restraints"][r]
-                    r = r.replace(" ","").split(",")
-                    if len(r) == 5:
-                        struct.add_restraint({"type" : "angle",
-                                            "atom1" : r[1],
-                                            "atom2" : r[0],
-                                            "atom3" : r[1],
-                                            "atom4" : r[2],
-                                            "value" : float(r[3]),
-                                            "weight" : float(r[4])})
-                    else:
-                        struct.add_restraint({"type" : "angle",
-                                            "atom1" : r[0],
-                                            "atom2" : r[1],
-                                            "atom3" : r[2],
-                                            "atom4" : r[3],
-                                            "value" : float(r[4]),
-                                            "weight" : float(r[5])})
-            minimiser_settings["use_restraints"] = True
-
-        if all_settings["use_torsion_restraints"]:
-            if all_settings["torsion_restraints"] is not None:
-                for r in all_settings["torsion_restraints"].keys():
-                    r = all_settings["torsion_restraints"][r]
-                    r = r.replace(" ","").split(",")
-                    struct.add_restraint({"type" : "torsion",
-                                            "atom1" : r[0],
-                                            "atom2" : r[1],
-                                            "atom3" : r[2],
-                                            "atom4" : r[3],
-                                            "value" : float(r[4]),
-                                            "weight" : float(r[5])})
-            minimiser_settings["use_restraints"] = True
-
-        minimiser_settings["restraint_weight_type"] = all_settings["restraint_weight_type"]
-
-        if all_settings["animate_structure"]:
-            minimiser_settings["save_trajectories"] = True
         if all_settings["memory_opt"]:
-            gsu.improve_GPU_memory_use(struct, minimiser_settings)
+            su.improve_GPU_memory_use(struct, minimiser_settings)
             st.write("Attempting to reduce GPU memory use at the expense of "
                     "reduced Local Optimisation speed")
-        n_particles = all_settings["swarm_size"]*all_settings["n_swarms"]
-        if all_settings["inertia_type"] == "constant":
-            inertia = all_settings["inertia"]
-        else:
-            inertia = all_settings["inertia_type"]
-        swarm = optim.swarm.Swarm(
-                    Structure = struct,
-                    n_particles=int(n_particles),
-                    n_swarms = int(all_settings["n_swarms"]),
-                    global_update = all_settings["global_update"],
-                    global_update_freq = all_settings["global_update_freq"],
-                    inertia_bounds = all_settings["inertia_bounds"],
-                    inertia = inertia,
-                    c1 = all_settings["c1"],
-                    c2 = all_settings["c2"],
-                    limit_velocity = all_settings["limit_velocity"],
-                    vmax = all_settings["vmax"])
 
+        # Create the swarm object and generate initial positions for the particles
+        swarm = su.structure.get_swarm(struct, all_settings)
         external, internal = swarm.get_initial_positions(MDB=dbf)
         external = np.array(external)
         internal = np.array(internal)
         failed = False
 
-        if clear_files:
-            for u in uploaded_files:
-                u.read()
-                try:
-                    os.remove(name)
-                except FileNotFoundError:
-                    name = u.name.replace(" ", "_")
-                    try:
-                        os.remove(name)
-                    except FileNotFoundError:
-                        print("Failed to remove file", name)
+        su.files.remove_uploaded_files(clear_files, uploaded_files)
 
-        gsu.display_info(struct, all_settings, minimiser_settings,
+        su.display_info(struct, all_settings, minimiser_settings,
                                                     pawley_program)
 
         st.write("")
         st.write("")
         st.markdown("**Progress**")
         if all_settings["find_lr"]:
-            all_settings, minimiser_settings, failed = gsu.find_learning_rate(
+            all_settings, minimiser_settings, failed = su.structure.find_learning_rate(
                                                             all_settings,
                                                             minimiser_settings,
                                                             struct,
@@ -266,46 +111,29 @@ elif function == "GALLOP":
 
         if not failed:
             # Now dump all of the settings used to a JSON so it can be inspected
-            # or read in at a later stage.
+            # or read in at a later stage. This will be included with the zip
+            # that the user downloads to get their CIFs.
             settings_file = struct.name+"_GALLOP_Settings.json"
             with open(os.path.join(os.getcwd(),settings_file), "w") as f:
                 json.dump(all_settings, f, indent=4)
             f.close()
+
+            # Outer loop over the number of independent runs requested
             nruns = int(all_settings["n_GALLOP_runs"])
             for run in range(nruns):
                 if run > 0:
-
-                    # New swarm and starting positions
-                    swarm = optim.swarm.Swarm(
-                        Structure = struct,
-                        n_particles=int(n_particles),
-                        n_swarms = int(all_settings["n_swarms"]),
-                        global_update = all_settings["global_update"],
-                        global_update_freq = all_settings["global_update_freq"],
-                        inertia_bounds = all_settings["inertia_bounds"],
-                        inertia = inertia,
-                        c1 = all_settings["c1"],
-                        c2 = all_settings["c2"],
-                        limit_velocity = all_settings["limit_velocity"],
-                        vmax = all_settings["vmax"])
-
+                    # New swarm and starting positions for each independent run
+                    swarm = su.structure.get_swarm(struct, all_settings)
                     external, internal = swarm.get_initial_positions(MDB=dbf)
                     external = np.array(external)
                     internal = np.array(internal)
                 st.write("")
                 result_info = []
                 start_time = time.time()
-                run_placeholder = st.empty()
-                iter_placeholder = st.empty()
+                run_placeholder = st.empty() # Which run is currently active
+                iter_placeholder = st.empty() # Which iteration of run N
                 progress_bar_placeholder = st.empty()
-                structure_plot_placeholder = st.empty()
-                if struct.source.lower() == "dash":
-                    profile_plot_placeholder = st.empty()
                 result_placeholder = st.empty()
-
-                now = datetime.datetime.now()
-                current_time = str(now.strftime("%H-%M"))
-
                 lr = minimiser_settings["learning_rate"]
 
                 GPU_split = all_settings["particle_division"]
@@ -317,35 +145,18 @@ elif function == "GALLOP":
                     pool = mp.Pool(processes = len(GPU_split))
 
                 with run_placeholder:
-                    st.write(f"Run {run+1} of {nruns}...")
-                zipname = f'{struct.name}_run_{run+1}_{current_time}_\
-                        {all_settings["n_swarms"]}_swarms_\
-                        {all_settings["swarm_size"]}_particles_\
-                        {all_settings["optim"]}.zip'
-                zipname = zipname.replace(" ","")
-                if not os.path.exists("GALLOP_results"):
-                    os.mkdir("GALLOP_results")
+                    if run+1 == nruns:
+                        st.write(f"Run {run+1} of {nruns}.")
+                    else:
+                        st.write(f"Run {run+1} of {nruns}...")
 
-                date = datetime.date.today().strftime("%Y-%b-%d")
-                if not os.path.exists(os.path.join("GALLOP_results", date)):
-                    os.mkdir(os.path.join("GALLOP_results", date))
-                zipname = os.path.join("GALLOP_results",date,zipname)
+                zipname, filename = su.files.get_zipname(struct, all_settings, run)
 
-
+                # Inner loop over GALLOP iterations
                 for i in range(int(all_settings["n_GALLOP_iters"])):
-                    itertext = "GALLOP iteration " + str(i+1)
-                    if ((i+1)%all_settings["global_update_freq"] == 0
-                            and i != 0 and all_settings["global_update"]):
-                        itertext += " Global update after this iter"
-                    if ((i+1)==all_settings["shadow_iters"] and
-                                                all_settings["torsion_shadowing"]):
-                        itertext += " Removing torsion shadowing after this iter"
-                    if all_settings["randomise_worst"]:
-                        if (i+1) % all_settings["randomise_freq"] == 0:
-                            pcnt = all_settings["randomise_percentage"]
-                            itertext += f" Randomising worst {pcnt} % of particles"
-
+                    itertext = su.get_itertext(i, all_settings)
                     iter_placeholder.text(itertext)
+                    # Run the local optimisation component of GALLOP
                     with progress_bar_placeholder:
                         try:
                             if (GPU_split is not None and n_GPUs >= len(GPU_split)):
@@ -380,130 +191,53 @@ elif function == "GALLOP":
                     result_info_df = pd.DataFrame(result_info, columns=["best chi2",
                                                                     "time / min"])
                     result_info_df.index = np.arange(1, len(result_info_df) + 1)
-                    with structure_plot_placeholder:
-                        hide_H = True
-                        with st.expander(label="Show structure", expanded=False):
-                            html = gsu.show_structure(result, struct, all_settings,
-                                                                hide_H=hide_H)
-                            #st.components.v1.html(open(
-                            ##    f'viz_{result["GALLOP Iter"]+1}.html', 'r').read(),
-                            #                        width=600, height=400)
-                            st.components.v1.html(html, width=600, height=400)
-                            if hide_H:
-                                st.write(f"Iteration {i+1}. H hidden for clarity")
-                            else:
-                                st.write(f"Iteration {i+1}")
 
-                    if struct.source.lower() == "dash":
-                        with profile_plot_placeholder:
-                            with st.expander(label="Show profile", expanded=False):
-                                if struct.ignore_H_atoms:
-                                    st.write("Stats with H-atoms included:")
-                                st.write("$\\chi^{2}_{int}$ = "+str(
-                                        np.around(result["best_chi_2_with_H"], 3)))
-                                st.write("$\\chi^{2}_{prof}$ = "+str(
-                                                np.around(result["prof_chi_2"], 3)))
-                                ratio = np.around(
-                                    result["prof_chi_2"] / struct.PawleyChiSq, 3)
-                                st.write("$\\frac{\\chi^{2}_{prof}}"
-                                        + "{\\chi^{2}_{Pawley}}$ ="
-                                        + " " + str(ratio))
-
-                                fig, ax = plt.subplots(2, 1, gridspec_kw={
-                                                        'height_ratios': [4, 1]},
-                                                        figsize=(10,8))
-
-                                ax[0].plot(struct.profile[:,0], struct.profile[:,1])
-                                ax[0].plot(struct.profile[:,0], result["calc_profile"])
-                                ax[1].plot(struct.profile[:,0], (struct.profile[:,1]
-                                    - result["calc_profile"])/struct.profile[:,2])
-
-                                #ax[0].set_xlabel('2$\\theta$')
-                                ax[0].title.set_text(f"Iteration {i+1}, "
-                                            +"$\\chi^{2}_{prof}$ = "+str(
-                                            np.around(result["prof_chi_2"], 3)))
-                                ax[0].set_ylabel('Intensity')
-                                ax[0].legend(["Obs", "Calc"])
-                                ax[1].set_xlabel('2$\\theta$')
-                                ax[1].set_ylabel('$\\Delta(I)/\\sigma(I_{obs})$')
-                                st.pyplot(fig)
-
-                    col1, col2 = result_placeholder.columns([2,2])
+                    # Now display some output to the user, including a link to
+                    # download the CIFs
+                    col1, col2 = result_placeholder.columns([1,2])
                     with col1:
-                        # Zip and then delete the cifs, then download the zip
-                        if i == 0 and run == 0:
-                            zipObj = ZipFile(zipname, 'w')
-                            settings_file = struct.name+"_GALLOP_Settings.json"
-                            zipObj.write(settings_file)
-                            os.remove(settings_file)
-
-                        else:
-                            zipObj = ZipFile(zipname, 'a', ZIP_DEFLATED)
-                        if all_settings["animate_structure"]:
-
-                            html = f'plot_iter_{result["GALLOP Iter"]+1}_both_anim.html'
-                            zipObj.write(html)
-                            os.remove(html)
-                            #html = f'viz_{result["GALLOP Iter"]+1}_asym_anim.html'
-                            #zipObj.write(html)
-                            #os.remove(html)
-
-                        for fn in glob.iglob("*_chisqd_*"):
-                            zipObj.write(fn)
-                            os.remove(fn)
-                        zipObj.close()
-                        filename = zipname.split(date)[1].strip("\\").strip("_")
-                        with open(os.path.join(os.getcwd(), zipname), "rb") as f:
-                            file_bytes = f.read()
-                            b64 = base64.b64encode(file_bytes).decode()
-                            href = f'<a href="data:file/zip;base64,{b64}\
-                                    " download=\'{filename}\'>\
-                                    CIFs for run {run+1}</a>'
-                            st.markdown(href, unsafe_allow_html=True)
-                        f.close()
-
+                        # Zip and then delete the cifs, then make a download
+                        # link for the zip file
+                        su.files.get_download_link(run, i, zipname, result,
+                                                all_settings, filename, struct)
                         st.table(result_info_df.iloc[::-1])
                     with col2:
-                        st.write("")
-                        st.write("")
-                        labels = np.ones_like(chi_2)
-                        for j in range(all_settings["n_swarms"]):
-                            begin = j*all_settings["swarm_size"]
-                            end = (j+1)*all_settings["swarm_size"]
-                            labels[begin:end] *= j
-                            labels[begin:end] += 1
-                        chi2_info = pd.DataFrame({
-                            "chi2" : chi_2,
-                            "swarm" : labels
-                        })
-                        alt.data_transformers.disable_max_rows()
+                        swarm_plot, structure_plot, profile_plot = st.tabs([
+                            "Swarms", "View structure", "View Profile"])
+                        # Show the swarms
+                        with swarm_plot:
+                            su.plots.plot_swarms(chi_2, all_settings)
+                        # Display the structure
+                        with structure_plot:
+                            su.plots.plot_structure(result, struct, all_settings, i)
+                        # If using DASH data, plot the diffraction data
+                        with profile_plot:
+                            su.plots.plot_profile(struct, result, i)
 
-                        chart = alt.layer(alt.Chart(chi2_info).mark_tick().encode(
-                            x='chi2:Q',
-                            y='swarm:O'
-                        )).interactive()
-
-                        st.altair_chart(chart)
+                    # Perform the PSO update and get the new starting points
                     external, internal = swarm.update_position(result=result,
                                                                 verbose=False)
 
+                    # Now optionally randomise the worst performing particles if
+                    # requested by the user.
                     if all_settings["randomise_worst"]:
                         if (i+1) % all_settings["randomise_freq"] == 0:
                             pcnt = all_settings["randomise_percentage"] / 100.
                             to_randomise = swarm.best_chi_2 >= np.percentile(
-                                                        swarm.best_chi_2, 100.-pcnt)
+                                                    swarm.best_chi_2, 100.-pcnt)
                             external[to_randomise] = np.random.uniform(-1, 1,
                                             size=external[to_randomise].shape)
                             internal[to_randomise] = np.random.uniform(-np.pi,
                                         np.pi,size=internal[to_randomise].shape)
                             swarm.best_chi_2[to_randomise] = np.inf
                             swarm.velocity[to_randomise] *= 0
-
+                    # If using torsion shadowing, check if the number of assigned
+                    # iterations has passed, and if so, disable shadowing.
                     if ((i+1)==all_settings["shadow_iters"] and
                                                 all_settings["torsion_shadowing"]):
                         minimiser_settings["torsion_shadowing"] = False
-                        # Add a little random noise to the internal DoF as they will
-                        # all be the same. This is roughly +/- 10 deg
+                        # Add a little random noise to the internal DoF as they
+                        # will all be the same. This is roughly +/- 10 deg
                         internal += np.random.uniform(-0.157,0.157,
                                         size=internal.shape)
 

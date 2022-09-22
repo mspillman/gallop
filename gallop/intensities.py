@@ -52,7 +52,7 @@ def intensities_from_full_cell_contents(frac_all, hkl, intensity_calc_prefix_fs,
         centrosymmetric (bool): True if space group is centrosymmetric
 
     Returns:
-        [type]: [description]
+        Tensor: Calculated intensities
     """
     pi = 3.141592653589793
     hxkylz = 2. * pi * torch.einsum("ji,klj->kil", hkl, frac_all)
@@ -253,13 +253,12 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
     elif space_group_number == 15:
         # C2/c
-        # The initial term involving only h and k could be calculated in advance.
         hl = 2 * pi * (torch.einsum("i,jk->jik", hkl[0], asymmetric_frac_coords[:,:,0])
                         + torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
                         + hkl[2].view(1,peaks,1)/4)
         ky = 2 * pi * (torch.einsum("i,jk->jik", hkl[1], asymmetric_frac_coords[:,:,1])
                         - hkl[2].view(1,peaks,1)/4)
-
+        # The initial term involving only h and k could be calculated in advance.
         A = 8 * (((torch.cos((2 * pi * (hkl[0] + hkl[1]))/4))**2).view(1,peaks,1)
                     * torch.cos(hl) * torch.cos(ky))
 
@@ -413,6 +412,28 @@ def calculate_intensities(asymmetric_frac_coords, hkl, intensity_calc_prefix_fs,
 
         A = 8 * chkl * ((chkl * chxky * clz_k) + (chykx * clz_h))
         intensities = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+
+    elif space_group_number == 92:
+        hpk = (hkl[0] + hkl[1])
+        hmk = (hkl[0] - hkl[1])
+        xpy = asymmetric_frac_coords[:,:,0] + asymmetric_frac_coords[:,:,1]
+        xmy = asymmetric_frac_coords[:,:,0] - asymmetric_frac_coords[:,:,1]
+        lz = torch.einsum("i,jk->jik", hkl[2], asymmetric_frac_coords[:,:,2])
+        l2 = (hkl[2]/2).view(1,peaks,1)
+        l4 = (hkl[2]/4).view(1,peaks,1)
+        chk = torch.cos(pi*hpk).view(1,peaks,1)
+        hpkxpy = torch.einsum("i,jk->jik", hpk, xpy)
+        hmkxmy = torch.einsum("i,jk->jik", hmk, xmy)
+        hpkxmy = torch.einsum("i,jk->jik", hpk, xmy)
+        hmkxpy = torch.einsum("i,jk->jik", hmk, xpy)
+
+        A =  4*(torch.cos(pi*hpkxpy)*torch.cos(pi*(hmkxmy-l2))*torch.cos(2*pi*(lz+l4))
+                + chk*torch.cos(pi*(hmkxpy-l2))*torch.cos(pi*hpkxmy)*torch.cos(2*pi*lz))
+        B = -4*(torch.sin(pi*hpkxpy)*torch.sin(pi*(hmkxmy-l2))*torch.sin(2*pi*(lz+l4))
+                - chk*torch.sin(pi*(hmkxpy-l2))*torch.sin(pi*hpkxmy)*torch.sin(2*pi*lz))
+        Asqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,A).sum(dim=2)**2
+        Bsqd = torch.einsum("ij,bij->bij",intensity_calc_prefix_fs_asymmetric,B).sum(dim=2)**2
+        intensities = Asqd + Bsqd
 
     elif space_group_number == 148:
         # R-3

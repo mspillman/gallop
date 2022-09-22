@@ -273,6 +273,39 @@ def find_learning_rate(Structure, external=None, internal=None,
         print("ERROR! Minimiser Settings are needed!")
         return None
 
+def update_learning_rate(i,optimizer,learning_rate,learning_rate_schedule,
+                n_iterations,n_cooldown,b_bounds_1_cycle):
+    if learning_rate_schedule.lower() == "1cycle":
+        lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
+                learning_rate, n_iterations-n_cooldown, n_iterations,
+                **b_bounds_1_cycle)
+    elif learning_rate_schedule.lower() == "sqrt":
+        lr = adjust_lr_1_over_sqrt(optimizer, i, learning_rate)
+    elif learning_rate_schedule.lower() == "constant":
+        lr = learning_rate
+    elif learning_rate_schedule.lower() == "array":
+        try:
+            lr = learning_rate[i]
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+        except IndexError:
+            print("Error in learning rate array")
+            if len(learning_rate) < i:
+                print("Insufficient entries in list, using last value")
+                lr = learning_rate[-1]
+            else:
+                print("Check and try again")
+                exit()
+    else:
+        if i == 0:
+            print("Learning rate scheduler unknown, using 1cycle")
+            learning_rate_schedule="1cycle"
+            lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
+                    learning_rate, n_iterations-n_cooldown, n_iterations)
+        else:
+            print("An error has occurred with lr scheduling")
+    return lr
+
 def minimise(Structure, external=None, internal=None, n_samples=10000,
     n_iterations=500, n_cooldown=100, device=None, dtype=torch.float32,
     n_reflections=None, learning_rate_schedule="1cycle",
@@ -283,7 +316,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     include_dw_factors=True, chi2_solved=None, use_progress_bar=True,
     save_CIF=True, streamlit=False, use_restraints=False,
     restraint_weight_type="min_chi2", include_PO=False, PO_axis=(0, 0, 1),
-    notebook=False):
+    notebook=False, profile=False, step=1):
     """
     Main minimiser function used by GALLOP. Take a set of input external and
     internal degrees of freedom (as numpy arrays) together with the observed
@@ -424,6 +457,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             March-Dollase PO correction. Defaults to (0, 0, 1).
         notebook (bool, optional): If the code is running in a Jupyter notebook,
             use the tqdm notebook progress bars instead. Defaults to False.
+        profile (bool, optional): If set to True, the profile chisquared will be
+            used instead of intensity chisquared. Defaults to False.
+        step (int, optional): If using profile chisquared, step is the step size
+            of points to include in the calculation. 1 uses the full profile, 2
+            would use every other point, 3 every third point etc. Defaults to 1.
 
     Returns:
         dictionary: A dictionary containing the optimised external and internal
@@ -443,6 +481,9 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         betas = [0.9,0.9]
     if streamlit:
         import streamlit as st
+    trajectories = []
+    gradients = []
+    losses = []
 
     if torsion_shadowing:
         # Only pay attention to the first block of torsions accounting for Z'>1.
@@ -464,11 +505,20 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             for i in range(Z_prime-1):
                 for j in range(2**i):
                     t_permutations[j+(2**i)::2**(i+1),-i-1] *= -1
-
         t_permutations = torch.from_numpy(t_permutations).type(dtype).to(device)
         internal = internal[:,:int(internal.shape[1] / Z_prime)]
 
+    if use_restraints:
+        restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
+                                                            dtype, device)
 
+    if profile:
+        profile_tensors = tensor_prep.get_profile_tensors(Structure, step,
+                                                            dtype, device)
+    if include_PO:
+        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
+                            n_reflections, tensors["zm"]["external"].shape[0],
+                            device, dtype)
 
     # Load the tensors and other parameters needed
     tensors = tensor_prep.get_all_required_tensors(
@@ -476,15 +526,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                                 n_samples=n_samples, device=device, dtype=dtype,
                                 n_reflections=n_reflections, verbose=verbose,
                                 include_dw_factors=include_dw_factors)
-    trajectories = []
-    gradients = []
-    losses = []
-
-
-    if use_restraints:
-        restraint_tensors = tensor_prep.get_restraint_tensors(Structure,
-                                                            dtype, device)
-
 
     # Initialize the optimizer
     if isinstance(optimizer, str):
@@ -529,9 +570,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                     param_group['lr'] = learning_rate
 
     if include_PO:
-        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
-                            n_reflections, tensors["zm"]["external"].shape[0],
-                            device, dtype)
         optimizer.add_param_group({"params" : [factor]})
 
     if start_time is None:
@@ -562,35 +600,8 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         # Zero out gradient, else they will accumulate between iterations
         optimizer.zero_grad()
 
-        if learning_rate_schedule.lower() == "1cycle":
-            lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
-                    learning_rate, n_iterations-n_cooldown, n_iterations,
-                    **b_bounds_1_cycle)
-        elif learning_rate_schedule.lower() == "sqrt":
-            lr = adjust_lr_1_over_sqrt(optimizer, i, learning_rate)
-        elif learning_rate_schedule.lower() == "constant":
-            lr = learning_rate
-        elif learning_rate_schedule.lower() == "array":
-            try:
-                lr = learning_rate[i]
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = lr
-            except IndexError:
-                print("Error in learning rate array")
-                if len(learning_rate) < i:
-                    print("Insufficient entries in list, using last value")
-                    lr = learning_rate[-1]
-                else:
-                    print("Check and try again")
-                    exit()
-        else:
-            if i == 0:
-                print("Learning rate scheduler unknown, using 1cycle")
-                learning_rate_schedule="1cycle"
-                lr = adjust_lr_1_cycle(optimizer, i, learning_rate/10,
-                        learning_rate, n_iterations-n_cooldown, n_iterations)
-            else:
-                print("An error has occurred with lr scheduling")
+        lr = update_learning_rate(i,optimizer,learning_rate,learning_rate_schedule,
+                n_iterations,n_cooldown,b_bounds_1_cycle)
 
         # Forward pass - this gets a tensor of shape (n_samples, 1) with a
         # chi_2 value for each set of external/internal DoFs.
@@ -599,22 +610,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 internal = tensors["zm"]["internal"]
                 all_tors = torch.einsum("ij,ik->ikj",internal,t_permutations
                         ).reshape(internal.shape[0], internal.shape[1]*Z_prime)
-
+                zm_tensors = {}
+                zm_tensors.update(tensors["zm"])
+                zm_tensors["internal"] = all_tors
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
-                    tensors["zm"]["external"],
-                    all_tors,
-                    tensors["zm"]["position"],
-                    tensors["zm"]["rotation"],
-                    tensors["zm"]["torsion"],
-                    tensors["zm"]["initial_D2"],
-                    tensors["zm"]["zmatrices_degrees_of_freedom"],
-                    tensors["zm"]["bond_connection"],
-                    tensors["zm"]["angle_connection"],
-                    tensors["zm"]["torsion_connection"],
-                    tensors["zm"]["torsion_refinable_indices"],
-                    tensors["zm"]["lattice_inv_matrix"],
-                    tensors["zm"]["init_cart_coords"]
-                    )
+                                                                **zm_tensors)
             else:
                 asymmetric_frac_coords = zm_to_cart.get_asymmetric_coords(
                                                             **tensors["zm"])
@@ -625,13 +625,22 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 corrected_intensities = intensities.apply_MD_PO_correction(
                                                 calculated_intensities,
                                                 cosP, sinP, factor)
-                chi_2 = chi2.calc_chisqd(corrected_intensities,
+                if profile:
+                    chi_2 = chi2.calc_prof_chisqd(corrected_intensities, **profile_tensors)
+                else:
+                    chi_2 = chi2.calc_int_chisqd(corrected_intensities,
                                         **tensors["chisqd_tensors"])
             else:
-                chi_2 = chi2.calc_chisqd(calculated_intensities,
+                if profile:
+                    chi_2 = chi2.calc_prof_chisqd(calculated_intensities, **profile_tensors)
+                else:
+                    chi_2 = chi2.calc_int_chisqd(calculated_intensities,
                                         **tensors["chisqd_tensors"])
         else:
-            chi_2 = chi2.get_chi_2(**tensors)
+            if profile:
+                chi_2 = chi2.get_chi_2(**tensors, profile=profile_tensors)
+            else:
+                chi_2 = chi2.get_chi_2(**tensors)
 
         if use_restraints:
             restraint_penalty = restraints.get_restraint_penalties(
@@ -706,7 +715,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
             #with col2:
             if i % print_every == 0 or i == 1:
                 with chi2_result:
-                    st.write(str(np.around(chi_2.min().item(), 3)))
+                    st.write(str(chi_2.min().item())[:6])
     result = {
             "external"     : tensors["zm"]["external"].detach().cpu().numpy(),
             "internal"     : tensors["zm"]["internal"].detach().cpu().numpy(),
@@ -720,6 +729,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         #torsions = np.tile(torsions, (1,Z_prime))
         #result["internal"] = torsions
         result["internal"] = all_tors.detach().cpu().numpy()
+
 
     # Now calculate the intensities with H-atoms included and use them to get a
     # profile chi2 estimate. If Structure.ignore_H_atoms is True, also calculate
@@ -754,7 +764,7 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
                 factor[best][0].cpu().reshape(1,1))
 
     if ignore_H_setting:
-        chi_2_H = chi2.calc_chisqd(best_intensities,
+        chi_2_H = chi2.calc_int_chisqd(best_intensities,
                                             **best_tensors["chisqd_tensors"])
 
         result["best_chi_2_with_H"] = chi_2_H.detach().cpu().numpy()[0]
@@ -786,13 +796,25 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if save_grad:
         result["gradients"] = gradients
 
+    if save_CIF:
+        files.save_CIF_of_best_result(Structure, result, start_time,
+                                        n_reflections)
+    # Now delete tensors to clear GPU memory for the next iteration
     if include_PO:
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
         del factor
+        del cosP
+        del sinP
 
-    if save_CIF:
-        files.save_CIF_of_best_result(Structure, result, start_time,
-                                        n_reflections)
+    if torsion_shadowing:
+        del t_permutations
+
+    if use_restraints:
+        del restraint_tensors
+
+    if profile:
+        del profile_tensors
+
     del tensors
     return result

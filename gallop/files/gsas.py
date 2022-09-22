@@ -66,7 +66,7 @@ def get_data_from_GSAS_gpx(filename, percentage_cutoff_inv_cov=20):
     data["intensities"] = intensities
     data["dspacing"] = dspacing
     data["inverse_covariance_matrix"] = inverse_covariance_matrix
-    data["lattice"] = pmg.Lattice.from_parameters(cell[0], cell[1], cell[2],
+    data["lattice"] = pmg.core.Lattice.from_parameters(cell[0], cell[1], cell[2],
                                                     cell[3], cell[4], cell[5])
     data["space_group"] = pmg.symmetry.groups.SpaceGroup(space_group)
     data["sg_number"] = int(data["space_group"].int_number)
