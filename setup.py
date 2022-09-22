@@ -13,7 +13,7 @@ setup(
                             'gallop/user_settings/Default.json',
                             'gallop/atomic_scattering_params.json']},
     include_package_data=True,
-    scripts=['gallop_streamlit.py', 'gallop_streamlit_utils.py', 'gallop.bat'],
+    scripts=['gallop_streamlit.py', 'gallop.bat'],
     install_requires=['pymatgen',
                         'numpy',
                         'torch',
