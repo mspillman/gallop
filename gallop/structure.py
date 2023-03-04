@@ -14,6 +14,38 @@ from pymatgen.symmetry import groups
 import gallop.z_matrix as z_matrix
 import gallop.files as files
 
+
+atomic_numbers = {
+    1 : "H", 2 : "He", 3 : "Li", 4 : "Be", 5 : "B",
+    6 : "C", 7 : "N", 8 : "O", 9 : "F", 10 : "Ne",
+    11 : "Na", 12 : "Mg", 13 : "Al", 14 : "Si", 15 : "P",
+    16 : "S", 17 : "Cl", 18 : "Ar", 19 : "K", 20 : "Ca",
+    21 : "Sc", 22 : "Ti", 23 : "V", 24 : "Cr", 25 : "Mn",
+    26 : "Fe", 27 : "Co", 28 : "Ni", 29 : "Cu",
+    30 : "Zn", 31 : "Ga", 32 : "Ge", 33 : "As",
+    34 : "Se", 35 : "Br", 36 : "Kr", 37 : "Rb",
+    38 : "Sr", 39 : "Y", 40 : "Zr", 41 : "Nb", 42 : "Mo",
+    43 : "Tc", 44 : "Ru", 45 : "Rh", 46 : "Pd",
+    47 : "Ag", 48 : "Cd", 49 : "In", 50 : "Sn",
+    51 : "Sb", 52 : "Te", 53 : "I", 54 : "Xe", 55 : "Cs",
+    56 : "Ba", 57 : "La", 58 : "Ce", 59 : "Pr",
+    60 : "Nd", 61 : "Pm", 62 : "Sm", 63 : "Eu",
+    64 : "Gd", 65 : "Tb", 66 : "Dy", 67 : "Ho",
+    68 : "Er", 69 : "Tm", 70 : "Yb", 71 : "Lu",
+    72 : "Hf", 73 : "Ta", 74 : "W", 75 : "Re", 76 : "Os",
+    77 : "Ir", 78 : "Pt", 79 : "Au", 80 : "Hg",
+    81 : "Tl", 82 : "Pb", 83 : "Bi", 84 : "Po",
+    85 : "At", 86 : "Rn", 87 : "Fr", 88 : "Ra",
+    89 : "Ac", 90 : "Th", 91 : "Pa", 92 : "U", 93 : "Np",
+    94 : "Pu", 95 : "Am", 96 : "Cm", 97 : "Bk",
+    98 : "Cf", 99 : "Es", 100 : "Fm", 101 : "Md",
+    102 : "No", 103 : "Lr", 104 : "Rf", 105 : "Db",
+    106 : "Sg", 107 : "Bh", 108 : "Hs", 109 : "Mt",
+    110 : "Ds", 111 : "Rg", 112 : "Cn", 113 : "Nh",
+    114 : "Fl", 115 : "Mc", 116 : "Lv", 117 : "Ts",
+    118 : "Og"
+    }
+
 class Structure(object):
     """
     The main class used in GALLOP to hold all of the information
@@ -39,7 +71,8 @@ class Structure(object):
 
     """
     def __init__(self, name="Gallop_structure", ignore_H_atoms=True,
-                    absorb_H_Z_increase=False, absorb_H_occu_increase=False):
+                    absorb_H_Z_increase=False, absorb_H_occu_increase=False,
+                    radiation="X-ray"):
         """
         Args:
             name (str, optional): The root name to be used for
@@ -59,6 +92,9 @@ class Structure(object):
                 increasing the occupancy of the non-H atoms by
                 a factor of (1 + n_H_connected_expanded)/non_H(Z).
                 Defaults to False.
+            radiation (string, optional): The type of radiation used to collect
+                the diffraction data. Can be one of X-ray, electron or neutron.
+                Defaults to X-ray
         """
         self.name = name
         self.ignore_H_atoms = ignore_H_atoms
@@ -66,6 +102,7 @@ class Structure(object):
         self.zmatrices = []
         self.absorb_H_Z_increase = absorb_H_Z_increase
         self.absorb_H_occu_increase = absorb_H_occu_increase
+        self.radiation = radiation.lower()
         self.temperature = None
         self.original_sg_number = None
         self.total_dof_calculated = False
@@ -285,6 +322,161 @@ class Structure(object):
             affine_matrices.append(op.affine_matrix)
         return np.array(affine_matrices)
 
+    def get_expanded(self, just_asymmetric, fractional_coords, all_atoms_elements,
+                    all_occus, all_atoms_n_H_connected, from_cif):
+        """
+        Take the coordinates etc, and expand out for all atoms in the unit cell,
+        assuming that only the asymmetric unit information has been provided.
+        Used in the intensity prefix function.
+        """
+        if not just_asymmetric:
+            # Apply symmetry of space group to locate all atoms
+            # within the unit cell. This is a dummy structure,
+            # and the purpose is only to extract the atomic
+            # scattering parameters etc, which are independent
+            # of position in the unit cell.
+            species_expanded = []
+            fractional_expanded = []
+            n_H_connected_expanded = []
+            occus_expanded = []
+            xyzw = np.vstack((fractional_coords.T, np.ones((1,
+                                fractional_coords.shape[0]))))
+            for am in self.affine_matrices:
+                expanded = np.array(np.dot(am, xyzw).T)
+                fractional_expanded.append(expanded[:,:3])
+                species_expanded.append(all_atoms_elements)
+                occus_expanded.append(all_occus)
+                n_H_connected_expanded.append(all_atoms_n_H_connected)
+            species_expanded = np.array(species_expanded).ravel()
+            fractional_expanded = np.vstack(fractional_expanded)
+            n_H_connected_expanded = np.hstack(n_H_connected_expanded)
+            occus_expanded = np.hstack(occus_expanded)
+        else:
+            species_expanded = all_atoms_elements
+            fractional_expanded = fractional_coords
+            occus_expanded = all_occus
+            if not from_cif:
+                n_H_connected_expanded = all_atoms_n_H_connected
+
+        species_occus_expanded = []
+        for sp_oc in zip(species_expanded, occus_expanded):
+            species_occus_expanded.append({sp_oc[0] : sp_oc[1]})
+
+        return fractional_expanded, n_H_connected_expanded, species_occus_expanded
+
+    def get_coords_occus_elements(self, from_cif, just_asymmetric):
+        """
+        Get the atoms from each of the Z-matrices or CIF for use in the intensity
+        prefix function.
+        """
+        if not from_cif:
+            all_atoms_coords = []
+            all_atoms_elements = []
+            all_atoms_n_H_connected = []
+            all_occus = []
+            for zmat in self.zmatrices:
+                if self.ignore_H_atoms:
+                    all_atoms_coords.append(
+                        zmat.initial_cartesian_no_H)
+                    all_atoms_elements.append(
+                        zmat.elements_no_H)
+                    all_atoms_n_H_connected.append(
+                        zmat.n_H_connected)
+                    all_occus.append(zmat.occus_no_H)
+                else:
+                    all_atoms_coords.append(zmat.initial_cartesian)
+                    all_atoms_elements.append(zmat.elements)
+                    all_occus.append(zmat.occus)
+            all_atoms_coords = np.vstack(all_atoms_coords)
+            all_atoms_elements = np.hstack(all_atoms_elements)
+            all_occus = np.hstack(all_occus)
+            if self.ignore_H_atoms:
+                all_atoms_n_H_connected = np.hstack(all_atoms_n_H_connected)
+            else:
+                all_atoms_n_H_connected = np.array(all_atoms_n_H_connected)
+            fractional_coords = np.dot(all_atoms_coords,
+                                                    self.lattice.inv_matrix)
+        else:
+            if self.ignore_H_atoms:
+                fractional_coords = self.cif_frac_coords_no_H
+                all_atoms_elements = self.cif_species_no_H
+            else:
+                fractional_coords = self.cif_frac_coords
+                all_atoms_elements = self.cif_species
+            just_asymmetric = True
+        return all_atoms_coords, all_atoms_elements, all_atoms_n_H_connected, \
+            all_occus, fractional_coords, just_asymmetric
+
+    def get_coeffs_dwfactors_occus(self, dummy_structure, debye_waller_factors, n_H_connected_expanded, from_cif, just_asymmetric):
+        """_summary_
+
+        Args:
+            dummy_structure (_type_): _description_
+            debye_waller_factors (_type_): _description_
+            n_H_connected_expanded (_type_): _description_
+            from_cif (_type_): _description_
+            just_asymmetric (_type_): _description_
+            radiation (_type_): _description_
+
+        Raises:
+            ValueError: _description_
+        """
+        if "neutron" in self.radiation:
+            scattering_factor_file = os.path.join(os.path.dirname(__file__),
+                                    "neutron_scattering_length.json")
+        else:
+            scattering_factor_file = os.path.join(os.path.dirname(__file__),
+                                    "atomic_scattering_params.json")
+        with open(scattering_factor_file) as f:
+                    ATOMIC_SCATTERING_PARAMS = json.load(f)
+        f.close()
+
+        zs = []
+        coeffs = []
+        occus = []
+        dwfactors = []
+
+        for i, site in enumerate(dummy_structure):
+            for sp in site.species:
+                if ((not from_cif) and self.ignore_H_atoms \
+                        and self.absorb_H_Z_increase
+                        and "neutron" not in self.radiation):
+                    zs.append(sp.Z+n_H_connected_expanded[i])
+                else:
+                    zs.append(sp.Z)
+                try:
+                    if ((not from_cif)
+                        and self.ignore_H_atoms
+                        and self.absorb_H_Z_increase
+                        and "neutron" not in self.radiation):
+                        new_Z = sp.Z+n_H_connected_expanded[i]
+                        c = ATOMIC_SCATTERING_PARAMS[atomic_numbers[new_Z]]
+                    else:
+                        c = ATOMIC_SCATTERING_PARAMS[sp.symbol]
+                except KeyError as no_key:
+                    raise ValueError("Unable to calculate intensity \
+                                    calculation prefix arrays"
+                                    "there are no scattering coefficients\
+                                    for:" " %s." % sp.symbol) from no_key
+                if "neutron" in self.radiation:
+                    coeffs.append([c])
+                else:
+                    coeffs.append(c)
+                dwfactors.append(debye_waller_factors.get(sp.symbol, 0))
+            occus.append(site.species.get(site.species.elements[0]))
+        zs = np.array(zs)
+        coeffs = np.array(coeffs)
+        occus = np.array(occus)
+        dwfactors = np.array(dwfactors)
+        if from_cif:
+            self.cif_dwfactors = dwfactors
+        else:
+            if just_asymmetric:
+                self.dwfactors_asymmetric = dwfactors
+            else:
+                self.dwfactors = dwfactors
+        return zs, coeffs, occus, dwfactors
+
     def generate_intensity_calculation_prefix(self,
                                             debye_waller_factors=None,
                                             just_asymmetric=False,
@@ -309,159 +501,27 @@ class Structure(object):
         if len(self.zmatrices) == 0 and not from_cif:
             print("No Z-matrices have been added!")
         else:
-            if not from_cif:
-                all_atoms_coords = []
-                all_atoms_elements = []
-                all_atoms_n_H_connected = []
-                all_occus = []
-                for zmat in self.zmatrices:
-                    if self.ignore_H_atoms:
-                        all_atoms_coords.append(
-                            zmat.initial_cartesian_no_H)
-                        all_atoms_elements.append(
-                            zmat.elements_no_H)
-                        all_atoms_n_H_connected.append(
-                            zmat.n_H_connected)
-                        all_occus.append(zmat.occus_no_H)
-                    else:
-                        all_atoms_coords.append(zmat.initial_cartesian)
-                        all_atoms_elements.append(zmat.elements)
-                        all_occus.append(zmat.occus)
+            all_atoms_coords, all_atoms_elements, all_atoms_n_H_connected, \
+            all_occus, fractional_coords, just_asymmetric \
+                = self.get_coords_occus_elements(from_cif, just_asymmetric)
 
-                all_atoms_coords = np.vstack(all_atoms_coords)
-                all_atoms_elements = np.hstack(all_atoms_elements)
-                all_occus = np.hstack(all_occus)
-                if self.ignore_H_atoms:
-                    all_atoms_n_H_connected = np.hstack(all_atoms_n_H_connected)
-                else:
-                    all_atoms_n_H_connected = np.array(all_atoms_n_H_connected)
 
-                fractional_coords = np.dot(all_atoms_coords,
-                                                        self.lattice.inv_matrix)
-            else:
-                if self.ignore_H_atoms:
-                    fractional_coords = self.cif_frac_coords_no_H
-                    all_atoms_elements = self.cif_species_no_H
-                else:
-                    fractional_coords = self.cif_frac_coords
-                    all_atoms_elements = self.cif_species
-                just_asymmetric = True
+            fractional_expanded, n_H_connected_expanded, species_occus_expanded \
+                = self.get_expanded(just_asymmetric, fractional_coords,
+                                    all_atoms_elements, all_occus,
+                                    all_atoms_n_H_connected, from_cif)
 
-            if not just_asymmetric:
-                # Apply symmetry of space group to locate all atoms
-                # within the unit cell. This is a dummy structure,
-                # and the purpose is only to extract the atomic
-                # scattering parameters etc, which are independent
-                # of position in the unit cell.
-                species_expanded = []
-                fractional_expanded = []
-                n_H_connected_expanded = []
-                occus_expanded = []
-                xyzw = np.vstack((fractional_coords.T, np.ones((1,
-                                    fractional_coords.shape[0]))))
-                for am in self.affine_matrices:
-                    expanded = np.array(np.dot(am, xyzw).T)
-                    fractional_expanded.append(expanded[:,:3])
-                    species_expanded.append(all_atoms_elements)
-                    occus_expanded.append(all_occus)
-                    n_H_connected_expanded.append(all_atoms_n_H_connected)
-                species_expanded = np.array(species_expanded).ravel()
-                fractional_expanded = np.vstack(fractional_expanded)
-                n_H_connected_expanded = np.hstack(n_H_connected_expanded)
-                occus_expanded = np.hstack(occus_expanded)
-            else:
-                species_expanded = all_atoms_elements
-                fractional_expanded = fractional_coords
-                occus_expanded = all_occus
-                if not from_cif:
-                    n_H_connected_expanded = all_atoms_n_H_connected
 
-            species_occus_expanded = []
-            for sp_oc in zip(species_expanded, occus_expanded):
-                species_occus_expanded.append({sp_oc[0] : sp_oc[1]})
-            with open(
-                os.path.join(os.path.dirname(__file__),
-                                        "atomic_scattering_params.json")) as f:
-                ATOMIC_SCATTERING_PARAMS = json.load(f)
-            f.close()
-
-            zs = []
-            coeffs = []
-            occus = []
-            dwfactors = []
-            atomic_numbers = {
-                1 : "H", 2 : "He", 3 : "Li", 4 : "Be", 5 : "B",
-                6 : "C", 7 : "N", 8 : "O", 9 : "F", 10 : "Ne",
-                11 : "Na", 12 : "Mg", 13 : "Al", 14 : "Si", 15 : "P",
-                16 : "S", 17 : "Cl", 18 : "Ar", 19 : "K", 20 : "Ca",
-                21 : "Sc", 22 : "Ti", 23 : "V", 24 : "Cr", 25 : "Mn",
-                26 : "Fe", 27 : "Co", 28 : "Ni", 29 : "Cu",
-                30 : "Zn", 31 : "Ga", 32 : "Ge", 33 : "As",
-                34 : "Se", 35 : "Br", 36 : "Kr", 37 : "Rb",
-                38 : "Sr", 39 : "Y", 40 : "Zr", 41 : "Nb", 42 : "Mo",
-                43 : "Tc", 44 : "Ru", 45 : "Rh", 46 : "Pd",
-                47 : "Ag", 48 : "Cd", 49 : "In", 50 : "Sn",
-                51 : "Sb", 52 : "Te", 53 : "I", 54 : "Xe", 55 : "Cs",
-                56 : "Ba", 57 : "La", 58 : "Ce", 59 : "Pr",
-                60 : "Nd", 61 : "Pm", 62 : "Sm", 63 : "Eu",
-                64 : "Gd", 65 : "Tb", 66 : "Dy", 67 : "Ho",
-                68 : "Er", 69 : "Tm", 70 : "Yb", 71 : "Lu",
-                72 : "Hf", 73 : "Ta", 74 : "W", 75 : "Re", 76 : "Os",
-                77 : "Ir", 78 : "Pt", 79 : "Au", 80 : "Hg",
-                81 : "Tl", 82 : "Pb", 83 : "Bi", 84 : "Po",
-                85 : "At", 86 : "Rn", 87 : "Fr", 88 : "Ra",
-                89 : "Ac", 90 : "Th", 91 : "Pa", 92 : "U", 93 : "Np",
-                94 : "Pu", 95 : "Am", 96 : "Cm", 97 : "Bk",
-                98 : "Cf", 99 : "Es", 100 : "Fm", 101 : "Md",
-                102 : "No", 103 : "Lr", 104 : "Rf", 105 : "Db",
-                106 : "Sg", 107 : "Bh", 108 : "Hs", 109 : "Mt",
-                110 : "Ds", 111 : "Rg", 112 : "Cn", 113 : "Nh",
-                114 : "Fl", 115 : "Mc", 116 : "Lv", 117 : "Ts",
-                118 : "Og"
-                }
-
-            # Create a pymatgen Structure object using the dummy atom positions
-            # created earlier
+            # Create a pymatgen Structure object using the atom positions
+            # created earlier. This is just a dummy structure, not used in any
+            # other GALLOP functions or calculations.
             dummy_structure = pmg.core.Structure(lattice=self.lattice,
                                 species=species_occus_expanded,
                                 coords=fractional_expanded)
-            i = 0
-            for site in dummy_structure:
-                for sp in site.species:
-                    if ((not from_cif) and self.ignore_H_atoms \
-                                                and self.absorb_H_Z_increase):
-                        zs.append(sp.Z+n_H_connected_expanded[i])
-                    else:
-                        zs.append(sp.Z)
-                    try:
-                        if ((not from_cif)
-                            and self.ignore_H_atoms
-                            and self.absorb_H_Z_increase):
-                            new_Z = sp.Z+n_H_connected_expanded[i]
-                            c = ATOMIC_SCATTERING_PARAMS[atomic_numbers[new_Z]]
-                        else:
-                            c = ATOMIC_SCATTERING_PARAMS[sp.symbol]
-                    except KeyError as no_key:
-                        raise ValueError("Unable to calculate intensity \
-                                        calculation prefix arrays"
-                                        "there are no scattering coefficients\
-                                        for:" " %s." % sp.symbol) from no_key
-                    coeffs.append(c)
-                    dwfactors.append(debye_waller_factors.get(sp.symbol, 0))
-                occus.append(site.species.get(site.species.elements[0]))
-                i += 1
 
-            zs = np.array(zs)
-            coeffs = np.array(coeffs)
-            occus = np.array(occus)
-            dwfactors = np.array(dwfactors)
-            if from_cif:
-                self.cif_dwfactors = dwfactors
-            else:
-                if just_asymmetric:
-                    self.dwfactors_asymmetric = dwfactors
-                else:
-                    self.dwfactors = dwfactors
+            zs, coeffs, occus, dwfactors = self.get_coeffs_dwfactors_occus(
+                dummy_structure, debye_waller_factors, n_H_connected_expanded,
+                from_cif, just_asymmetric)
 
             g_hkl = np.sqrt(np.sum(np.dot(self.hkl,
                 self.lattice.reciprocal_lattice_crystallographic.matrix)**2,
@@ -473,13 +533,27 @@ class Structure(object):
             # s = g_hkl / 2
             s2 = (g_hkl / 2)**2
 
-            fs = []
             dw_correction = []
             for x in s2:
-                fs.append(zs - 41.78214 * x * np.sum(coeffs[:, :, 0] * \
-                                        np.exp(-coeffs[:, :, 1] * x), axis=1))
                 dw_correction.append(np.exp(-1*dwfactors * x))
-            fs = np.array(fs)
+            if "neutron" in self.radiation:
+                fs = np.tile(coeffs, (1,s2.shape[0])).T
+            else:
+                # First get the X-ray scattering factors
+                fs = []
+                for x in s2:
+                    fs.append(zs - 41.78214 * x * np.sum(coeffs[:, :, 0] * \
+                                        np.exp(-coeffs[:, :, 1] * x), axis=1))
+                fs = np.array(fs)
+                if "electron" in self.radiation:
+                    # Now convert the X-ray scattering factors into electron
+                    # scattering factors using the Mott-Bethe formula.
+                    # See pymatgen documentation here for the implementation which
+                    # inspired this:
+                    # https://pymatgen.org/pymatgen.analysis.diffraction.tem.html
+                    prefactor = 0.023934
+                    electron_fs = prefactor * (zs.reshape(1,-1) - fs) / s2.reshape(-1,1)
+                    fs = electron_fs
             dw_correction = np.array(dw_correction).astype(float)
             self.fs = fs
             prefix = np.empty_like(fs)

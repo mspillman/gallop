@@ -50,7 +50,6 @@ def get_shelx_data(filename, hklfile):
     data["original_sg_number"] = data["sg_number"]
     data["wavelength"] = wavelength
 
-
     d_hkl = 1/np.sqrt(np.sum(np.dot(hkl,
         data["lattice"].reciprocal_lattice_crystallographic.matrix)**2, axis=1))
     d_hkl_sort = np.argsort(-1*d_hkl) # Get descending order for d-spacing
@@ -98,7 +97,7 @@ def get_data_from_cif(filename):
                     be = float(line[1].split("(")[0])
                 if "angle_gamma" in line[0]:
                     ga = float(line[1].split("(")[0])
-                if "Int_Tables_number" in line[0]:
+                if "int_tables_number" in line[0].lower() or "space_group_it_number" in line[0].lower():
                     space_group_number = int(line[1])
                 if "wavelength.wavelength" in line[0] or "wavelength_wavelength" in line[0]:
                     wavelength = float(line[1])
