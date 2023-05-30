@@ -19,7 +19,7 @@ An article describing the approach taken by this code is available from [CrystEn
 
 [_CrystEngComm_, 2021, **23**, 6481 - 6485](https://pubs.rsc.org/en/content/articlelanding/2021/CE/D1CE00978H)
 
-_GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. An introduction to the algorithm can be found in [this blog post](https://mspillman.github.io/blog/gallop/pxrd/python/2021/10/30/Introduction-to-GALLOP.html). We have also published [an article](https://pubs.rsc.org/en/content/articlelanding/2022/ce/d2ce00520d) showing how _GALLOP_ can be used to efficiently solve the conformations of rings. This is also covered in a [blog post](https://mspillman.github.io/blog/gallop/pxrd/python/restraints/2022/05/30/Restraints-for-rings-and-stereochemistry.html).
+_GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. An introduction to the algorithm can be found in [this blog post]([https://mspillman.github.io/blog/gallop/pxrd/python/2021/10/30/Introduction-to-GALLOP.html](https://mspillman.github.io/blog/posts/2021-10-30-introduction-to-gallop.html)). We have also published [an article](https://pubs.rsc.org/en/content/articlelanding/2022/ce/d2ce00520d) showing how _GALLOP_ can be used to efficiently solve the conformations of rings. This is also covered in a [blog post](https://mspillman.github.io/blog/gallop/pxrd/python/restraints/2022/05/30/Restraints-for-rings-and-stereochemistry.html).
 
 This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
 
@@ -45,9 +45,9 @@ You will need a Google/Kaggle account to run the notebooks linked below. These n
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 
-An overview of using the browser interface can be found in [this blog post](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html).
+An overview of using the browser interface can be found in [this blog post]([https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html](https://mspillman.github.io/blog/posts/2021-11-02-solving-structures-with-gallop-browser-interface.html)).
 
-An overview of how to use the Python interface can be found in [this blog post](https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/03/Solving-structures-with-GALLOP-Python-API.html).
+An overview of how to use the Python interface can be found in [this blog post]([https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/03/Solving-structures-with-GALLOP-Python-API.html](https://mspillman.github.io/blog/posts/2021-11-03-solving-structures-with-gallop-python-api.html)).
 
 
 ### **Data preparation**
