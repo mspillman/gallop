@@ -20,6 +20,7 @@ setup(
                         'scipy>=1.7.0',
                         'matplotlib',
                         'torch-optimizer',
+                        'altair<5',
                         'streamlit==1.11.1',
                         'pandas',
                         'altair',
