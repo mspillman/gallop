@@ -12,6 +12,7 @@ requirements:
     - python
   run:
     - python>=3.8*
+    - altair<5
     - streamlit==1.11.1
     - pytorch=1.12.1
     - scipy>=1.7*
