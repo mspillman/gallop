@@ -22,7 +22,7 @@ setup(
                         'torch-optimizer',
                         'streamlit==1.11.1',
                         'pandas',
-                        'altair',
+                        'altair==4',
                         'py3Dmol',
                         'mpld3',
                         ],
