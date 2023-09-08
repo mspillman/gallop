@@ -470,9 +470,9 @@ def get_PO_tensors(Structure, PO_axis, n_reflections, n_samples, device, dtype):
     PO_axis = np.array(PO_axis)
     hkl = Structure.hkl[:n_reflections]
     u = hkl / np.sqrt(np.einsum("kj,kj->k", hkl, np.einsum("ij,kj->ki",
-                Structure.lattice.reciprocal_lattice.matrix,hkl))).reshape(-1,1)
+                Structure.lattice.reciprocal_lattice.metric_tensor,hkl))).reshape(-1,1)
     cosP = np.einsum("ij,j->i", u, np.inner(
-                    Structure.lattice.reciprocal_lattice.matrix, PO_axis))
+                    Structure.lattice.reciprocal_lattice.metric_tensor, PO_axis))
     one_minus_cosPsqd = 1.0-cosP**2
     one_minus_cosPsqd[one_minus_cosPsqd < 0.] *= 0.
     sinP = np.sqrt(one_minus_cosPsqd)
