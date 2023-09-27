@@ -16,7 +16,7 @@ requirements:
     - streamlit==1.11.1
     - pytorch=1.12.1
     - scipy>=1.7*
-    - py3dmol=1.7*
+    - py3dmol>=1.7*
     - torch-optimizer=0.1.0
     - pymatgen
     - cudatoolkit 11.6*
