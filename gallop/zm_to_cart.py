@@ -96,10 +96,10 @@ def get_rotation_matrices(rot):
         Tensor: Tensor with shape (n_samples, 3, 3) containing the rotation
             matrices equivalent to the quaternions
     """
-    a = rot[:,0].reshape(rot.shape[0],1)
-    b = rot[:,1].reshape(rot.shape[0],1)
-    c = rot[:,2].reshape(rot.shape[0],1)
-    d = rot[:,3].reshape(rot.shape[0],1)
+    a = rot[:,0].unsqueeze(1)
+    b = rot[:,1].unsqueeze(1)
+    c = rot[:,2].unsqueeze(1)
+    d = rot[:,3].unsqueeze(1)
 
     row_1_1 = 1 - 2*(c**2 + d**2)
     row_1_2 = 2*(b*c - d*a)
@@ -113,15 +113,10 @@ def get_rotation_matrices(rot):
     row_3_2 = 2*(c*d + b*a)
     row_3_3 = 1 - 2*(b**2 + c**2)
 
-    #R = torch.cat([row_1_1,row_1_2,row_1_3,
-    #                row_2_1,row_2_2,row_2_3,
-    #                row_3_1,row_3_2,row_3_3],dim=1).reshape(rot.shape[0], 3, 3)
-    #R = torch.transpose(R, 2, 1)
-    row_1 = torch.cat((row_1_1,row_1_2,row_1_3), dim=1)
-    row_2 = torch.cat((row_2_1,row_2_2,row_2_3), dim=1)
-    row_3 = torch.cat((row_3_1,row_3_2,row_3_3), dim=1)
-    R = torch.cat((row_1.unsqueeze(2), row_2.unsqueeze(2), row_3.unsqueeze(2)),
-                    dim=2)
+    row_1 = torch.cat((row_1_1, row_1_2, row_1_3), dim=1).unsqueeze(2)
+    row_2 = torch.cat((row_2_1, row_2_2, row_2_3), dim=1).unsqueeze(2)
+    row_3 = torch.cat((row_3_1, row_3_2, row_3_3), dim=1).unsqueeze(2)
+    R = torch.cat((row_1, row_2, row_3), dim=2)
     return R
 
 @torch.jit.script
@@ -151,7 +146,6 @@ def rotate_and_translate(cart_coords, R, translation, lattice_inv_matrix):
     # Translate the sites.
     fractional_coords = rot_cart + translation.view(translation.shape[0], 1, 3)
     return fractional_coords
-
 
 def get_asymmetric_coords(external, internal, position, rotation, torsion,
     initial_D2, zmatrices_degrees_of_freedom, bond_connection, angle_connection,
@@ -254,7 +248,7 @@ def get_asymmetric_coords_from_numpy(Structure, external, internal,
     Returns:
         numpy array: fractional coordinates of the asymmetric unit
     """
-    if n_samples == None:
+    if n_samples is None:
         n_samples = 1
 
     # Load the tensors needed
@@ -398,4 +392,143 @@ def unrolled_module_writer(input_tensors, filename="unrolled.py", usejit=True):
         for line in lines:
             out_file.write(line+"\n")
     out_file.close()
+    return [header] + rotation_matrix + zm_to_cart_lines + lines
+
+
+# Rewritten code using f-strings with ChatGPT
+
+def zm_to_cart_writer(zm_number, samples, atoms, init_D2, bond_connect, angle_connect, torsion_connect, refinable_torsion_indices, usejit=True):
+    lines_D2 = [f"def modify_D2_{zm_number}(tors, D2, refinable_torsion_indices):",
+                f"\tcos_phi = torch.cos(tors)",
+                f"\tsin_phi = torch.sin(tors)",
+                f"\tnew_D2 = D2.clone()",
+                f"\tnew_D2[:, refinable_torsion_indices, 1] = torch.mul(D2[:, refinable_torsion_indices, 1], cos_phi)",
+                f"\tnew_D2[:, refinable_torsion_indices, 2] = torch.mul(D2[:, refinable_torsion_indices, 2], sin_phi)",
+                f"\treturn new_D2"]
+
+    lines_zm = [f"def unroll_zm_to_cart{zm_number}(torsions, init_D2, refinable_torsion_indices):",
+                f"\t# type: (Tensor, Tensor, Tensor) -> Tensor",
+                f"\tD2 = modify_D2_{zm_number}(torsions, init_D2, refinable_torsion_indices)"]
+
+    if usejit:
+        print(f"Using JIT for ZM {zm_number}")
+        lines = [f"@torch.jit.script"] + lines_D2 + [f"@torch.jit.script"] + lines_zm
+    else:
+        lines = lines_D2 + lines_zm
+
+    for i in range(atoms):
+        if i < 3:
+            lines.append(f"\ta{i} = D2[:, {i}, :]")
+        else:
+            lines.append(f"\t# Atom {i}")
+            lines.append(f"\tC{i} = a{bond_connect[i]}")
+            lines.append(f"\tB{i} = a{angle_connect[i]}")
+            lines.append(f"\tA{i} = a{torsion_connect[i]}")
+            lines.append(f"\tc_minus_b{i} = C{i} - B{i}")
+            lines.append(f"\tbc{i} = c_minus_b{i}.div(torch.norm(c_minus_b{i}, dim=-1, keepdim=True))")
+            lines.append(f"\tAB{i} = B{i} - A{i}")
+            lines.append(f"\tn_1{i} = torch.cross(AB{i}, bc{i})")
+            lines.append(f"\tn{i} = n_1{i}.div(torch.norm(n_1{i}, dim=-1, keepdim=True))")
+            lines.append(f"\tn_bc{i} = torch.cross(n{i}, bc{i})")
+            lines.append(f"\tM{i} = torch.stack((bc{i}, n_bc{i}, n{i}), dim=-1)")
+            lines.append(f"\ta{i} = torch.einsum(\"bij,bj->bi\", M{i}, D2[:, {i}]) + C{i}")
+
+    lines.append(f"\treturn torch.stack([a{i} for i in range(atoms)], dim=1)")
+
+    return lines
+
+
+def unrolled_module_writer(input_tensors, filename="unrolled.py", usejit=True):
+    position, rotation, torsion, initial_D2, zmatrices_degrees_of_freedom, bond_connection, angle_connection, torsion_connection, torsion_refinable_indices, init_cart_coords = input_tensors
+    import os
+
+    position = [x.cpu().numpy() for x in position]
+    rotation = [x.cpu().numpy() for x in rotation]
+    torsion = [x.cpu().numpy() for x in torsion]
+    initial_D2 = [x.cpu().numpy() for x in initial_D2]
+    bond_connection = [x.cpu().numpy() for x in bond_connection]
+    angle_connection = [x.cpu().numpy() for x in angle_connection]
+    torsion_connection = [x.cpu().numpy() for x in torsion_connection]
+    torsion_refinable_indices = [x.cpu().numpy() for x in torsion_refinable_indices]
+    init_cart_coords = [x.cpu().numpy() for x in init_cart_coords if not isinstance(x, list)]
+
+    rotation_matrix = [f"def get_rotation_matrices(rot):",
+                      f"\ta = rot[:, 0].reshape(rot.shape[0], 1)",
+                      f"\tb = rot[:, 1].reshape(rot.shape[0], 1)",
+                      f"\tc = rot[:, 2].reshape(rot.shape[0], 1)",
+                      f"\td = rot[:, 3].reshape(rot.shape[0], 1)",
+                      f"\trow_1_1 = 1 - 2 * (c * c + d * d)",
+                      f"\trow_1_2 = 2 * (b * c - d * a)",
+                      f"\trow_1_3 = 2 * (b * d + c * a)",
+                      f"\trow_2_1 = 2 * (b * c + d * a)",
+                      f"\trow_2_2 = 1 - 2 * (b * b + d * d)",
+                      f"\trow_2_3 = 2 * (c * d - b * a)",
+                      f"\trow_3_1 = 2 * (b * d - c * a)",
+                      f"\trow_3_2 = 2 * (c * d + b * a)",
+                      f"\trow_3_3 = 1 - 2 * (b * b + c * c)",
+                      f"\tR = torch.cat([row_1_1, row_1_2, row_1_3, row_2_1, row_2_2, row_2_3, row_3_1, row_3_2, row_3_3], dim=1).reshape(rot.shape[0], 3, 3)",
+                      f"\tR = torch.transpose(R, 2, 1)",
+                      f"\treturn R"]
+
+    if usejit:
+        print("Using JIT for rotation")
+        rotation_matrix = [f"@torch.jit.script"] + rotation_matrix
+
+    header = "import torch\n\n"
+    lines = [f"def get_fractional_coords(external, internal, position, rotation, torsion, initial_D2, torsion_refinable_indices, lattice_inv_matrix, init_cart_coords):",
+             f"\t# type: (Tensor, Tensor, List[Tensor], List[Tensor], List[Tensor], List[Tensor], List[Tensor], Tensor, List[Tensor]) -> Tensor"]
+
+    if usejit:
+        lines = [f"@torch.jit.script"] + lines
+
+    zm_to_cart_lines = []
+
+    for i, zm_dof in enumerate(zmatrices_degrees_of_freedom):
+        lines.append(f"\t# Z-matrix {i}")
+        lines.append(f"\ttranslation{i} = external[:, position[{i}]].reshape(external.shape[0], 1, {len(position[i])})")
+
+        if zm_dof > 7:
+            lines.append(f"\trot_in{i} = external[:, rotation[{i}]]")
+
+  # Quaternions for rotation
+            lines.append(f"\trot{i} = rot_in{i}.div(torch.norm(rot_in{i}, dim=-1, keepdim=True))")  # Normalize quaternions
+            lines.append(f"\tR{i} = get_rotation_matrices(rot{i})")  # Convert quaternions to rotation matrices
+
+            zm_to_cart_lines.extend(zm_to_cart_writer(i, initial_D2[i].shape[0], initial_D2[i].shape[1], initial_D2[i],
+                                                      bond_connection[i], angle_connection[i], torsion_connection[i],
+                                                      torsion_refinable_indices[i], usejit=usejit))
+
+            lines.append(f"\tcart_coords{i} = unroll_zm_to_cart{i}(internal[:, torsion[{i}]], initial_D2[{i}], torsion_refinable_indices[{i}])")
+            lines.append(f"\trot_cart{i} = torch.einsum(\"bjk,bij->bik\", R{i}, cart_coords{i})")
+            lines.append(f"\tfrac_rot_cart{i} = torch.einsum(\"jk,bij->bik\", lattice_inv_matrix, rot_cart{i})")
+            lines.append(f"\tfractional{i} = frac_rot_cart{i} + translation{i}.view(translation{i}.shape[0], 1, 3)")
+
+        elif zm_dof == 7:  # Rigid bodies
+            lines.append(f"\trot_in{i} = external[:, rotation[{i}]]")  # Quaternions for rotation
+            lines.append(f"\trot{i} = rot_in{i}.div(torch.norm(rot_in{i}, dim=-1, keepdim=True))")  # Normalize quaternions
+            lines.append(f"\tR{i} = get_rotation_matrices(rot{i})")  # Convert quaternions to rotation matrices
+            lines.append(f"\tcart_coords{i} = init_cart_coords[{i}]")
+            lines.append(f"\trot_cart{i} = torch.einsum(\"bjk,bij->bik\", R{i}, cart_coords{i})")
+            lines.append(f"\tfrac_rot_cart{i} = torch.einsum(\"jk,bij->bik\", lattice_inv_matrix, rot_cart{i})")
+            lines.append(f"\tfractional{i} = frac_rot_cart{i} + translation{i}.view(translation{i}.shape[0], 1, 3)")
+
+        else:  # Single atoms
+            lines.append(f"\tfractional{i} = translation{i}")
+
+    lines.append(f"\treturn torch.cat([fractional{i} for i in range(len(zmatrices_degrees_of_freedom))], dim=1)")
+
+    if os.path.exists(filename):
+        print("Deleting previous")
+        os.remove(filename)
+
+    with open(filename, "w") as out_file:
+        out_file.write(header)
+        for line in rotation_matrix:
+            out_file.write(line + "\n")
+        for zm_writer in zm_to_cart_lines:
+            for line in zm_writer:
+                out_file.write(line + "\n")
+        for line in lines:
+            out_file.write(line + "\n")
+
     return [header] + rotation_matrix + zm_to_cart_lines + lines
