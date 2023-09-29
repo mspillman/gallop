@@ -209,7 +209,7 @@ def local_settings(all_settings, loaded_values):
                 lr = st.number_input("Learning rate",
                                     min_value=0.000, max_value=None,
                                     value=loaded_values["lr"],
-                                    step=0.01, format=None, key=None)
+                                    step=0.01, format="%.4f", key=None)
                 find_lr_auto_mult = False
                 mult = 1.0
             options = get_options(loaded_values["learning_rate_schedule"],
