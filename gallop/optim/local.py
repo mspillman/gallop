@@ -515,18 +515,19 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if profile:
         profile_tensors = tensor_prep.get_profile_tensors(Structure, step,
                                                             dtype, device)
-    if include_PO:
-        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
-                            n_reflections, tensors["zm"]["external"].shape[0],
-                            device, dtype)
-
+    
     # Load the tensors and other parameters needed
     tensors = tensor_prep.get_all_required_tensors(
                                 Structure, external=external, internal=internal,
                                 n_samples=n_samples, device=device, dtype=dtype,
                                 n_reflections=n_reflections, verbose=verbose,
                                 include_dw_factors=include_dw_factors)
-
+    
+    if include_PO:
+        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
+                            n_reflections, tensors["zm"]["external"].shape[0],
+                            device, dtype)
+    
     # Initialize the optimizer
     if isinstance(optimizer, str):
         if learning_rate_schedule.lower() == "array":
