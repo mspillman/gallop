@@ -787,7 +787,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         result["prof_chi_2"] = profchi2
         result["calc_profile"] = rescale*calc_profile
 
-
     if save_trajectories:
         result["trajectories"] = trajectories
 
@@ -797,10 +796,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if save_grad:
         result["gradients"] = gradients
 
-    if save_CIF:
-        files.save_CIF_of_best_result(Structure, result, start_time,
-                                        n_reflections)
-    # Now delete tensors to clear GPU memory for the next iteration
     if include_PO:
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
@@ -808,6 +803,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         del cosP
         del sinP
 
+    if save_CIF:
+        files.save_CIF_of_best_result(Structure, result, start_time,
+                                        n_reflections)
+
+    # Now delete tensors to clear GPU memory for the next iteration
     if torsion_shadowing:
         del t_permutations
 
