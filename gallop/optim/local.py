@@ -515,17 +515,17 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if profile:
         profile_tensors = tensor_prep.get_profile_tensors(Structure, step,
                                                             dtype, device)
-    if include_PO:
-        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
-                            n_reflections, tensors["zm"]["external"].shape[0],
-                            device, dtype)
-
     # Load the tensors and other parameters needed
     tensors = tensor_prep.get_all_required_tensors(
                                 Structure, external=external, internal=internal,
                                 n_samples=n_samples, device=device, dtype=dtype,
                                 n_reflections=n_reflections, verbose=verbose,
                                 include_dw_factors=include_dw_factors)
+
+    if include_PO:
+        cosP, sinP, factor = tensor_prep.get_PO_tensors(Structure, PO_axis,
+                            n_reflections, tensors["zm"]["external"].shape[0],
+                            device, dtype)
 
     # Initialize the optimizer
     if isinstance(optimizer, str):
@@ -796,10 +796,6 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
     if save_grad:
         result["gradients"] = gradients
 
-    if save_CIF:
-        files.save_CIF_of_best_result(Structure, result, start_time,
-                                        n_reflections)
-    # Now delete tensors to clear GPU memory for the next iteration
     if include_PO:
         result["MD_factor"] = factor.detach().cpu().numpy()**2
         result["PO_axis"] = PO_axis
@@ -807,6 +803,11 @@ def minimise(Structure, external=None, internal=None, n_samples=10000,
         del cosP
         del sinP
 
+    if save_CIF:
+        files.save_CIF_of_best_result(Structure, result, start_time,
+                                        n_reflections)
+
+    # Now delete tensors to clear GPU memory for the next iteration
     if torsion_shadowing:
         del t_permutations
 

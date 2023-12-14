@@ -64,10 +64,10 @@ def zm_to_cart(torsions, init_D2, bond_connect, angle_connect, torsion_connect,
                         description. Shape (n_samples, n_atoms, 3)
     """
     D2 = modify_D2(torsions, init_D2, refinable_torsion_indices)
-    cart_list = torch.zeros_like(D2)
+    cart_list = torch.empty_like(D2)
     cart_list[:,:3,:] = D2[:,:3,:]
-    for i in range(D2.shape[1]-3):
-        i+=3 # torch.jit doesn't work with range(3, atoms)
+    for i in range(3, D2.shape[1]):
+        #i+=3 # torch.jit doesn't work with range(3, atoms)
         C = cart_list[:,bond_connect[i]]
         B = cart_list[:,angle_connect[i]]
         A = cart_list[:,torsion_connect[i]]
