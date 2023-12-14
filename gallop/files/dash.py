@@ -91,7 +91,7 @@ def get_DASH_inverse_covariance_matrix(
             # Populate off diagonal elements
             for corr in off_diag_elements[i]:
                 if float(corr) >= percentage_cutoff_inv_cov:
-                    matrix[i][j] = 0.01*sigma[i]*sigma[j]*float(corr)
+                    matrix[i][j] = 0.01*sigma[i]*sigma[j]*corr
                     matrix[j][i] += matrix[i][j]
                 j+=1
         else:
