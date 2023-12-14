@@ -45,9 +45,9 @@ You will need a Google/Kaggle account to run the notebooks linked below. These n
 
 \* To use the browser interface notebook, you will also need an ngrok authentication key, which can be obtained for free [here](https://ngrok.com/).
 
-An overview of using the browser interface can be found in [this blog post]([https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/02/Solving-structures-with-GALLOP-browser-interface.html](https://mspillman.github.io/blog/posts/2021-11-02-solving-structures-with-gallop-browser-interface.html)).
+An overview of using the browser interface can be found in [this blog post](https://mspillman.github.io/blog/posts/2021-11-02-solving-structures-with-gallop-browser-interface.html).
 
-An overview of how to use the Python interface can be found in [this blog post]([https://mspillman.github.io/blog/gallop/pxrd/python/2021/11/03/Solving-structures-with-GALLOP-Python-API.html](https://mspillman.github.io/blog/posts/2021-11-03-solving-structures-with-gallop-python-api.html)).
+An overview of how to use the Python interface can be found in [this blog post](https://mspillman.github.io/blog/posts/2021-11-03-solving-structures-with-gallop-python-api.html).
 
 
 ### **Data preparation**
