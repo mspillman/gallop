@@ -132,15 +132,15 @@ def read_DASH_hcv(filename, percentage_cutoff_inv_cov=20):
     with open(filename) as in_hcv:
         for line in in_hcv:
             line = list(filter(None,line.strip().split(" ")))
-            hkl.append(line[0:3])
-            I.append(line[3])
-            sigma.append(line[4])
+            hkl.append([int(x) for x in line[0:3]])
+            I.append(float(line[3]))
+            sigma.append(float(line[4]))
             peaknumbers.append(int(line[5]))
-            inverse_covariance_off_diag.append(line[6:])
+            inverse_covariance_off_diag.append([float(x) for x in line[6:]])
     in_hcv.close()
-    hkl = np.array(hkl).astype(int)
-    I = np.array(I).astype(float)
-    sigma = np.array(sigma).astype(float)
+    hkl = np.array(hkl)
+    I = np.array(I)
+    sigma = np.array(sigma)
     peaknumbers = np.array(peaknumbers)
     inverse_covariance = get_DASH_inverse_covariance_matrix(
                                 inverse_covariance_off_diag,
