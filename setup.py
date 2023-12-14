@@ -17,7 +17,7 @@ setup(
     install_requires=['pymatgen==2023.5.10',
                         'numpy==1.24.3',
                         'torch==2.0.0',
-                        'scipy==1.10.1',
+                        'scipy==1.11.2',
                         'matplotlib',
                         'torch-optimizer==0.3.0',
                         'streamlit==1.11.1',
