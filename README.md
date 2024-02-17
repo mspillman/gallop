@@ -21,13 +21,12 @@ An article describing the approach taken by this code is available from [CrystEn
 
 _GALLOP_ is a recently developed hybrid algorithm for crystal structure determination from powder diffraction data (SDPD), which combines fast local optimisation with a particle swarm optimiser. An introduction to the algorithm can be found in [this blog post]([https://mspillman.github.io/blog/gallop/pxrd/python/2021/10/30/Introduction-to-GALLOP.html](https://mspillman.github.io/blog/posts/2021-10-30-introduction-to-gallop.html)). We have also published [an article](https://pubs.rsc.org/en/content/articlelanding/2022/ce/d2ce00520d) showing how _GALLOP_ can be used to efficiently solve the conformations of rings. This is also covered in a [blog post](https://mspillman.github.io/blog/gallop/pxrd/python/restraints/2022/05/30/Restraints-for-rings-and-stereochemistry.html).
 
-This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs) and tensor processing units (TPUs*). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly.
+This repository provides an implementation of _GALLOP_ that is capable of running on graphics processing units (GPUs). The use of hardware accelerators provides significant performance advantages over CPU-based methods, allowing complex crystal structures to be solved rapidly. GALLOP has also been tested on TPUs, though at this point there is no significant advantage, and it entails some additional complexity. If you require TPU acceleration, please contact me for more information.
 
 Other software is required for PXRD data indexing and intensity extraction via Pawley refinement. _GALLOP_ currently accepts as input files produced by [_DASH_](https://github.com/ccdc-opensource/dash), [_GSAS-II_](https://subversion.xray.aps.anl.gov/trac/pyGSAS) and [_TOPAS_](http://www.topas-academic.net/) (experimental). Z-matrices of the molecular fragments of interest are also required, which can be automatically generated in the correct format using _DASH_.
 
 Once all data is prepared, _GALLOP_ can be used via a convenient browser-based GUI or as part of a Python program.
 
-\* instructions coming soon
 
 #### Video showing browser interface in use
 A video showing _GALLOP_ solving CT-DMF2 (42 degrees of freedom) in real time via the _GALLOP_ broswer-based interface is available in this short [YouTube video](https://www.youtube.com/watch?v=n0aovGUS4JU).
