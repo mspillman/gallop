@@ -18,7 +18,7 @@ requirements:
     - scipy>=1.7*
     - py3dmol=1.7*
     - torch-optimizer=0.1.0
-    - pymatgen
+    - pymatgen==2023.12.18
     - cudatoolkit 11.6*
     - mpld3
 
