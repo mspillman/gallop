@@ -1,5 +1,4 @@
 # **_GALLOP_**
-**GPU Accelerated Local Optimisation and Particle Swarm: fast crystal structure determination from powder diffraction data.**
 
 ***Update Jun 2025***
 
@@ -7,6 +6,8 @@
 
 Expect some changes to the installation instructions over the next few days.*
 
+
+**GPU Accelerated Local Optimisation and Particle Swarm: fast crystal structure determination from powder diffraction data.**
 
 This code is very much a work in progress and is likely to have many bugs. If you have comments, suggestions, bugs to report or ideas for improvement or new features, please feel free to submit an issue, contact me directly (markspillman _at_ gmail _dot_ com) or submit a pull request.
 
