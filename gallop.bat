@@ -1,1 +1,0 @@
-streamlit run %~dp0\gallop_streamlit.py
