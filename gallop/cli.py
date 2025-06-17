@@ -6,9 +6,6 @@ from importlib.resources import files
 def main():
     """Launches the Streamlit app from within the package."""
     try:
-        # This is the key change:
-        # It gets a handle to the installed 'gallop' package...
-        # ...and finds the 'gallop_streamlit.py' file inside it.
         script_path = files('gallop').joinpath('gallop_streamlit.py')
 
     except (ModuleNotFoundError, FileNotFoundError):
