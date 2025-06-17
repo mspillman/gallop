@@ -22,7 +22,7 @@ dependencies = [
     "pymatgen>=2025.6.14",
     "scipy>=1.15.3",
     "streamlit>=1.45.1",
-    "torch>=2.7.1",
+    "torch>=2.6.0",
     "torch-optimizer>=0.3.0",
     "tqdm>=4.67.1",
 ]
@@ -44,16 +44,16 @@ gallop = [
 
 
 [[tool.uv.index]]
-name = "pytorch-cu118"
-url = "https://download.pytorch.org/whl/cu118"
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cu118", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 torchvision = [
-  { index = "pytorch-cu118", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 
 [dependency-groups]
