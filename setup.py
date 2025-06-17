@@ -8,10 +8,11 @@ setup(
     author='Mark Spillman',
     author_email='markspillman@gmail.com',
     license='GPLv3',
-    packages=['gallop', 'gallop.optim', 'gallop.files', 'gallop.streamlit_utils', 'gallop.example_data'],
+    packages=['gallop', 'gallop.optim', 'gallop.files', 'gallop.streamlit_utils', 'gallop.example_data', 'gallop.user_settings'],
     package_data={'gallop': ['gallop/example_data/*.*',
                             'gallop/user_settings/Default.json',
-                            'gallop/atomic_scattering_params.json']},
+                            'gallop/atomic_scattering_params.json',
+                            'neutron_scattering_length.json']},
     include_package_data=True,
     scripts=['gallop_streamlit.py', 'gallop.bat'],
 )
