@@ -56,7 +56,7 @@ echo Activating virtual environment and installing packages...
 call "%VENV_DIR%\Scripts\activate.bat"
 
 echo Installing gallop and its dependencies. This might take a few minutes...
-uv pip install git+https://github.com/mspillman/gallop@development
+uv pip install git+https://github.com/mspillman/gallop
 
 if %errorlevel% neq 0 (
     echo ERROR: Installation failed. Please check the errors above.
