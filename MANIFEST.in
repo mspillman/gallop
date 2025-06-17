@@ -1,3 +1,0 @@
-include gallop/user_settings/Default.json
-include gallop/example_data/*
-include gallop/atomic_scattering_params.json
