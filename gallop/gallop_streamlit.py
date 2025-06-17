@@ -12,7 +12,6 @@ import torch
 import streamlit as st
 import numpy as np
 import pandas as pd
-from gallop.optim.local import minimise
 from gallop import streamlit_utils as su
 from gallop import optim
 from gallop import structure
