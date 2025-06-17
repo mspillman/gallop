@@ -8,7 +8,7 @@ setup(
     author='Mark Spillman',
     author_email='markspillman@gmail.com',
     license='GPLv3',
-    packages=['gallop', 'gallop.optim', 'gallop.files'],
+    packages=['gallop', 'gallop.optim', 'gallop.files', 'gallop.streamlit_utils', 'gallop.example_data'],
     package_data={'gallop': ['gallop/example_data/*.*',
                             'gallop/user_settings/Default.json',
                             'gallop/atomic_scattering_params.json']},
