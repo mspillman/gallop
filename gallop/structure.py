@@ -357,6 +357,8 @@ class Structure(object):
             occus_expanded = all_occus
             if not from_cif:
                 n_H_connected_expanded = all_atoms_n_H_connected
+            else:
+                n_H_connected_expanded = None
 
         species_occus_expanded = []
         for sp_oc in zip(species_expanded, occus_expanded):
@@ -404,6 +406,9 @@ class Structure(object):
                 fractional_coords = self.cif_frac_coords
                 all_atoms_elements = self.cif_species
             just_asymmetric = True
+            all_atoms_coords = fractional_coords
+            all_atoms_n_H_connected = None
+            all_occus = np.ones(all_atoms_coords.shape[0])
         return all_atoms_coords, all_atoms_elements, all_atoms_n_H_connected, \
             all_occus, fractional_coords, just_asymmetric
 
