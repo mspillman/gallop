@@ -2,6 +2,7 @@
 **GPU Accelerated Local Optimisation and Particle Swarm: fast crystal structure determination from powder diffraction data.**
 
 ***Update Jun 2025***
+
 *I have been working for a company that did not permit me to make contributions to open-source projects. I have since left that role, and confirmed with my new employer that I am able to contribute to open source projects. As such, I hope to be able to make further updates to _GALLOP_ when time allows, and continue improving this project. Collaboration and other contributions would be very welcome!
 
 Expect some changes to the installation instructions over the next few days.*
