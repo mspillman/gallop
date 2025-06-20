@@ -332,11 +332,13 @@ Older Nvidia GPUs may not work with PyTorch. Your GPU should have a compute capa
 
 The simplest way to get started with _GALLOP_ is to use the [uv package management system](https://docs.astral.sh/uv/getting-started/installation/). Please follow the instructions on the UV website to install it to your machine. You do not need to download and install CUDA separately. You will need approximately 10 GB of disk space available to proceed, and ideally local administrator privileges. Also make sure that you have C++ build tools installed - on Windows, this will be the visual C++ build tools which you can obtain from [here](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
 
-1. Install uv according to the instructions [here](https://docs.astral.sh/uv/getting-started/installation/). It is recommended to install it as an administrator, however, the below may still work in a virtual environment.
-2. Once uv is installed, download the [installer.bat](https://github.com/mspillman/gallop/blob/development/installer.bat) and [run-gallop.bat](https://github.com/mspillman/gallop/blob/development/run-gallop.bat) files to your machine.
-3. Create a folder called "gallop" in a sensible location, e.g. C:\Users\username\gallop and copy the installer.bat and run-gallop.bat files to the new folder.
-4. The first time you want to use gallop, you need to run the installer file. Simply double click the installer.bat file. If this is the first time you have used it on your machine, a Windows defender dialog may appear. To allow the script to run, click "more info" then "Run anyway".
-5. Once the installer has finished running, you can then run gallop by double clicking the run-gallop.py file.
+1. Install uv according to the powershell instructions [here](https://docs.astral.sh/uv/getting-started/installation/).
+2. Install git from [here](https://git-scm.com/downloads/win) (do not use the 'thumbdrive edition').
+3. Once uv and git are installed, download the GALLOP [installer.bat](https://github.com/mspillman/gallop/blob/development/installer.bat) and [run-gallop.bat](https://github.com/mspillman/gallop/blob/development/run-gallop.bat) files to your machine.
+4. Create a folder called "gallop" in a sensible location, e.g. C:\Users\username\gallop and copy the installer.bat and run-gallop.bat files to the new folder.
+5. The first time you want to use gallop, you need to run the installer file. Simply double click the installer.bat file. If this is the first time you have used it on your machine, a Windows defender dialog may appear. To allow the script to run, click "more info" then "Run anyway".
+6. Once the installer has finished running, you can then run gallop by double clicking the run-gallop.py file.
+7. Confirm it works by running one of the example datasets. If GALLOP runs, and it makes use of your GPU (check your system monitor to confirm) then everything should be running smoothly.
 
 **Other environments:**
 
