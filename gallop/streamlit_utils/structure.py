@@ -102,7 +102,6 @@ def get_minimiser_settings(struct, all_settings, use_profile, step):
         PO_axis_split = all_settings["PO_axis"].replace(" ","").split(",")
         PO_axis_split = [int(x) for x in PO_axis_split]
         minimiser_settings["PO_axis"] = PO_axis_split
-
     if all_settings["use_distance_restraints"]:
         if all_settings["distance_restraints"] is not None:
             for r in all_settings["distance_restraints"].keys():

@@ -1,0 +1,62 @@
+# This table is essential for modern tools like uv and pip
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gallop"
+version = "0.1.13" # Single source of truth for the version
+description = "Fast crystal structure determination from powder diffraction data"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "GPL-3.0-only" } # Standard way to specify license
+authors = [
+    { name = "Mark Spillman", email = "markspillman@gmail.com" }
+]
+urls = {"Homepage" = "https://github.com/mspillman/gallop"}
+dependencies = [
+    "altair<5",
+    "mpld3>=0.5.10",
+    "numpy>=2.3.0",
+    "py3dmol>=2.5.0",
+    "pymatgen>=2025.6.14",
+    "scipy>=1.15.3",
+    "streamlit>=1.45.1",
+    "torch>=2.6.0",
+    "torch-optimizer>=0.3.0",
+    "tqdm>=4.67.1",
+]
+
+
+[project.scripts]
+gallop-ui = "gallop.cli:main"
+
+[tool.setuptools]
+packages = { find = {} }
+
+[tool.setuptools.package-data]
+gallop = [
+    "example_data/*.*",
+    "user_settings/Default.json",
+    "atomic_scattering_params.json",
+    "neutron_scattering_length.json",
+]
+
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+]

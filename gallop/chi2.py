@@ -38,9 +38,12 @@ def calc_int_chisqd(calculated_intensities, inverse_covariance_matrix,
     sum_1_2 = torch.einsum("ij,j->i",calculated_intensities,
                                     chisqd_scale_sum_1_1)
 
-    sum_2_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,
+    #sum_2_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,
+    #                                    calculated_intensities)
+    #sum_2_2 = torch.einsum("ij,ij->i",calculated_intensities,sum_2_1)
+    sum_2_2 = torch.einsum("ij,jk,ik->i",calculated_intensities,
+                                        inverse_covariance_matrix,
                                         calculated_intensities)
-    sum_2_2 = torch.einsum("ij,ij->i",calculated_intensities,sum_2_1)
 
     # Scaling factor for calculated intensities.
     scale = (sum_1_2 / sum_2_2).reshape(-1,1)
@@ -52,9 +55,9 @@ def calc_int_chisqd(calculated_intensities, inverse_covariance_matrix,
             - (scale*calculated_intensities))
 
     # Finally calculate chisqd - d.A.d
-    chi_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,diff) # A.d
-    chi_2 = torch.einsum("ij,ij->i",diff,chi_1) # d.(A.d)
-
+    #chi_1 = torch.einsum("ij,kj->ki",inverse_covariance_matrix,diff) # A.d
+    #chi_2 = torch.einsum("ij,ij->i",diff,chi_1) # d.(A.d)
+    chi_2 = torch.einsum("ij,jk,ik->i",diff,inverse_covariance_matrix,diff)
     return chi_2 / (calculated_intensities.shape[1] - 2)
 
 @torch.jit.script

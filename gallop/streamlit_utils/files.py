@@ -70,20 +70,20 @@ def get_files():
             uploaded_files = st.file_uploader("Upload GSAS-II project file and\
                                     Z-matrices",
                                     accept_multiple_files=True,
-                                    type=["zmatrix", "gpx", "json"],
+                                    type=["zmatrix", "gpx", "json", "dbf"],
                                     key=None)
         elif pawley_program == "TOPAS (experimental)":
             uploaded_files = st.file_uploader("Upload TOPAS .out file and\
                                     Z-matrices",
                                     accept_multiple_files=True,
-                                    type=["zmatrix", "out", "json"],
+                                    type=["zmatrix", "out", "json", "dbf"],
                                     key=None)
         else:
             uploaded_files = st.file_uploader("Upload SHELX .hkl file in HKLF 4\
                                     format and Z-matrices, plus either .ins or \
                                     .cif containing cell and space group info",
                                     accept_multiple_files=True,
-                                    type=["zmatrix","ins","hkl","cif","json"],
+                                    type=["zmatrix","ins","hkl","cif","json", "dbf"],
                                     key=None)
         col1, col2 = st.columns([2,2])
         with col1:
